@@ -33,6 +33,7 @@ export default function PendingActivationsPage() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
@@ -109,7 +110,7 @@ export default function PendingActivationsPage() {
             <p className="text-3xl font-bold text-accent-red">{stats.pendingCount}</p>
           </div>
           <div className="card bg-blue-50 border-l-4 border-accent-blue">
-            <p className="text-gray-600 text-sm mb-1">Today's Revenue</p>
+            <p className="text-gray-600 text-sm mb-1">Today&apos;s Revenue</p>
             <p className="text-3xl font-bold text-accent-blue">
               {formatCurrency(stats.todayRevenue)}
             </p>

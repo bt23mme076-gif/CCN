@@ -20,6 +20,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const fetchCustomers = async () => {

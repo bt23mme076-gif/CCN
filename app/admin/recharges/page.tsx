@@ -26,6 +26,7 @@ export default function AllRechargesPage() {
 
   useEffect(() => {
     fetchRecharges();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const fetchRecharges = async () => {
