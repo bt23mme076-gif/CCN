@@ -1,0 +1,138 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import PlanCard from '@/components/PlanCard';
+import PaymentModal from '@/components/PaymentModal';
+
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  duration_days: number;
+  channels: string[];
+  is_popular: boolean;
+}
+
+interface Customer {
+  stb_number: string;
+}
+
+export default function PlansPage() {
+  const router = useRouter();
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [plansRes, customerRes] = await Promise.all([
+        fetch('/api/plans'),
+        fetch('/api/auth/me'),
+      ]);
+
+      if (!customerRes.ok) {
+        router.push('/login');
+        return;
+      }
+
+      const plansData = await plansRes.json();
+      const customerData = await customerRes.json();
+
+      setPlans(plansData.plans || []);
+      setCustomer(customerData.customer);
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectPlan = (planId: string) => {
+    const plan = plans.find((p) => p.id === planId);
+    if (plan) {
+      setSelectedPlan(plan);
+      setShowPaymentModal(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-1">
+      {/* Header */}
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="font-display text-2xl font-bold text-brand-navy">
+              CableEasy
+            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/dashboard"
+                className="text-gray-600 hover:text-brand-navy font-medium"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-accent-red hover:underline font-medium"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center mb-12">
+          <h1 className="font-display text-4xl font-bold text-brand-navy mb-4">
+            Choose Your Plan
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Select the perfect plan for your entertainment needs
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {plans && plans.length > 0 ? (
+            plans.map((plan) => (
+              <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-600">No plans available at the moment.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        plan={selectedPlan}
+        stbNumber={customer?.stb_number || ''}
+      />
+    </div>
+  );
+}
