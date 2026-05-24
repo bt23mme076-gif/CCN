@@ -131,20 +131,23 @@ export default function DashboardPage() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-display text-2xl font-bold text-brand-navy">
-              CableEasy
+            <Link href="/" className="font-display text-xl sm:text-2xl font-bold text-brand-navy">
+              CCN Cable
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/dashboard/buy"
-                className="text-gray-600 hover:text-brand-navy font-medium hidden sm:inline"
+                className="text-gray-600 hover:text-brand-navy font-medium text-sm sm:text-base"
               >
-                Buy & History
+                <span className="hidden sm:inline">Buy & History</span>
+                <span className="sm:hidden">Buy</span>
               </Link>
-              <span className="text-gray-600">Hi, {customer?.name}</span>
+              <span className="text-gray-600 text-sm sm:text-base hidden xs:inline">
+                Hi, {customer?.name}
+              </span>
               <button
                 onClick={handleLogout}
-                className="text-accent-red hover:underline font-medium"
+                className="text-accent-red hover:underline font-medium text-sm sm:text-base"
               >
                 Logout
               </button>
