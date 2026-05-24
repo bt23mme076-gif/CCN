@@ -1,8 +1,12 @@
+import 'dotenv/config';
 import { db } from './index';
 import { plans, admins } from './schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
+
+// Load environment variables
+// Load environment variables
 
 async function main() {
   console.log('Seeding database...');

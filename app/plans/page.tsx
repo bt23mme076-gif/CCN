@@ -16,6 +16,8 @@ interface Plan {
 }
 
 interface Customer {
+  name: string;
+  mobile: string;
   stb_number: string;
 }
 
@@ -85,7 +87,7 @@ export default function PlansPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="font-display text-2xl font-bold text-brand-navy">
-              CableEasy
+              CCN Cable
             </Link>
             <div className="flex items-center gap-4">
               <Link
@@ -108,16 +110,16 @@ export default function PlansPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
           <h1 className="font-display text-4xl font-bold text-brand-navy mb-4">
-            Choose Your Plan
+            Our CCN Special Plans
           </h1>
           <p className="text-gray-600 text-lg">
             Select the perfect plan for your entertainment needs
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-8">
           {plans && plans.length > 0 ? (
-            plans.map((plan) => (
+            plans.filter(p => p.price === 19900 || p.price === 29900).map((plan) => (
               <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
             ))
           ) : (
@@ -133,6 +135,8 @@ export default function PlansPage() {
         onClose={() => setShowPaymentModal(false)}
         plan={selectedPlan}
         stbNumber={customer?.stb_number || ''}
+        customerName={customer?.name || ''}
+        customerMobile={customer?.mobile || ''}
       />
     </div>
   );

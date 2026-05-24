@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PlanCard from '@/components/PlanCard';
+import PaymentModal from '@/components/PaymentModal';
 
 interface Plan {
   id: string;
@@ -15,42 +16,57 @@ interface Plan {
   is_popular: boolean;
 }
 
+interface Customer {
+  name: string;
+  mobile: string;
+  stb_number: string;
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Payment Modal State
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
-    fetchPlans();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchPlans = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch('/api/plans');
-      const data = await response.json();
-      setPlans(data.plans || []);
+      const [plansRes, customerRes] = await Promise.all([
+        fetch('/api/plans'),
+        fetch('/api/auth/me'),
+      ]);
+
+      const plansData = await plansRes.json();
+      setPlans(plansData.plans || []);
+
+      if (customerRes.ok) {
+        const customerData = await customerRes.json();
+        setCustomer(customerData.customer);
+      }
     } catch (error) {
-      console.error('Failed to fetch plans:', error);
-      setPlans([]);
+      console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSelectPlan = async (planId: string) => {
-    // Check if user is authenticated
-    try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        // User is authenticated, go to plans page
-        router.push('/plans');
-      } else {
-        // User not authenticated, go to login
-        router.push('/login');
-      }
-    } catch {
+    if (!customer) {
       router.push('/login');
+      return;
+    }
+    const plan = plans.find((p) => p.id === planId);
+    if (plan) {
+      setSelectedPlan(plan);
+      setShowPaymentModal(true);
     }
   };
 
@@ -62,18 +78,20 @@ export default function HomePage() {
       <section className="bg-brand-navy text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="font-display text-5xl md:text-6xl font-bold mb-6">
-            Recharge Your Cable Connection Online
+            Welcome to CCN Cable Network
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Fast, secure, and hassle-free cable recharge with instant activation.
-            Choose your plan and get started in minutes.
+            Choose our best-selling ₹199 or ₹299 plans and get started in minutes.
           </p>
-          <button
-            onClick={() => router.push('/register')}
-            className="bg-accent-red text-white px-8 py-4 rounded-lg font-medium text-lg hover:bg-red-700 transition-colors"
-          >
-            Get Started Now
-          </button>
+          {!customer && (
+            <button
+              onClick={() => router.push('/register')}
+              className="bg-accent-red text-white px-8 py-4 rounded-lg font-medium text-lg hover:bg-red-700 transition-colors"
+            >
+              Get Started Now
+            </button>
+          )}
         </div>
       </section>
 
@@ -82,7 +100,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-display text-4xl font-bold text-brand-navy mb-4">
-              Choose Your Plan
+              Our CCN Special Plans
             </h2>
             <p className="text-gray-600 text-lg">
               Select the perfect plan for your entertainment needs
@@ -94,8 +112,8 @@ export default function HomePage() {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
             </div>
           ) : plans && plans.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {plans.map((plan) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-8">
+              {plans.filter(p => p.price === 19900 || p.price === 29900).map((plan) => (
                 <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
               ))}
             </div>
@@ -187,6 +205,17 @@ export default function HomePage() {
       </section>
 
       <Footer />
+
+      {customer && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          plan={selectedPlan}
+          stbNumber={customer.stb_number}
+          customerName={customer.name}
+          customerMobile={customer.mobile}
+        />
+      )}
     </div>
   );
 }

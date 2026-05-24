@@ -13,6 +13,8 @@ interface PaymentModalProps {
     duration_days: number;
   } | null;
   stbNumber: string;
+  customerName?: string;
+  customerMobile?: string;
 }
 
 declare global {
@@ -26,6 +28,8 @@ export default function PaymentModal({
   onClose,
   plan,
   stbNumber,
+  customerName = '',
+  customerMobile = '',
 }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -98,9 +102,9 @@ export default function PaymentModal({
             }
           },
           prefill: {
-            name: '',
+            name: customerName,
             email: '',
-            contact: '',
+            contact: customerMobile,
           },
           theme: {
             color: '#e63946',

@@ -1,6 +1,10 @@
+import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { migrationClient } from './index';
+
+// Load environment variables
+// Load environment variables
 
 async function main() {
   console.log('Running migrations...');
