@@ -1,6 +1,8 @@
 'use client';
 
 import { formatCurrency } from '@/lib/utils';
+import ChannelListDownload from './ChannelListDownload';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface PlanCardProps {
   plan: {
@@ -15,6 +17,8 @@ interface PlanCardProps {
 }
 
 export default function PlanCard({ plan, onSelect }: PlanCardProps) {
+  const { t } = useTranslation();
+  
   return (
     <div
       className={`card relative ${
@@ -23,7 +27,7 @@ export default function PlanCard({ plan, onSelect }: PlanCardProps) {
     >
       {plan.is_popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent-red text-white px-4 py-1 rounded-full text-sm font-medium">
-          Most Popular
+          {t('popularPlan')}
         </div>
       )}
 
@@ -34,7 +38,11 @@ export default function PlanCard({ plan, onSelect }: PlanCardProps) {
         <div className="text-4xl font-bold text-accent-red mb-1">
           {formatCurrency(plan.price)}
         </div>
-        <p className="text-gray-600">{plan.duration_days} days</p>
+        <p className="text-gray-600">{plan.duration_days} {t('days')}</p>
+      </div>
+
+      <div className="mb-4">
+        <ChannelListDownload planName={plan.name} price={plan.price} />
       </div>
 
       <ul className="space-y-3 mb-6">
@@ -66,7 +74,7 @@ export default function PlanCard({ plan, onSelect }: PlanCardProps) {
             : 'bg-brand-navy text-white hover:bg-gray-800'
         }`}
       >
-        Select Plan
+        {t('selectPlan')}
       </button>
     </div>
   );
