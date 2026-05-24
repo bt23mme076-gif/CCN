@@ -129,11 +129,11 @@ export default function PaymentModal({
   if (showSuccess && orderDetails) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl p-8 max-w-md w-full">
+        <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
               <svg
-                className="w-8 h-8 text-success"
+                className="w-7 h-7 sm:w-8 sm:h-8 text-success"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -146,23 +146,23 @@ export default function PaymentModal({
                 />
               </svg>
             </div>
-            <h2 className="font-display text-2xl font-bold text-brand-navy mb-2">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-2">
               Payment Successful!
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
               Your recharge will be activated shortly by our operator
             </p>
 
-            <div className="bg-gray-1 rounded-lg p-4 mb-6 text-left">
-              <div className="flex justify-between mb-2">
+            <div className="bg-gray-1 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-left">
+              <div className="flex justify-between mb-2 text-sm sm:text-base">
                 <span className="text-gray-600">Order ID:</span>
-                <span className="font-medium">{orderDetails.orderId}</span>
+                <span className="font-medium text-xs sm:text-sm break-all ml-2">{orderDetails.orderId}</span>
               </div>
-              <div className="flex justify-between mb-2">
+              <div className="flex justify-between mb-2 text-sm sm:text-base">
                 <span className="text-gray-600">Plan:</span>
                 <span className="font-medium">{orderDetails.planName}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-sm sm:text-base">
                 <span className="text-gray-600">Amount Paid:</span>
                 <span className="font-medium text-success">
                   {formatCurrency(orderDetails.amount)}
@@ -176,7 +176,7 @@ export default function PaymentModal({
                 onClose();
                 window.location.href = '/dashboard';
               }}
-              className="btn-primary w-full"
+              className="btn-primary w-full text-sm sm:text-base"
             >
               Go to Dashboard
             </button>
@@ -188,18 +188,18 @@ export default function PaymentModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl p-8 max-w-md w-full">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="font-display text-2xl font-bold text-brand-navy">
+      <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy">
             Confirm Payment
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 p-1"
             disabled={loading}
           >
             <svg
-              className="w-6 h-6"
+              className="w-5 h-5 sm:w-6 sm:h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -214,20 +214,20 @@ export default function PaymentModal({
           </button>
         </div>
 
-        <div className="space-y-4 mb-6">
-          <div className="flex justify-between">
+        <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+          <div className="flex justify-between text-sm sm:text-base">
             <span className="text-gray-600">Plan:</span>
             <span className="font-medium">{plan.name}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-sm sm:text-base">
             <span className="text-gray-600">Duration:</span>
             <span className="font-medium">{plan.duration_days} days</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-sm sm:text-base">
             <span className="text-gray-600">STB Number:</span>
-            <span className="font-medium">{stbNumber}</span>
+            <span className="font-medium break-all">{stbNumber}</span>
           </div>
-          <div className="flex justify-between text-lg font-bold pt-4 border-t">
+          <div className="flex justify-between text-base sm:text-lg font-bold pt-3 sm:pt-4 border-t">
             <span>Total Amount:</span>
             <span className="text-accent-red">{formatCurrency(plan.price)}</span>
           </div>
@@ -236,7 +236,7 @@ export default function PaymentModal({
         <button
           onClick={handlePayment}
           disabled={loading}
-          className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
           {loading ? 'Processing...' : 'Pay with Razorpay'}
         </button>

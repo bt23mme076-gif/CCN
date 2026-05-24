@@ -75,19 +75,19 @@ export default function HomePage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="bg-brand-navy text-white py-20">
+      <section className="bg-brand-navy text-white py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-5xl md:text-6xl font-bold mb-6">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
             Welcome to CCN Cable Network
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
             Fast, secure, and hassle-free cable recharge with instant activation.
             Choose our best-selling ₹199 or ₹299 plans and get started in minutes.
           </p>
           {!customer && (
             <button
               onClick={() => router.push('/register')}
-              className="bg-accent-red text-white px-8 py-4 rounded-lg font-medium text-lg hover:bg-red-700 transition-colors"
+              className="bg-accent-red text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-base sm:text-lg hover:bg-red-700 transition-colors w-full sm:w-auto"
             >
               Get Started Now
             </button>
@@ -96,13 +96,13 @@ export default function HomePage() {
       </section>
 
       {/* Plans Section */}
-      <section className="py-16 bg-gray-1">
+      <section className="py-12 sm:py-16 bg-gray-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-4xl font-bold text-brand-navy mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3 sm:mb-4">
               Our CCN Special Plans
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-base sm:text-lg px-4">
               Select the perfect plan for your entertainment needs
             </p>
           </div>
@@ -112,7 +112,7 @@ export default function HomePage() {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
             </div>
           ) : plans && plans.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto gap-6 sm:gap-8">
               {plans.filter(p => p.price === 19900 || p.price === 29900).map((plan) => (
                 <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
               ))}
@@ -126,13 +126,13 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-16">
+      <section className="py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-accent-red bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
+            <div className="text-center p-4">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-accent-red bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
-                  className="w-8 h-8 text-accent-red"
+                  className="w-7 h-7 sm:w-8 sm:h-8 text-accent-red"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -145,18 +145,18 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="font-display text-xl font-bold text-brand-navy mb-2">
+              <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">
                 Instant Activation
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 Your recharge is activated within minutes by our operators
               </p>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-accent-blue bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center p-4">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-accent-blue bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
-                  className="w-8 h-8 text-accent-blue"
+                  className="w-7 h-7 sm:w-8 sm:h-8 text-accent-blue"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -169,18 +169,18 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="font-display text-xl font-bold text-brand-navy mb-2">
+              <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">
                 Secure Payments
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 All transactions are secured with Razorpay payment gateway
               </p>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-success bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center p-4 sm:col-span-2 md:col-span-1">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-success bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <svg
-                  className="w-8 h-8 text-success"
+                  className="w-7 h-7 sm:w-8 sm:h-8 text-success"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -193,10 +193,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="font-display text-xl font-bold text-brand-navy mb-2">
+              <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">
                 Full History
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 Track all your recharges and view detailed transaction history
               </p>
             </div>

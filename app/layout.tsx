@@ -4,9 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "CCN Cable Network",
   description: "Fast, secure, and hassle-free cable recharge with instant activation",
-  icons: {
-    icon: '/icon.svg',
-  },
 };
 
 export default function RootLayout({

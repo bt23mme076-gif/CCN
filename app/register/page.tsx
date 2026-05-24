@@ -77,12 +77,12 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-1">
       <Navbar />
 
-      <div className="max-w-md mx-auto px-4 py-16">
+      <div className="max-w-md mx-auto px-4 py-8 sm:py-12 md:py-16">
         <div className="card">
-          <h1 className="font-display text-3xl font-bold text-brand-navy mb-2 text-center">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-brand-navy mb-2 text-center">
             Create Account
           </h1>
-          <p className="text-gray-600 text-center mb-8">
+          <p className="text-sm sm:text-base text-gray-600 text-center mb-6 sm:mb-8">
             Register to start recharging your cable connection
           </p>
 
