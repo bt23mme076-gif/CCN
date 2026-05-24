@@ -80,7 +80,7 @@ export default function HomePage() {
       <section className="bg-brand-navy text-white py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
-            Welcome to CCN Cable Network
+            Welcome to CCN Network
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
             Fast, secure, and hassle-free cable recharge with instant activation.
