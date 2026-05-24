@@ -38,6 +38,15 @@ async function main() {
       },
       {
         id: `plan_${randomBytes(8).toString('hex')}`,
+        name: 'Royal HD',
+        price: 34900, // ₹349 in paise
+        duration_days: 30,
+        channels: ['All HD Channels', 'Premium HD Quality', 'Sports HD', 'Movies HD'],
+        is_popular: false,
+        is_active: true,
+      },
+      {
+        id: `plan_${randomBytes(8).toString('hex')}`,
         name: 'Gold',
         price: 39900, // ₹399 in paise
         duration_days: 30,

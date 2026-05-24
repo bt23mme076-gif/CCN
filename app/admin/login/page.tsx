@@ -25,22 +25,30 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
+      console.log('Attempting login with:', { username: formData.username });
+      
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
+        credentials: 'include', // Important: include cookies
       });
 
+      console.log('Login response status:', response.status);
       const data = await response.json();
+      console.log('Login response data:', data);
 
-      if (response.ok) {
-        router.push('/admin/pending');
+      if (response.ok && data.success) {
+        console.log('Login successful, redirecting...');
+        // Use window.location for a full page reload with new cookies
+        window.location.href = '/admin/pending';
       } else {
         setError(data.error || 'Login failed');
+        setLoading(false);
       }
-    } catch {
+    } catch (err) {
+      console.error('Login error:', err);
       setError('Login failed. Please try again.');
-    } finally {
       setLoading(false);
     }
   };

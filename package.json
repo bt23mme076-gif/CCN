@@ -10,7 +10,11 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx lib/db/migrate.ts",
     "db:seed": "tsx lib/db/seed.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "add-royal-hd": "tsx add-royal-hd.ts",
+    "change-admin-password": "tsx change-admin-password.ts",
+    "check-admin": "tsx check-admin.ts",
+    "create-admin": "tsx create-admin-now.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

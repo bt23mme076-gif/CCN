@@ -50,15 +50,25 @@ export async function POST(request: NextRequest) {
       role: 'admin',
     });
 
-    await setAuthCookie(token);
-
-    return NextResponse.json({
+    // Create response
+    const response = NextResponse.json({
       success: true,
       admin: {
         id: admin[0].id,
         username: admin[0].username,
       },
     });
+
+    // Set cookie on response
+    response.cookies.set('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

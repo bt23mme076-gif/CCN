@@ -18,13 +18,24 @@ export interface AdminJWTPayload {
 export type JWTPayload = CustomerJWTPayload | AdminJWTPayload;
 
 export function signToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  console.log('Signing token with payload:', payload);
+  console.log('JWT_SECRET exists:', !!JWT_SECRET);
+  console.log('JWT_SECRET length:', JWT_SECRET?.length);
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  console.log('Token created successfully');
+  return token;
 }
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
-  } catch {
+    console.log('Verifying token...');
+    console.log('JWT_SECRET exists:', !!JWT_SECRET);
+    console.log('JWT_SECRET length:', JWT_SECRET?.length);
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    console.log('Token verified successfully:', decoded);
+    return decoded;
+  } catch (error) {
+    console.error('Token verification failed:', error);
     return null;
   }
 }

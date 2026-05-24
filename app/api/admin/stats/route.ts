@@ -19,12 +19,13 @@ export async function GET() {
     // Get today's revenue
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const todayISO = today.toISOString();
 
     const todayRevenueResult = await db
       .select({ total: sql<number>`coalesce(sum(${recharges.amount}), 0)::int` })
       .from(recharges)
       .where(
-        sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${today}`
+        sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${todayISO}`
       );
 
     const todayRevenue = todayRevenueResult[0]?.total || 0;

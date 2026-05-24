@@ -119,7 +119,7 @@ export default function PlansPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-8">
           {plans && plans.length > 0 ? (
-            plans.filter(p => p.price === 19900 || p.price === 29900).map((plan) => (
+            plans.filter(p => p.price === 19900 || p.price === 29900 || p.price === 34900).map((plan) => (
               <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
             ))
           ) : (

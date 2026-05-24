@@ -15,6 +15,8 @@ export default function ChannelListDownload({ planName, price }: ChannelListDown
       return '/channels-base-pack-199.csv';
     } else if (price === 29900) {
       return '/channels-all-in-one-299.csv';
+    } else if (price === 34900) {
+      return '/channels-royal-hd-349.csv';
     }
     return null;
   };

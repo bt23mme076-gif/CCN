@@ -6,6 +6,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
+import WhatsAppButton from '@/components/WhatsAppButton';
+import ContactSection from '@/components/ContactSection';
 
 interface Plan {
   id: string;
@@ -112,8 +114,8 @@ export default function HomePage() {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
             </div>
           ) : plans && plans.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto gap-6 sm:gap-8">
-              {plans.filter(p => p.price === 19900 || p.price === 29900).map((plan) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6 sm:gap-8">
+              {plans.filter(p => p.price === 19900 || p.price === 29900 || p.price === 34900).map((plan) => (
                 <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
               ))}
             </div>
@@ -204,7 +206,13 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Contact Section */}
+      <ContactSection />
+
       <Footer />
+
+      {/* Floating WhatsApp Button */}
+      <WhatsAppButton />
 
       {customer && (
         <PaymentModal

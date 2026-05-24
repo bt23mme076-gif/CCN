@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function AdminLayout({
   children,
@@ -10,9 +11,49 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Skip auth check for login page
+    if (pathname === '/admin/login') {
+      setLoading(false);
+      return;
+    }
+
+    // Check authentication
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/admin/stats');
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          router.push('/admin/login');
+        }
+      } catch (error) {
+        router.push('/admin/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [pathname, router]);
 
   if (pathname === '/admin/login') {
     return <>{children}</>;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
   }
 
   const handleLogout = async () => {
@@ -32,7 +73,7 @@ export default function AdminLayout({
       {/* Sidebar */}
       <aside className="w-56 bg-brand-navy text-white fixed h-full">
         <div className="p-6">
-          <h1 className="font-display text-2xl font-bold mb-8">CableEasy</h1>
+          <h1 className="font-display text-2xl font-bold mb-8">CCN Cable</h1>
           <nav className="space-y-2">
             {navItems.map((item) => (
               <Link
