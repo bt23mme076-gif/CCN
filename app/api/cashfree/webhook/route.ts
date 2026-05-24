@@ -10,7 +10,14 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('x-webhook-signature');
     const timestamp = request.headers.get('x-webhook-timestamp');
 
+    console.log('Cashfree webhook received:', {
+      hasSignature: !!signature,
+      hasTimestamp: !!timestamp,
+      bodyLength: body.length,
+    });
+
     if (!signature || !timestamp) {
+      console.error('Webhook missing signature or timestamp');
       return NextResponse.json({ error: 'Missing signature or timestamp' }, { status: 400 });
     }
 
@@ -21,6 +28,7 @@ export async function POST(request: NextRequest) {
       .digest('base64');
 
     if (expectedSignature !== signature) {
+      console.error('Webhook signature mismatch');
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 400 }
@@ -28,6 +36,11 @@ export async function POST(request: NextRequest) {
     }
 
     const event = JSON.parse(body);
+    console.log('Webhook event:', {
+      type: event.type,
+      orderId: event.data?.order?.order_id,
+      paymentId: event.data?.payment?.cf_payment_id,
+    });
 
     // Handle payment success event
     if (event.type === 'PAYMENT_SUCCESS_WEBHOOK') {
@@ -35,6 +48,7 @@ export async function POST(request: NextRequest) {
       const paymentId = event.data?.payment?.cf_payment_id;
 
       if (!orderId) {
+        console.error('Webhook missing order ID');
         return NextResponse.json({ error: 'Missing order ID' }, { status: 400 });
       }
 
@@ -44,6 +58,11 @@ export async function POST(request: NextRequest) {
         .from(recharges)
         .where(eq(recharges.cashfree_order_id, orderId))
         .limit(1);
+
+      console.log('Recharge found:', {
+        found: recharge.length > 0,
+        status: recharge[0]?.status,
+      });
 
       if (recharge.length > 0 && recharge[0].status === 'pending') {
         // Update to paid
@@ -55,6 +74,8 @@ export async function POST(request: NextRequest) {
             paid_at: new Date(),
           })
           .where(eq(recharges.id, recharge[0].id));
+
+        console.log('Recharge updated to paid:', recharge[0].id);
       }
     }
 

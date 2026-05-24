@@ -29,11 +29,57 @@ export default function DashboardPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [recharges, setRecharges] = useState<Recharge[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paymentMessage, setPaymentMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
   useEffect(() => {
     fetchData();
+    checkPaymentStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const checkPaymentStatus = async () => {
+    // Check if redirected from payment
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('order_id');
+    
+    if (orderId) {
+      try {
+        // Verify payment status
+        const verifyResponse = await fetch('/api/recharge/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId }),
+        });
+
+        const verifyData = await verifyResponse.json();
+
+        if (verifyData.success) {
+          // Show success message
+          setPaymentMessage({
+            type: 'success',
+            text: 'Payment successful! Your recharge will be activated shortly by our operator.'
+          });
+        } else {
+          // Show error message
+          setPaymentMessage({
+            type: 'error',
+            text: 'Payment verification failed. Please contact support if amount was deducted.'
+          });
+        }
+      } catch (error) {
+        console.error('Payment verification error:', error);
+        setPaymentMessage({
+          type: 'error',
+          text: 'Unable to verify payment. Please contact support if amount was deducted.'
+        });
+      } finally {
+        // Clean up URL
+        window.history.replaceState({}, '', '/dashboard');
+        // Refresh data to show updated status
+        setTimeout(() => fetchData(), 1000);
+      }
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -69,6 +115,8 @@ export default function DashboardPage() {
     (r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date()
   );
 
+  const pendingActivation = recharges.find(r => r.status === 'paid');
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -100,6 +148,40 @@ export default function DashboardPage() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Payment Status Message */}
+        {paymentMessage && (
+          <div className={`mb-6 p-4 rounded-lg ${
+            paymentMessage.type === 'success' 
+              ? 'bg-green-50 border border-green-200 text-green-800' 
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                {paymentMessage.type === 'success' ? (
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">{paymentMessage.text}</p>
+              </div>
+              <button
+                onClick={() => setPaymentMessage(null)}
+                className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Customer Info */}
         <div className="card mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
@@ -115,6 +197,28 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Pending Activation Notice */}
+        {pendingActivation && (
+          <div className="card bg-yellow-50 border-l-4 border-yellow-500 mb-6 sm:mb-8">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-yellow-900 mb-1">Payment Confirmed - Activation Pending</h3>
+                <p className="text-sm text-yellow-800 mb-2">
+                  Your payment for <strong>{pendingActivation.plan_name}</strong> ({formatCurrency(pendingActivation.amount)}) has been received successfully.
+                </p>
+                <p className="text-sm text-yellow-800">
+                  Our operator will activate your plan shortly. You will receive confirmation once activated.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Active Plan */}
         <div className="card bg-brand-navy text-white mb-6 sm:mb-8">
