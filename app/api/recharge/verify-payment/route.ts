@@ -3,58 +3,89 @@ import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import crypto from 'crypto';
 import { z } from 'zod';
 
 const verifyPaymentSchema = z.object({
-  razorpayOrderId: z.string(),
-  razorpayPaymentId: z.string(),
-  razorpaySignature: z.string(),
-  rechargeId: z.string(),
+  orderId: z.string(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     await requireCustomerAuth();
     const body = await request.json();
-    const {
-      razorpayOrderId,
-      razorpayPaymentId,
-      razorpaySignature,
-      rechargeId,
-    } = verifyPaymentSchema.parse(body);
+    const { orderId } = verifyPaymentSchema.parse(body);
 
-    // Verify signature
-    const generatedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
-      .digest('hex');
+    // Check if Cashfree is configured
+    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
+      return NextResponse.json(
+        { error: 'Payment gateway not configured' },
+        { status: 503 }
+      );
+    }
 
-    if (generatedSignature !== razorpaySignature) {
+    // Verify payment status with Cashfree using REST API
+    const cashfreeApiUrl = process.env.CASHFREE_ENV === 'production'
+      ? `https://api.cashfree.com/pg/orders/${orderId}/payments`
+      : `https://sandbox.cashfree.com/pg/orders/${orderId}/payments`;
+
+    const cashfreeResponse = await fetch(cashfreeApiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-client-id': process.env.CASHFREE_APP_ID,
+        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+        'x-api-version': '2023-08-01',
+      },
+    });
+
+    if (!cashfreeResponse.ok) {
+      return NextResponse.json(
+        { success: false, error: 'Payment not found' },
+        { status: 404 }
+      );
+    }
+
+    const payments = await cashfreeResponse.json();
+
+    if (!payments || payments.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Payment not found' },
+        { status: 404 }
+      );
+    }
+
+    const payment = payments[0];
+
+    // Check payment status
+    if (payment.payment_status === 'SUCCESS') {
+      // Update recharge status to paid
+      await db
+        .update(recharges)
+        .set({
+          status: 'paid',
+          cashfree_payment_id: payment.cf_payment_id?.toString(),
+          paid_at: new Date(),
+        })
+        .where(eq(recharges.id, orderId));
+
+      return NextResponse.json({ success: true });
+    } else if (payment.payment_status === 'FAILED') {
       // Update recharge status to failed
       await db
         .update(recharges)
         .set({ status: 'failed' })
-        .where(eq(recharges.id, rechargeId));
+        .where(eq(recharges.id, orderId));
 
       return NextResponse.json(
-        { success: false, error: 'Payment verification failed' },
+        { success: false, error: 'Payment failed' },
+        { status: 400 }
+      );
+    } else {
+      return NextResponse.json(
+        { success: false, error: 'Payment pending' },
         { status: 400 }
       );
     }
-
-    // Update recharge status to paid
-    await db
-      .update(recharges)
-      .set({
-        status: 'paid',
-        razorpay_payment_id: razorpayPaymentId,
-        razorpay_signature: razorpaySignature,
-        paid_at: new Date(),
-      })
-      .where(eq(recharges.id, rechargeId));
-
-    return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

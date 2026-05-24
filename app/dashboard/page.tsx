@@ -21,7 +21,7 @@ interface Recharge {
   status: string;
   created_at: string;
   expires_at: string | null;
-  razorpay_order_id: string | null;
+  cashfree_order_id: string | null;
 }
 
 export default function DashboardPage() {

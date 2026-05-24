@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
+import { load } from '@cashfreepayments/cashfree-js';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -15,12 +16,6 @@ interface PaymentModalProps {
   stbNumber: string;
   customerName?: string;
   customerMobile?: string;
-}
-
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
 }
 
 export default function PaymentModal({
@@ -54,71 +49,61 @@ export default function PaymentModal({
 
       const orderData = await orderResponse.json();
 
-      // Load Razorpay script
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      document.body.appendChild(script);
+      // Initialize Cashfree SDK
+      const cashfree = await load({
+        mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
+      });
 
-      script.onload = () => {
-        const options = {
-          key: orderData.key,
-          amount: orderData.amount,
-          currency: orderData.currency,
-          name: 'CableEasy',
-          description: `${plan.name} - ${plan.duration_days} days`,
-          order_id: orderData.razorpayOrderId,
-          handler: async function (response: any) {
-            try {
-              // Verify payment
-              const verifyResponse = await fetch('/api/recharge/verify-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature,
-                  rechargeId: orderData.orderId,
-                }),
-              });
-
-              const verifyData = await verifyResponse.json();
-
-              if (verifyData.success) {
-                setOrderDetails({
-                  orderId: orderData.orderId,
-                  planName: plan.name,
-                  amount: plan.price,
-                });
-                setShowSuccess(true);
-              } else {
-                alert('Payment verification failed. Please contact support.');
-              }
-            } catch (error) {
-              console.error('Verification error:', error);
-              alert('Payment verification failed. Please contact support.');
-            } finally {
-              setLoading(false);
-            }
-          },
-          prefill: {
-            name: customerName,
-            email: '',
-            contact: customerMobile,
-          },
-          theme: {
-            color: '#e63946',
-          },
-          modal: {
-            ondismiss: function () {
-              setLoading(false);
-            },
-          },
-        };
-
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
+      // Create checkout options
+      const checkoutOptions = {
+        paymentSessionId: orderData.paymentSessionId,
+        returnUrl: `${window.location.origin}/dashboard?order_id=${orderData.orderId}`,
       };
+
+      // Open Cashfree checkout
+      cashfree.checkout(checkoutOptions).then(async (result: any) => {
+        if (result.error) {
+          console.error('Payment error:', result.error);
+          alert('Payment failed. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+        if (result.redirect) {
+          console.log('Payment will be redirected');
+        }
+
+        if (result.paymentDetails) {
+          // Verify payment
+          try {
+            const verifyResponse = await fetch('/api/recharge/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: orderData.orderId,
+              }),
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyData.success) {
+              setOrderDetails({
+                orderId: orderData.orderId,
+                planName: plan.name,
+                amount: plan.price,
+              });
+              setShowSuccess(true);
+            } else {
+              alert('Payment verification failed. Please contact support.');
+            }
+          } catch (error) {
+            console.error('Verification error:', error);
+            alert('Payment verification failed. Please contact support.');
+          } finally {
+            setLoading(false);
+          }
+        }
+      });
     } catch (error) {
       console.error('Payment error:', error);
       alert('Failed to initiate payment. Please try again.');
@@ -238,7 +223,7 @@ export default function PaymentModal({
           disabled={loading}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
-          {loading ? 'Processing...' : 'Pay with Razorpay'}
+          {loading ? 'Processing...' : 'Pay with Cashfree'}
         </button>
       </div>
     </div>

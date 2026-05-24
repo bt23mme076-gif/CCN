@@ -1,22 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plans, recharges } from '@/lib/db/schema';
+import { plans, recharges, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import Razorpay from 'razorpay';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
-
-// Initialize Razorpay only if keys are available
-const getRazorpayInstance = () => {
-  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-    return null;
-  }
-  return new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-  });
-};
 
 const createOrderSchema = z.object({
   planId: z.string(),
@@ -42,24 +30,70 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Razorpay is configured
-    const razorpay = getRazorpayInstance();
-    if (!razorpay) {
+    // Get customer details
+    const customer = await db
+      .select()
+      .from(customers)
+      .where(eq(customers.id, user.customerId))
+      .limit(1);
+
+    if (customer.length === 0) {
+      return NextResponse.json(
+        { error: 'Customer not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if Cashfree is configured
+    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
       return NextResponse.json(
         { error: 'Payment gateway not configured. Please contact administrator.' },
         { status: 503 }
       );
     }
 
-    // Create Razorpay order
-    const razorpayOrder = await razorpay.orders.create({
-      amount: plan[0].price,
-      currency: 'INR',
-      receipt: generateOrderId(),
+    // Create recharge record first
+    const rechargeId = generateOrderId();
+    
+    // Create Cashfree order using REST API
+    const cashfreeApiUrl = process.env.CASHFREE_ENV === 'production'
+      ? 'https://api.cashfree.com/pg/orders'
+      : 'https://sandbox.cashfree.com/pg/orders';
+
+    const orderData = {
+      order_id: rechargeId,
+      order_amount: (plan[0].price / 100).toFixed(2), // Convert paise to rupees
+      order_currency: 'INR',
+      customer_details: {
+        customer_id: user.customerId,
+        customer_phone: customer[0].mobile,
+        customer_name: customer[0].name,
+      },
+      order_meta: {
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?order_id=${rechargeId}`,
+      },
+    };
+
+    const cashfreeResponse = await fetch(cashfreeApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-client-id': process.env.CASHFREE_APP_ID,
+        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+        'x-api-version': '2023-08-01',
+      },
+      body: JSON.stringify(orderData),
     });
 
-    // Create recharge record
-    const rechargeId = generateOrderId();
+    if (!cashfreeResponse.ok) {
+      const errorData = await cashfreeResponse.json();
+      console.error('Cashfree API error:', errorData);
+      throw new Error('Failed to create Cashfree order');
+    }
+
+    const cashfreeOrder = await cashfreeResponse.json();
+
+    // Save recharge record
     await db.insert(recharges).values({
       id: rechargeId,
       customer_id: user.customerId,
@@ -67,15 +101,15 @@ export async function POST(request: NextRequest) {
       plan_name: plan[0].name,
       amount: plan[0].price,
       status: 'pending',
-      razorpay_order_id: razorpayOrder.id,
+      cashfree_order_id: cashfreeOrder.order_id || rechargeId,
     });
 
     return NextResponse.json({
       orderId: rechargeId,
-      razorpayOrderId: razorpayOrder.id,
+      cashfreeOrderId: cashfreeOrder.order_id,
+      paymentSessionId: cashfreeOrder.payment_session_id,
       amount: plan[0].price,
       currency: 'INR',
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

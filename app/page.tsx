@@ -175,7 +175,7 @@ export default function HomePage() {
                 Secure Payments
               </h3>
               <p className="text-sm sm:text-base text-gray-600">
-                All transactions are secured with Razorpay payment gateway
+                All transactions are secured with Cashfree payment gateway
               </p>
             </div>
 
