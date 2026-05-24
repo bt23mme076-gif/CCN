@@ -9,10 +9,6 @@ import PaymentModal from '@/components/PaymentModal';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import ContactSection from '@/components/ContactSection';
 
-// Disable caching for this page
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 interface Plan {
   id: string;
   name: string;

@@ -6,10 +6,6 @@ import Link from 'next/link';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
 
-// Disable caching for this page
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 interface Plan {
   id: string;
   name: string;
