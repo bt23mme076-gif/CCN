@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const admin = await db
       .select()
       .from(admins)
-      .where(eq(admins.id, adminId))
+      .where(eq(admins.id, adminId as string))
       .limit(1);
 
     if (admin.length === 0) {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     await db
       .update(admins)
       .set({ password_hash: newPasswordHash })
-      .where(eq(admins.id, adminId));
+      .where(eq(admins.id, adminId as string));
 
     return NextResponse.json({ 
       success: true, 
