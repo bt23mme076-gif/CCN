@@ -135,6 +135,12 @@ export default function DashboardPage() {
               CableEasy
             </Link>
             <div className="flex items-center gap-4">
+              <Link
+                href="/dashboard/buy"
+                className="text-gray-600 hover:text-brand-navy font-medium hidden sm:inline"
+              >
+                Buy & History
+              </Link>
               <span className="text-gray-600">Hi, {customer?.name}</span>
               <button
                 onClick={handleLogout}
@@ -257,12 +263,29 @@ export default function DashboardPage() {
         </div>
 
         {activePlan && (
-          <div className="mb-6 sm:mb-8 text-center">
+          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-4">
             <Link
               href="/plans"
-              className="btn-primary inline-block w-full sm:w-auto"
+              className="btn-primary flex-1 text-center"
             >
               Recharge Now
+            </Link>
+            <Link
+              href="/dashboard/buy"
+              className="bg-accent-blue text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex-1 text-center"
+            >
+              View Buy & History
+            </Link>
+          </div>
+        )}
+
+        {!activePlan && (
+          <div className="mb-6 sm:mb-8 text-center">
+            <Link
+              href="/dashboard/buy"
+              className="btn-primary inline-block w-full sm:w-auto"
+            >
+              Browse Plans & History
             </Link>
           </div>
         )}
