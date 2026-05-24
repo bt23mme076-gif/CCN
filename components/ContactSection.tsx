@@ -60,7 +60,7 @@ export default function ContactSection() {
 
           {/* Email Contact */}
           <a
-            href="mailto:support@ccncable.com"
+            href="mailto:jatinrai254@gmail.com"
             className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-purple-500"
           >
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-500 transition-colors">
@@ -75,7 +75,7 @@ export default function ContactSection() {
               Send us your queries anytime
             </p>
             <p className="text-purple-600 font-semibold text-center text-sm group-hover:text-purple-700">
-              support@ccncable.com
+              jatinrai254@gmail.com
             </p>
           </a>
         </div>

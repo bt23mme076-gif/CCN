@@ -47,7 +47,7 @@
 - **Name**: Jatin Rai
 - **WhatsApp**: +91 93999 74696
 - **Phone**: +91 93999 74696
-- **Email**: support@ccncable.com
+- **Email**: jatinrai254@gmail.com
 
 ### Contact Methods
 
@@ -70,7 +70,7 @@
   - Click-to-call on mobile
 
 #### 3. Email Support
-- **Email**: support@ccncable.com
+- **Email**: jatinrai254@gmail.com
 - **Features**:
   - Detailed queries
   - Documentation support
@@ -280,7 +280,7 @@ To update contact information:
 2. **Email Address**:
    - Edit `components/ContactSection.tsx`
    - Edit `components/Footer.tsx`
-   - Replace `support@ccncable.com`
+   - Replace `jatinrai254@gmail.com`
 
 3. **Phone Number**:
    - Same as WhatsApp number
@@ -373,7 +373,7 @@ Move WhatsApp button:
 
 For any issues or questions about the revamp:
 - **WhatsApp**: +91 93999 74696
-- **Email**: support@ccncable.com
+- **Email**: jatinrai254@gmail.com
 - **Developer**: Check code comments
 
 ---

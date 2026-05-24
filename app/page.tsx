@@ -91,7 +91,7 @@ export default function HomePage() {
               onClick={() => router.push('/register')}
               className="bg-accent-red text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium text-base sm:text-lg hover:bg-red-700 transition-colors w-full sm:w-auto"
             >
-              Get Started Now
+              Sign-Up
             </button>
           )}
         </div>
