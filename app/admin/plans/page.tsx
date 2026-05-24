@@ -17,6 +17,7 @@ export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -25,6 +26,7 @@ export default function PlansPage() {
     is_popular: false,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPlans();
@@ -65,8 +67,14 @@ export default function PlansPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch('/api/admin/plans', {
-        method: 'POST',
+      const url = editingPlan 
+        ? `/api/admin/plans/${editingPlan.id}`
+        : '/api/admin/plans';
+      
+      const method = editingPlan ? 'PATCH' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
@@ -86,16 +94,65 @@ export default function PlansPage() {
           is_popular: false,
         });
         setShowForm(false);
+        setEditingPlan(null);
         fetchPlans();
       } else {
-        alert('Failed to create plan');
+        alert(`Failed to ${editingPlan ? 'update' : 'create'} plan`);
       }
     } catch (error) {
-      console.error('Failed to create plan:', error);
-      alert('Failed to create plan');
+      console.error(`Failed to ${editingPlan ? 'update' : 'create'} plan:`, error);
+      alert(`Failed to ${editingPlan ? 'update' : 'create'} plan`);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEdit = (plan: Plan) => {
+    setEditingPlan(plan);
+    setFormData({
+      name: plan.name,
+      price: (plan.price / 100).toString(),
+      duration_days: plan.duration_days.toString(),
+      channels: plan.channels.join(', '),
+      is_popular: plan.is_popular,
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (planId: string, planName: string) => {
+    if (!confirm(`Are you sure you want to delete "${planName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeleting(planId);
+    try {
+      const response = await fetch(`/api/admin/plans/${planId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        fetchPlans();
+      } else {
+        alert('Failed to delete plan');
+      }
+    } catch (error) {
+      console.error('Failed to delete plan:', error);
+      alert('Failed to delete plan');
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPlan(null);
+    setFormData({
+      name: '',
+      price: '',
+      duration_days: '',
+      channels: '',
+      is_popular: false,
+    });
+    setShowForm(false);
   };
 
   return (
@@ -103,7 +160,17 @@ export default function PlansPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="font-display text-3xl font-bold text-brand-navy">Plans</h1>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            setEditingPlan(null);
+            setFormData({
+              name: '',
+              price: '',
+              duration_days: '',
+              channels: '',
+              is_popular: false,
+            });
+            setShowForm(!showForm);
+          }}
           className="btn-primary"
         >
           {showForm ? 'Cancel' : 'Add Plan'}
@@ -113,7 +180,7 @@ export default function PlansPage() {
       {showForm && (
         <div className="card mb-8">
           <h2 className="font-display text-xl font-bold text-brand-navy mb-4">
-            Create New Plan
+            {editingPlan ? 'Edit Plan' : 'Create New Plan'}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -188,8 +255,17 @@ export default function PlansPage() {
               disabled={submitting}
               className="btn-primary disabled:opacity-50"
             >
-              {submitting ? 'Creating...' : 'Create Plan'}
+              {submitting ? (editingPlan ? 'Updating...' : 'Creating...') : (editingPlan ? 'Update Plan' : 'Create Plan')}
             </button>
+            {editingPlan && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="ml-4 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+              >
+                Cancel Edit
+              </button>
+            )}
           </form>
         </div>
       )}
@@ -247,12 +323,29 @@ export default function PlansPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <button
-                        onClick={() => handleToggleActive(plan.id, plan.is_active)}
-                        className="text-accent-blue hover:underline text-sm font-medium"
-                      >
-                        {plan.is_active ? 'Hide' : 'Show'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEdit(plan)}
+                          className="text-accent-blue hover:underline text-sm font-medium"
+                        >
+                          Edit
+                        </button>
+                        <span className="text-gray-300">|</span>
+                        <button
+                          onClick={() => handleToggleActive(plan.id, plan.is_active)}
+                          className="text-accent-blue hover:underline text-sm font-medium"
+                        >
+                          {plan.is_active ? 'Hide' : 'Show'}
+                        </button>
+                        <span className="text-gray-300">|</span>
+                        <button
+                          onClick={() => handleDelete(plan.id, plan.name)}
+                          disabled={deleting === plan.id}
+                          className="text-accent-red hover:underline text-sm font-medium disabled:opacity-50"
+                        >
+                          {deleting === plan.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

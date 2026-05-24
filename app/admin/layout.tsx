@@ -66,6 +66,7 @@ export default function AdminLayout({
     { href: '/admin/recharges', label: 'All Recharges', icon: '💳' },
     { href: '/admin/customers', label: 'Customers', icon: '👥' },
     { href: '/admin/plans', label: 'Plans', icon: '📋' },
+    { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
   ];
 
   return (
