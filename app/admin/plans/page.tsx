@@ -130,10 +130,15 @@ export default function PlansPage() {
         method: 'DELETE',
       });
 
+      const data = await response.json();
+
       if (response.ok) {
+        if (data.message.includes('hidden')) {
+          alert(`Note: ${data.message}`);
+        }
         fetchPlans();
       } else {
-        alert('Failed to delete plan');
+        alert(data.error || 'Failed to delete plan');
       }
     } catch (error) {
       console.error('Failed to delete plan:', error);

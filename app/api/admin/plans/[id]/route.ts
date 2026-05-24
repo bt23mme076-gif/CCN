@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plans } from '@/lib/db/schema';
+import { plans, recharges } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -76,7 +76,27 @@ export async function DELETE(
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
 
-    // Delete the plan
+    // Check if there are any recharges using this plan
+    const rechargesUsingPlan = await db
+      .select()
+      .from(recharges)
+      .where(eq(recharges.plan_id, planId))
+      .limit(1);
+
+    if (rechargesUsingPlan.length > 0) {
+      // Instead of deleting, just hide the plan
+      await db
+        .update(plans)
+        .set({ is_active: false })
+        .where(eq(plans.id, planId));
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Plan has existing recharges. Plan has been hidden instead of deleted.' 
+      });
+    }
+
+    // No recharges, safe to delete
     await db.delete(plans).where(eq(plans.id, planId));
 
     return NextResponse.json({ success: true, message: 'Plan deleted successfully' });
