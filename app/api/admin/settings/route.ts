@@ -13,24 +13,24 @@ const changePasswordSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const adminId = await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const body = await request.json();
     const { currentPassword, newPassword } = changePasswordSchema.parse(body);
 
-    // Get admin
-    const admin = await db
+    // Get admin from database
+    const adminRecord = await db
       .select()
       .from(admins)
-      .where(eq(admins.id, adminId as string))
+      .where(eq(admins.id, admin.adminId))
       .limit(1);
 
-    if (admin.length === 0) {
+    if (adminRecord.length === 0) {
       return NextResponse.json({ error: 'Admin not found' }, { status: 404 });
     }
 
     // Verify current password
-    const isValid = await bcrypt.compare(currentPassword, admin[0].password_hash);
+    const isValid = await bcrypt.compare(currentPassword, adminRecord[0].password_hash);
     if (!isValid) {
       return NextResponse.json(
         { error: 'Current password is incorrect' },
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     await db
       .update(admins)
       .set({ password_hash: newPasswordHash })
-      .where(eq(admins.id, adminId as string));
+      .where(eq(admins.id, admin.adminId));
 
     return NextResponse.json({ 
       success: true, 
