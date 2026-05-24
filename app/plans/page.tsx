@@ -141,7 +141,7 @@ export default function PlansPage() {
               )}
 
               {/* Regular Plans */}
-              {plans.filter(p => p.price === 19900 || p.price === 29900 || p.price === 34900).map((plan) => (
+              {plans.filter(p => p.price !== 100).map((plan) => (
                 <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
               ))}
             </>

@@ -137,7 +137,7 @@ export default function HomePage() {
 
               {/* Regular Plans */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6 sm:gap-8">
-                {plans.filter(p => p.price === 19900 || p.price === 29900 || p.price === 34900).map((plan) => (
+                {plans.filter(p => p.price !== 100).map((plan) => (
                   <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
                 ))}
               </div>
