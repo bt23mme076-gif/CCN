@@ -78,12 +78,13 @@ export default function HomePage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative bg-brand-navy text-white py-16 sm:py-20 md:py-28 overflow-hidden">
+      <section className="relative bg-gradient-hero text-white py-16 sm:py-20 md:py-28 overflow-hidden">
         {/* Animated background shapes */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-accent-red rounded-full opacity-10 blur-3xl animate-float" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-accent-blue rounded-full opacity-10 blur-3xl animate-float-delay" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-accent-red/5 to-accent-blue/5 rounded-full blur-3xl" />
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-accent-orange rounded-full opacity-[0.07] blur-3xl animate-float" />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-brand-electric rounded-full opacity-[0.08] blur-3xl animate-float-delay" />
+          <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-accent-cyan rounded-full opacity-[0.05] blur-3xl animate-float" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-accent-red/5 via-brand-electric/5 to-accent-cyan/5 rounded-full blur-3xl" />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -96,7 +97,7 @@ export default function HomePage() {
           <h1 className="animate-fadeInUp-delay-1 font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 sm:mb-6 leading-tight">
             Your Entertainment,
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-red via-accent-orange to-accent-red bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">
               Simplified
             </span>
           </h1>
@@ -111,7 +112,7 @@ export default function HomePage() {
               <>
                 <button
                   onClick={() => router.push('/register')}
-                  className="bg-accent-red text-white px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg hover:bg-red-700 transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 w-full sm:w-auto"
+                  className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
                 >
                   Get Started Free
                 </button>
@@ -128,7 +129,7 @@ export default function HomePage() {
                   const el = document.getElementById('plans');
                   el?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="bg-accent-red text-white px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg hover:bg-red-700 transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 w-full sm:w-auto"
+                className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
               >
                 Browse Plans
               </button>
@@ -173,7 +174,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12 max-w-4xl mx-auto relative">
             {/* Connector line (desktop) */}
-            <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-accent-red via-accent-blue to-success" />
+            <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-accent-red via-accent-orange to-accent-cyan" />
 
             {/* Step 1 */}
             <div className="text-center relative">
@@ -215,7 +216,7 @@ export default function HomePage() {
       <section id="plans" className="py-14 sm:py-20 bg-gray-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14">
-            <span className="inline-block bg-accent-red/10 text-accent-red text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+            <span className="inline-block bg-gradient-accent text-white text-sm font-semibold px-5 py-1.5 rounded-full mb-4 shadow-sm">
               Our Plans
             </span>
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3 sm:mb-4">
@@ -245,22 +246,27 @@ export default function HomePage() {
       </section>
 
       {/* Stats Strip */}
-      <section className="py-10 sm:py-14 bg-brand-navy text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-14 bg-gradient-hero text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(83,52,131,0.15),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(72,202,228,0.08),transparent_70%)]" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
-            {[
-              { value: '2,000+', label: 'Happy Customers' },
-              { value: '200+', label: 'SD & HD Channels' },
-              { value: '15 min', label: 'Avg Activation Time' },
-              { value: '24/7', label: 'Customer Support' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-1 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
-                  {stat.value}
-                </div>
-                <div className="text-xs sm:text-sm text-gray-400">{stat.label}</div>
-              </div>
-            ))}
+            <div>
+              <div className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-1 text-gradient-brand">2,000+</div>
+              <div className="text-xs sm:text-sm text-gray-400">Happy Customers</div>
+            </div>
+            <div>
+              <div className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-1 text-gradient-blue">200+</div>
+              <div className="text-xs sm:text-sm text-gray-400">SD & HD Channels</div>
+            </div>
+            <div>
+              <div className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-1 text-gradient-brand">15 min</div>
+              <div className="text-xs sm:text-sm text-gray-400">Avg Activation Time</div>
+            </div>
+            <div>
+              <div className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-1 text-gradient-blue">24/7</div>
+              <div className="text-xs sm:text-sm text-gray-400">Customer Support</div>
+            </div>
           </div>
         </div>
       </section>
@@ -270,7 +276,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14">
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3">
-              Why Choose CCN?
+              Why Choose CCN Networks?
             </h2>
             <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto">
               We make cable TV recharge simple, fast, and reliable

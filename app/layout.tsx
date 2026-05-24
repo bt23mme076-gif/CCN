@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CCN Network",
+  title: "CCN Networks",
   description: "Fast, secure, and hassle-free cable recharge with instant activation",
 };
 

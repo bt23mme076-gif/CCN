@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'CCN Network',
-    short_name: 'CCN Network',
+    name: 'CCN Networks',
+    short_name: 'CCN Networks',
     description: 'Fast, secure, and hassle-free cable recharge',
     start_url: '/',
     display: 'standalone',

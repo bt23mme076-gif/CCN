@@ -86,8 +86,9 @@ export default function PlansPage() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-display text-2xl font-bold text-brand-navy">
-              CCN Network
+            <Link href="/" className="font-display text-2xl font-bold">
+              <span className="text-gradient-cool">CCN</span>{' '}
+              <span className="text-brand-navy">Networks</span>
             </Link>
             <div className="flex items-center gap-4">
               <Link

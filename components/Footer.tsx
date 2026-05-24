@@ -7,7 +7,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
-            <h3 className="font-display text-2xl font-bold mb-4">CCN Network</h3>
+            <h3 className="font-display text-2xl font-bold mb-4">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-accent-cyan to-white">CCN</span>{' '}
+              <span className="text-white">Networks</span>
+            </h3>
             <p className="text-gray-300 text-sm mb-4 max-w-md">
               Your trusted cable TV service provider. Recharge online with instant activation and enjoy uninterrupted entertainment.
             </p>
@@ -85,7 +88,7 @@ export default function Footer() {
         <div className="pt-8 border-t border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} CCN Network. All rights reserved.
+              © {new Date().getFullYear()} CCN Networks. All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link
