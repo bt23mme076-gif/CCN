@@ -114,11 +114,34 @@ export default function HomePage() {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
             </div>
           ) : plans && plans.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6 sm:gap-8">
-              {plans.filter(p => p.price === 19900 || p.price === 29900 || p.price === 34900).map((plan) => (
-                <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
-              ))}
-            </div>
+            <>
+              {/* Test Plan - Prominent Display */}
+              {plans.filter(p => p.price === 100).length > 0 && (
+                <div className="max-w-md mx-auto mb-8">
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-500 rounded-xl p-4 sm:p-6">
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-green-700 font-bold text-sm sm:text-base">Test Payment Gateway</span>
+                    </div>
+                    {plans.filter(p => p.price === 100).map((plan) => (
+                      <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
+                    ))}
+                    <p className="text-center text-xs sm:text-sm text-gray-600 mt-3">
+                      Try our payment system with just ₹1 • Perfect for testing
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Regular Plans */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6 sm:gap-8">
+                {plans.filter(p => p.price === 19900 || p.price === 29900 || p.price === 34900).map((plan) => (
+                  <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
+                ))}
+              </div>
+            </>
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-600">No plans available at the moment.</p>
