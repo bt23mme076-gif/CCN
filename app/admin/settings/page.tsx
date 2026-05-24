@@ -61,25 +61,25 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-bold text-brand-navy mb-8">
+      <h1 className="font-display text-2xl sm:text-3xl font-bold text-brand-navy mb-6 sm:mb-8">
         Settings
       </h1>
 
       <div className="max-w-2xl">
         <div className="card">
-          <h2 className="font-display text-xl font-bold text-brand-navy mb-6">
+          <h2 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-4 sm:mb-6">
             Change Password
           </h2>
 
           {message && (
             <div
-              className={`mb-6 p-4 rounded-lg ${
+              className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg ${
                 message.type === 'success'
                   ? 'bg-green-50 border border-green-200 text-green-800'
                   : 'bg-red-50 border border-red-200 text-red-800'
               }`}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2 sm:gap-3">
                 <div className="flex-shrink-0">
                   {message.type === 'success' ? (
                     <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Current Password
@@ -147,16 +147,15 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="btn-primary disabled:opacity-50"
+              className="btn-primary w-full sm:w-auto disabled:opacity-50"
             >
               {submitting ? 'Changing Password...' : 'Change Password'}
             </button>
           </form>
         </div>
 
-        {/* Additional Settings Section */}
-        <div className="card mt-6">
-          <h2 className="font-display text-xl font-bold text-brand-navy mb-4">
+        <div className="card mt-4 sm:mt-6">
+          <h2 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-4">
             Admin Information
           </h2>
           <div className="space-y-3 text-sm text-gray-600">

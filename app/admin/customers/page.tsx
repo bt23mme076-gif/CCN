@@ -115,13 +115,13 @@ export default function CustomersPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="font-display text-3xl font-bold text-brand-navy">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold text-brand-navy">
           Customers
         </h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="btn-primary"
+          className="btn-primary w-full sm:w-auto"
         >
           {showForm ? 'Cancel' : 'Add Customer'}
         </button>
@@ -168,7 +168,7 @@ export default function CustomersPage() {
             Create New Customer
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Name
@@ -196,7 +196,7 @@ export default function CustomersPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   STB Number
@@ -267,48 +267,86 @@ export default function CustomersPage() {
         ) : customers.length === 0 ? (
           <p className="text-gray-600 text-center py-8">No customers found</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Mobile</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">STB Number</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Area</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Recharges</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Last Plan</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {customers.map(({ customer, rechargeCount, lastRecharge }) => (
-                  <tr key={customer.mobile} className="border-b last:border-b-0">
-                    <td className="py-3 px-4 font-medium">{customer.name}</td>
-                    <td className="py-3 px-4 text-gray-600">{customer.mobile}</td>
-                    <td className="py-3 px-4 text-gray-600">{customer.stb_number}</td>
-                    <td className="py-3 px-4 text-gray-600">{customer.area}</td>
-                    <td className="py-3 px-4">
-                      <span className="bg-accent-blue bg-opacity-10 text-accent-blue px-3 py-1 rounded-full text-sm font-medium">
-                        {rechargeCount}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-gray-600">
-                      {lastRecharge || '-'}
-                    </td>
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={() => handleDelete(customer.id, customer.name)}
-                        disabled={deleting === customer.id}
-                        className="text-accent-red hover:underline text-sm font-medium disabled:opacity-50"
-                      >
-                        {deleting === customer.id ? 'Deleting...' : 'Delete'}
-                      </button>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Mobile</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">STB Number</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Area</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Recharges</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Last Plan</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {customers.map(({ customer, rechargeCount, lastRecharge }) => (
+                    <tr key={customer.mobile} className="border-b last:border-b-0">
+                      <td className="py-3 px-4 font-medium">{customer.name}</td>
+                      <td className="py-3 px-4 text-gray-600">{customer.mobile}</td>
+                      <td className="py-3 px-4 text-gray-600">{customer.stb_number}</td>
+                      <td className="py-3 px-4 text-gray-600">{customer.area}</td>
+                      <td className="py-3 px-4">
+                        <span className="bg-accent-blue bg-opacity-10 text-accent-blue px-3 py-1 rounded-full text-sm font-medium">
+                          {rechargeCount}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">
+                        {lastRecharge || '-'}
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => handleDelete(customer.id, customer.name)}
+                          disabled={deleting === customer.id}
+                          className="text-accent-red hover:underline text-sm font-medium disabled:opacity-50"
+                        >
+                          {deleting === customer.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {customers.map(({ customer, rechargeCount, lastRecharge }) => (
+                <div key={customer.mobile} className="bg-gray-1 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-brand-navy text-base truncate">{customer.name}</h3>
+                      <p className="text-sm text-gray-600">{customer.mobile}</p>
+                    </div>
+                    <span className="bg-accent-blue bg-opacity-10 text-accent-blue px-2 py-1 rounded-full text-xs font-medium ml-2">
+                      {rechargeCount} recharges
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-sm mb-3">
+                    <p className="text-gray-600">
+                      <span className="font-medium">STB:</span> {customer.stb_number}
+                    </p>
+                    <p className="text-gray-600">
+                      <span className="font-medium">Area:</span> {customer.area}
+                    </p>
+                    <p className="text-gray-600">
+                      <span className="font-medium">Last Plan:</span> {lastRecharge || '-'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(customer.id, customer.name)}
+                    disabled={deleting === customer.id}
+                    className="w-full bg-red-50 text-accent-red py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
+                  >
+                    {deleting === customer.id ? 'Deleting...' : 'Delete Customer'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
