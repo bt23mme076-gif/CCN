@@ -74,6 +74,14 @@ export async function POST(request: NextRequest) {
       },
     };
 
+    console.log('Creating Cashfree order with:', {
+      url: cashfreeApiUrl,
+      orderId: rechargeId,
+      amount: (plan[0].price / 100).toFixed(2),
+      returnUrl: orderData.order_meta.return_url,
+      env: process.env.CASHFREE_ENV,
+    });
+
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: 'POST',
       headers: {
@@ -85,13 +93,38 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(orderData),
     });
 
+    const responseText = await cashfreeResponse.text();
+    console.log('Cashfree response status:', cashfreeResponse.status);
+    console.log('Cashfree response body:', responseText);
+
     if (!cashfreeResponse.ok) {
-      const errorData = await cashfreeResponse.json();
+      let errorData;
+      try {
+        errorData = JSON.parse(responseText);
+      } catch {
+        errorData = { message: responseText };
+      }
       console.error('Cashfree API error:', errorData);
-      throw new Error('Failed to create Cashfree order');
+      return NextResponse.json(
+        { error: `Payment gateway error: ${errorData.message || 'Unknown error'}` },
+        { status: 503 }
+      );
     }
 
-    const cashfreeOrder = await cashfreeResponse.json();
+    const cashfreeOrder = JSON.parse(responseText);
+    console.log('Cashfree order created:', {
+      orderId: cashfreeOrder.order_id,
+      hasPaymentSessionId: !!cashfreeOrder.payment_session_id,
+    });
+
+    // Validate payment_session_id
+    if (!cashfreeOrder.payment_session_id) {
+      console.error('Missing payment_session_id in Cashfree response:', cashfreeOrder);
+      return NextResponse.json(
+        { error: 'Payment gateway error: Missing payment session ID' },
+        { status: 503 }
+      );
+    }
 
     // Save recharge record
     await db.insert(recharges).values({
