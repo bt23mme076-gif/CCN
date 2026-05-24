@@ -57,13 +57,13 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <Image 
               src="/logo.jpg" 
-              alt="CCN Cable" 
+              alt="CCN Network"
               width={40} 
               height={40} 
               className="h-10 w-10 rounded-md object-cover" 
             />
             <span className="font-display text-lg sm:text-xl md:text-2xl font-bold text-brand-navy">
-              CCN Cable
+              CCN Network
             </span>
           </Link>
 
