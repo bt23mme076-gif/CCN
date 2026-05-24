@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -44,7 +45,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.jpg" alt="CCN Cable" className="h-10 w-auto rounded-md object-contain" />
+            <Image src="/logo.jpg" alt="CCN Cable" width={40} height={40} className="h-10 w-auto rounded-md object-contain" />
             <span className="font-display text-xl sm:text-2xl font-bold text-brand-navy hidden sm:inline-block">CCN Cable</span>
           </Link>
 

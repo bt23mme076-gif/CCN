@@ -6,7 +6,7 @@ export default function ContactSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-navy mb-4">
-            Need Help? We're Here for You!
+            Need Help? We&apos;re Here for You!
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Have questions about our plans or need assistance? Our support team is available 24/7 to help you.
