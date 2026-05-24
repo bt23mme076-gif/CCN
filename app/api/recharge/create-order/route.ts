@@ -7,10 +7,16 @@ import Razorpay from 'razorpay';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+// Initialize Razorpay only if keys are available
+const getRazorpayInstance = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    return null;
+  }
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+};
 
 const createOrderSchema = z.object({
   planId: z.string(),
@@ -33,6 +39,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Plan not found or inactive' },
         { status: 404 }
+      );
+    }
+
+    // Check if Razorpay is configured
+    const razorpay = getRazorpayInstance();
+    if (!razorpay) {
+      return NextResponse.json(
+        { error: 'Payment gateway not configured. Please contact administrator.' },
+        { status: 503 }
       );
     }
 
