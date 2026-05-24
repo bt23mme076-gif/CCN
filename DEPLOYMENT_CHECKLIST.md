@@ -118,10 +118,10 @@ The application is fully responsive and works on:
 
 ### Plans
 1. Basic - ₹199/30 days
-2. Silver - ₹299/30 days (Popular)
+2. ALL in ONE - ₹299/30 days (Popular)
 3. Gold - ₹399/30 days
 4. Platinum - ₹599/30 days
-5. Silver 3M - ₹799/90 days
+5. ALL in ONE 3M - ₹799/90 days
 
 ### Admin User
 - Username: `admin`

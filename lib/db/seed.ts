@@ -29,7 +29,7 @@ async function main() {
       },
       {
         id: `plan_${randomBytes(8).toString('hex')}`,
-        name: 'Silver',
+        name: 'ALL in ONE',
         price: 29900, // ₹299 in paise
         duration_days: 30,
         channels: ['200+ SD Channels', 'Star Network', 'Sony Set', 'Colors'],
@@ -56,7 +56,7 @@ async function main() {
       },
       {
         id: `plan_${randomBytes(8).toString('hex')}`,
-        name: 'Silver 3M',
+        name: 'ALL in ONE 3M',
         price: 79900, // ₹799 in paise
         duration_days: 90,
         channels: ['200+ SD Channels', 'Star Network', 'Sony Set', 'Save ₹98'],

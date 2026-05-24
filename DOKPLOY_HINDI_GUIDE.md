@@ -121,7 +121,7 @@ Seeding completed!
 - Example: `https://cableeasy.dokploy.app`
 
 ### 4.2 Homepage Check Karo
-- 5 plans dikhne chahiye (Basic, Silver, Gold, Platinum, Silver 3M)
+- 5 plans dikhne chahiye (Basic, ALL in ONE, Gold, Platinum, ALL in ONE 3M)
 - Agar plans nahi dikh rahe to database setup dobara check karo
 
 ### 4.3 Customer Registration Test Karo

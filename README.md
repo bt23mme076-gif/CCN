@@ -75,7 +75,7 @@ npm run db:seed
 ```
 
 This will create:
-- 5 cable plans (Basic, Silver, Gold, Platinum, Silver 3M)
+- 5 cable plans (Basic, ALL in ONE, Gold, Platinum, ALL in ONE 3M)
 - Admin user with credentials:
   - Username: `admin`
   - Password: `admin123`
