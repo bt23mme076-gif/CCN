@@ -3,12 +3,15 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useTranslation } from '@/lib/useTranslation';
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const isAuthPage = pathname === '/login' || pathname === '/register';
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkAuth = async () => {
