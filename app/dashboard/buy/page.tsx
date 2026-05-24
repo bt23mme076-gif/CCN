@@ -38,9 +38,62 @@ interface Recharge {
   cashfree_payment_id: string | null;
 }
 
+// Helper function to calculate time remaining
+function getTimeRemaining(expiryDate: Date) {
+  const now = new Date();
+  const diff = expiryDate.getTime() - now.getTime();
+  
+  if (diff <= 0) {
+    return { expired: true, text: 'Expired', color: 'text-red-600' };
+  }
+  
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  
+  if (days > 7) {
+    return { expired: false, text: `${days} days left`, color: 'text-green-600' };
+  } else if (days > 3) {
+    return { expired: false, text: `${days} days left`, color: 'text-yellow-600' };
+  } else if (days > 0) {
+    return { expired: false, text: `${days}d ${hours}h left`, color: 'text-orange-600' };
+  } else {
+    return { expired: false, text: `${hours} hours left`, color: 'text-red-600' };
+  }
+}
+
+// Helper function to format date in a friendly way
+function formatFriendlyDate(date: Date) {
+  const now = new Date();
+  const diff = date.getTime() - now.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  
+  const dateStr = date.toLocaleDateString('en-IN', { 
+    day: 'numeric', 
+    month: 'short', 
+    year: 'numeric' 
+  });
+  
+  const timeStr = date.toLocaleTimeString('en-IN', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+  
+  if (days === 0) {
+    return `Today at ${timeStr}`;
+  } else if (days === 1) {
+    return `Tomorrow at ${timeStr}`;
+  } else if (days === -1) {
+    return `Yesterday at ${timeStr}`;
+  } else if (days > 0 && days <= 7) {
+    return `In ${days} days (${dateStr})`;
+  } else {
+    return `${dateStr} at ${timeStr}`;
+  }
+}
+
 export default function BuyHistoryPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'buy' | 'history'>('buy');
+  const [activeTab, setActiveTab] = useState<'buy' | 'history'>('history');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [recharges, setRecharges] = useState<Recharge[]>([]);
@@ -48,6 +101,16 @@ export default function BuyHistoryPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every minute for countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -57,9 +120,9 @@ export default function BuyHistoryPage() {
   const fetchData = async () => {
     try {
       const [plansRes, customerRes, rechargesRes] = await Promise.all([
-        fetch('/api/plans'),
-        fetch('/api/auth/me'),
-        fetch('/api/recharge/history'),
+        fetch('/api/plans', { cache: 'no-store' }),
+        fetch('/api/auth/me', { cache: 'no-store' }),
+        fetch('/api/recharge/history', { cache: 'no-store' }),
       ]);
 
       if (!customerRes.ok) {
@@ -104,8 +167,16 @@ export default function BuyHistoryPage() {
     .reduce((sum, r) => sum + r.amount, 0);
   
   const totalRecharges = recharges.length;
-  const activeRecharges = recharges.filter(r => r.status === 'activated').length;
+  const activeRecharges = recharges.filter(r => {
+    if (r.status !== 'activated' || !r.expires_at) return false;
+    return new Date(r.expires_at) > currentTime;
+  }).length;
   const pendingRecharges = recharges.filter(r => r.status === 'paid').length;
+
+  // Find next expiring plan
+  const nextExpiringPlan = recharges
+    .filter(r => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > currentTime)
+    .sort((a, b) => new Date(a.expires_at!).getTime() - new Date(b.expires_at!).getTime())[0];
 
   if (loading) {
     return (
@@ -122,7 +193,7 @@ export default function BuyHistoryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="font-display text-2xl font-bold text-brand-navy">
-              CableEasy
+              CCN Cable
             </Link>
             <div className="flex items-center gap-4">
               <Link
@@ -153,6 +224,38 @@ export default function BuyHistoryPage() {
             Purchase new plans or view your complete recharge history
           </p>
         </div>
+
+        {/* Next Expiry Alert */}
+        {nextExpiringPlan && (
+          <div className="card bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-500 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-orange-900 mb-1">Next Plan Expiring Soon</h3>
+                <p className="text-sm text-orange-800">
+                  <span className="font-semibold">{nextExpiringPlan.plan_name}</span> expires{' '}
+                  <span className="font-semibold">
+                    {formatFriendlyDate(new Date(nextExpiringPlan.expires_at!))}
+                  </span>
+                  {' '}•{' '}
+                  <span className={`font-bold ${getTimeRemaining(new Date(nextExpiringPlan.expires_at!)).color}`}>
+                    {getTimeRemaining(new Date(nextExpiringPlan.expires_at!)).text}
+                  </span>
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveTab('buy')}
+                className="btn-primary text-sm whitespace-nowrap"
+              >
+                Renew Now
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 sm:mb-8">
@@ -335,54 +438,105 @@ export default function BuyHistoryPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredRecharges.map((recharge) => (
-                  <div key={recharge.id} className="card hover:shadow-lg transition-shadow">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      {/* Left: Plan Info */}
-                      <div className="flex-1">
-                        <div className="flex items-start gap-3">
-                          <div className="w-12 h-12 bg-accent-blue bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-brand-navy text-base sm:text-lg mb-1">
-                              {recharge.plan_name}
-                            </h3>
-                            <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                              Order ID: <span className="font-mono">{recharge.id}</span>
-                            </p>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600">
-                              <span>Created: {formatDateTime(new Date(recharge.created_at))}</span>
-                              {recharge.paid_at && (
-                                <span>Paid: {formatDateTime(new Date(recharge.paid_at))}</span>
-                              )}
-                              {recharge.activated_at && (
-                                <span>Activated: {formatDateTime(new Date(recharge.activated_at))}</span>
-                              )}
+                {filteredRecharges.map((recharge) => {
+                  const isExpired = recharge.expires_at && new Date(recharge.expires_at) < currentTime;
+                  const timeRemaining = recharge.expires_at ? getTimeRemaining(new Date(recharge.expires_at)) : null;
+                  
+                  return (
+                    <div 
+                      key={recharge.id} 
+                      className={`card hover:shadow-lg transition-shadow ${
+                        isExpired ? 'bg-gray-50 opacity-75' : ''
+                      }`}
+                    >
+                      <div className="flex flex-col gap-4">
+                        {/* Top Section: Plan Info & Status */}
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                          {/* Left: Plan Info */}
+                          <div className="flex-1">
+                            <div className="flex items-start gap-3">
+                              <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                isExpired 
+                                  ? 'bg-gray-200' 
+                                  : 'bg-accent-blue bg-opacity-10'
+                              }`}>
+                                <svg className={`w-6 h-6 ${isExpired ? 'text-gray-400' : 'text-accent-blue'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-bold text-brand-navy text-base sm:text-lg">
+                                    {recharge.plan_name}
+                                  </h3>
+                                  {isExpired && (
+                                    <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded">
+                                      EXPIRED
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs sm:text-sm text-gray-600 mb-2">
+                                  Order ID: <span className="font-mono">{recharge.id.slice(0, 20)}...</span>
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* Right: Amount & Status */}
-                      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 sm:text-right">
-                        <div>
-                          <p className="text-xl sm:text-2xl font-bold text-brand-navy">
-                            {formatCurrency(recharge.amount)}
-                          </p>
-                          {recharge.expires_at && (
-                            <p className="text-xs text-gray-600">
-                              Expires: {formatDateTime(new Date(recharge.expires_at))}
+                          {/* Right: Amount & Status */}
+                          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 sm:text-right">
+                            <p className="text-xl sm:text-2xl font-bold text-brand-navy">
+                              {formatCurrency(recharge.amount)}
                             </p>
-                          )}
+                            <StatusBadge status={recharge.status} />
+                          </div>
                         </div>
-                        <StatusBadge status={recharge.status} />
+
+                        {/* Bottom Section: Dates & Expiry */}
+                        <div className={`pt-4 border-t ${isExpired ? 'border-gray-200' : 'border-gray-100'}`}>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm">
+                            <div>
+                              <p className="text-gray-500 mb-1">Created</p>
+                              <p className="font-medium text-gray-700">
+                                {formatDateTime(new Date(recharge.created_at))}
+                              </p>
+                            </div>
+                            {recharge.paid_at && (
+                              <div>
+                                <p className="text-gray-500 mb-1">Paid</p>
+                                <p className="font-medium text-gray-700">
+                                  {formatDateTime(new Date(recharge.paid_at))}
+                                </p>
+                              </div>
+                            )}
+                            {recharge.activated_at && (
+                              <div>
+                                <p className="text-gray-500 mb-1">Activated</p>
+                                <p className="font-medium text-gray-700">
+                                  {formatDateTime(new Date(recharge.activated_at))}
+                                </p>
+                              </div>
+                            )}
+                            {recharge.expires_at && (
+                              <div>
+                                <p className="text-gray-500 mb-1">
+                                  {isExpired ? 'Expired On' : 'Expires On'}
+                                </p>
+                                <p className={`font-bold ${timeRemaining?.color || 'text-gray-700'}`}>
+                                  {formatFriendlyDate(new Date(recharge.expires_at))}
+                                </p>
+                                {timeRemaining && !isExpired && (
+                                  <p className={`text-xs font-semibold mt-1 ${timeRemaining.color}`}>
+                                    {timeRemaining.text}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
