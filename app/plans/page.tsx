@@ -6,6 +6,10 @@ import Link from 'next/link';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
 
+// Disable caching for this page
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Plan {
   id: string;
   name: string;
@@ -37,8 +41,8 @@ export default function PlansPage() {
   const fetchData = async () => {
     try {
       const [plansRes, customerRes] = await Promise.all([
-        fetch('/api/plans'),
-        fetch('/api/auth/me'),
+        fetch('/api/plans', { cache: 'no-store' }),
+        fetch('/api/auth/me', { cache: 'no-store' }),
       ]);
 
       if (!customerRes.ok) {
