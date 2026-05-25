@@ -6,6 +6,7 @@ interface Announcement {
   id: string;
   text: string;
   is_active: boolean;
+  speed: number;
 }
 
 export default function BulletinBar() {
@@ -22,8 +23,8 @@ export default function BulletinBar() {
 
   if (!announcement) return null;
 
-  // Repeat text several times so the scroll looks seamless
-  const repeated = Array(6).fill(announcement.text).join('   •   ');
+  const speed = announcement.speed ?? 30;
+  const repeated = Array(8).fill(announcement.text).join('     •     ');
 
   return (
     <div
@@ -36,7 +37,7 @@ export default function BulletinBar() {
       <div
         className="whitespace-nowrap text-sm font-medium text-white/90 inline-block"
         style={{
-          animation: 'tickerScroll 30s linear infinite',
+          animation: `tickerScroll ${speed}s linear infinite`,
           paddingLeft: '100%',
         }}
       >

@@ -23,15 +23,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAdminAuth();
-    const { text, is_active } = await request.json();
+    const { text, is_active, speed } = await request.json();
 
     if (typeof text !== 'string' || text.trim().length === 0) {
       return NextResponse.json({ error: 'Announcement text is required' }, { status: 400 });
     }
 
+    const scrollSpeed = typeof speed === 'number' && speed >= 5 && speed <= 120 ? speed : 30;
+
     await db
       .update(announcements)
-      .set({ text: text.trim(), is_active: is_active ?? true, updated_at: new Date() })
+      .set({ text: text.trim(), is_active: is_active ?? true, speed: scrollSpeed, updated_at: new Date() })
       .where(eq(announcements.id, 'announcement_main'));
 
     return NextResponse.json({ success: true, message: 'Announcement updated!' });

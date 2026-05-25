@@ -14,6 +14,7 @@ export default function SettingsPage() {
   // Bulletin bar state
   const [bulletinText, setBulletinText] = useState('');
   const [bulletinActive, setBulletinActive] = useState(true);
+  const [bulletinSpeed, setBulletinSpeed] = useState(30);
   const [bulletinSaving, setBulletinSaving] = useState(false);
   const [bulletinMsg, setBulletinMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -24,6 +25,7 @@ export default function SettingsPage() {
         if (data.announcement) {
           setBulletinText(data.announcement.text);
           setBulletinActive(data.announcement.is_active);
+          setBulletinSpeed(data.announcement.speed ?? 30);
         }
       })
       .catch(() => {});
@@ -37,7 +39,7 @@ export default function SettingsPage() {
       const res = await fetch('/api/admin/announcement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: bulletinText, is_active: bulletinActive }),
+        body: JSON.stringify({ text: bulletinText, is_active: bulletinActive, speed: bulletinSpeed }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -266,6 +268,53 @@ export default function SettingsPage() {
               <span className="text-sm font-medium text-gray-700">
                 {bulletinActive ? '✅ Bulletin bar is visible to customers' : '❌ Bulletin bar is hidden'}
               </span>
+            </div>
+
+            {/* Speed Control */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Scroll Speed
+                <span className="ml-2 text-xs text-gray-400 font-normal">
+                  ({bulletinSpeed}s per cycle — lower = faster)
+                </span>
+              </label>
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-accent-red font-semibold w-12">Fast</span>
+                <input
+                  type="range"
+                  min={5}
+                  max={80}
+                  step={5}
+                  value={bulletinSpeed}
+                  onChange={(e) => setBulletinSpeed(Number(e.target.value))}
+                  className="flex-1 h-2 rounded-lg appearance-none cursor-pointer accent-accent-red"
+                />
+                <span className="text-xs text-gray-400 font-semibold w-12 text-right">Slow</span>
+              </div>
+              <div className="flex justify-between text-[10px] text-gray-400 mt-1 px-12">
+                <span>5s</span>
+                <span>20s</span>
+                <span>40s</span>
+                <span>60s</span>
+                <span>80s</span>
+              </div>
+              {/* Speed presets */}
+              <div className="flex gap-2 mt-3">
+                {[{ label: 'Fast', val: 10 }, { label: 'Normal', val: 30 }, { label: 'Slow', val: 60 }].map((p) => (
+                  <button
+                    key={p.val}
+                    type="button"
+                    onClick={() => setBulletinSpeed(p.val)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      bulletinSpeed === p.val
+                        ? 'bg-accent-red text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Live preview */}

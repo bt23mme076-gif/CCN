@@ -50,6 +50,7 @@ export const announcements = pgTable('announcements', {
   id: text('id').primaryKey(),
   text: text('text').notNull(),
   is_active: boolean('is_active').default(true).notNull(),
+  speed: integer('speed').default(30).notNull(), // seconds for one full scroll (lower = faster)
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 });
 
