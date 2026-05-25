@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function SettingsPage() {
   const [formData, setFormData] = useState({
@@ -10,6 +10,47 @@ export default function SettingsPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Bulletin bar state
+  const [bulletinText, setBulletinText] = useState('');
+  const [bulletinActive, setBulletinActive] = useState(true);
+  const [bulletinSaving, setBulletinSaving] = useState(false);
+  const [bulletinMsg, setBulletinMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/admin/announcement')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.announcement) {
+          setBulletinText(data.announcement.text);
+          setBulletinActive(data.announcement.is_active);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleBulletinSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBulletinMsg(null);
+    setBulletinSaving(true);
+    try {
+      const res = await fetch('/api/admin/announcement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: bulletinText, is_active: bulletinActive }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBulletinMsg({ type: 'success', text: 'Bulletin bar updated successfully!' });
+      } else {
+        setBulletinMsg({ type: 'error', text: data.error || 'Failed to update' });
+      }
+    } catch {
+      setBulletinMsg({ type: 'error', text: 'Failed to update bulletin bar' });
+    } finally {
+      setBulletinSaving(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,16 +200,100 @@ export default function SettingsPage() {
             Admin Information
           </h2>
           <div className="space-y-3 text-sm text-gray-600">
-            <p>
-              <strong className="text-brand-navy">Username:</strong> admin
-            </p>
-            <p>
-              <strong className="text-brand-navy">Role:</strong> Administrator
-            </p>
+            <p><strong className="text-brand-navy">Username:</strong> admin</p>
+            <p><strong className="text-brand-navy">Role:</strong> Administrator</p>
             <p className="text-xs text-gray-500 mt-4">
               For security reasons, keep your password secure and change it regularly.
             </p>
           </div>
+        </div>
+
+        {/* Bulletin Bar Settings */}
+        <div className="card mt-4 sm:mt-6">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)' }}>
+              <span className="text-white text-lg">📢</span>
+            </div>
+            <div>
+              <h2 className="font-display text-lg sm:text-xl font-bold text-brand-navy">
+                Bulletin Bar
+              </h2>
+              <p className="text-xs text-gray-500">Announcement shown below the navbar on all pages</p>
+            </div>
+          </div>
+
+          {bulletinMsg && (
+            <div className={`mb-4 p-3 rounded-lg text-sm font-medium ${
+              bulletinMsg.type === 'success'
+                ? 'bg-green-50 border border-green-200 text-green-800'
+                : 'bg-red-50 border border-red-200 text-red-800'
+            }`}>
+              {bulletinMsg.text}
+            </div>
+          )}
+
+          <form onSubmit={handleBulletinSave} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Announcement Text
+              </label>
+              <textarea
+                value={bulletinText}
+                onChange={(e) => setBulletinText(e.target.value)}
+                className="input-field resize-none"
+                rows={3}
+                placeholder="e.g. 📺 New plans available! Recharge now and enjoy 200+ channels."
+                required
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                You can use emojis to make it more eye-catching.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setBulletinActive(!bulletinActive)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  bulletinActive ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  bulletinActive ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+              <span className="text-sm font-medium text-gray-700">
+                {bulletinActive ? '✅ Bulletin bar is visible to customers' : '❌ Bulletin bar is hidden'}
+              </span>
+            </div>
+
+            {/* Live preview */}
+            {bulletinText && bulletinActive && (
+              <div>
+                <p className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Preview</p>
+                <div className="rounded-lg overflow-hidden"
+                  style={{ background: 'linear-gradient(90deg, #1a1a2e 0%, #e63946 35%, #f77f00 65%, #1a1a2e 100%)' }}>
+                  <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+                    <span className="bg-white/15 text-white text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest border border-white/20 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-yellow-300 rounded-full" />
+                      Notice
+                    </span>
+                    <p className="text-white text-xs font-medium text-center flex-1">{bulletinText}</p>
+                    <span className="text-white/40 text-xs">✕</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={bulletinSaving}
+              className="btn-primary w-full sm:w-auto disabled:opacity-50"
+            >
+              {bulletinSaving ? 'Saving...' : 'Save Bulletin Bar'}
+            </button>
+          </form>
         </div>
       </div>
     </div>

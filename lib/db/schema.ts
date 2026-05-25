@@ -46,6 +46,13 @@ export const admins = pgTable('admins', {
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const announcements = pgTable('announcements', {
+  id: text('id').primaryKey(),
+  text: text('text').notNull(),
+  is_active: boolean('is_active').default(true).notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
   recharges: many(recharges),
