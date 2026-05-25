@@ -28,8 +28,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
-        display: ['Syne', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
+        display: ['Playfair Display', 'serif'],
       },
       backgroundImage: {
         'gradient-brand': 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
