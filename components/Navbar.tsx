@@ -14,7 +14,14 @@ export default function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [customerName, setCustomerName] = useState('');
+  const [scrolled, setScrolled] = useState(false);
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -28,13 +35,12 @@ export default function Navbar() {
           setIsAuthenticated(false);
           setCustomerName('');
         }
-      } catch (error) {
+      } catch {
         setIsAuthenticated(false);
         setCustomerName('');
       }
     };
     checkAuth();
-    // Close mobile menu when route changes
     setMobileMenuOpen(false);
   }, [pathname]);
 
@@ -44,58 +50,95 @@ export default function Navbar() {
       setIsAuthenticated(false);
       setMobileMenuOpen(false);
       router.push('/login');
-    } catch (error) {
+    } catch {
       console.error('Logout failed');
     }
   };
 
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? 'shadow-2xl'
+          : 'shadow-lg'
+      }`}
+      style={{
+        background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)',
+      }}
+    >
+      {/* Subtle shimmer line at top */}
+      <div
+        className="h-0.5 w-full"
+        style={{
+          background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)',
+        }}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <Image 
-              src="/logo.jpg" 
-              alt="CCN Networks"
-              width={40} 
-              height={40} 
-              className="h-10 w-10 rounded-md object-cover" 
-            />
-            <span className="font-display text-lg sm:text-xl md:text-2xl font-bold">
-              <span className="text-gradient-cool">CCN</span>{' '}
-              <span className="text-brand-navy">Networks</span>
-            </span>
+          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
+            <div className="relative">
+              <div
+                className="absolute inset-0 rounded-lg blur-sm opacity-60 group-hover:opacity-90 transition-opacity"
+                style={{ background: 'linear-gradient(135deg, #e94560, #f5a623)' }}
+              />
+              <Image
+                src="/logo.jpg"
+                alt="CCN Cable"
+                width={40}
+                height={40}
+                className="relative h-10 w-10 rounded-lg object-cover border border-white/20"
+              />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span
+                className="font-display text-lg sm:text-xl font-extrabold tracking-wide"
+                style={{
+                  background: 'linear-gradient(90deg, #ffffff, #f5a623, #e94560)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                CCN Cable
+              </span>
+              <span className="text-[10px] text-blue-300 font-medium tracking-widest uppercase hidden sm:block">
+                Network
+              </span>
+            </div>
           </Link>
 
           {!isAuthPage && (
             <>
               {/* Desktop Menu */}
-              <div className="hidden md:flex gap-3 lg:gap-4 items-center">
-                <LanguageSwitcher />
+              <div className="hidden md:flex gap-1 lg:gap-2 items-center">
+                <div className="mr-2">
+                  <LanguageSwitcher />
+                </div>
+
                 {isAuthenticated ? (
                   <>
-                    <Link
-                      href="/dashboard"
-                      className="px-3 lg:px-4 py-2 text-brand-navy font-medium hover:text-accent-blue transition-colors text-sm lg:text-base"
-                    >
-                      {t('dashboard')}
-                    </Link>
-                    <Link
-                      href="/dashboard/buy"
-                      className="px-3 lg:px-4 py-2 text-brand-navy font-medium hover:text-accent-blue transition-colors text-sm lg:text-base"
-                    >
-                      Buy & History
-                    </Link>
                     {customerName && (
-                      <span className="text-gray-600 text-sm lg:text-base hidden lg:inline">
-                        Hi, {customerName}
+                      <span className="text-blue-200 text-sm hidden lg:flex items-center gap-1.5 mr-2">
+                        <span className="w-2 h-2 bg-green-400 rounded-full inline-block animate-pulse" />
+                        Hi, <span className="text-white font-semibold">{customerName}</span>
                       </span>
                     )}
+                    <NavLink href="/dashboard" label={t('dashboard')} icon={
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    } />
+                    <NavLink href="/dashboard/buy" label="Buy & History" icon={
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    } />
                     <button
                       onClick={handleLogout}
-                      className="px-3 lg:px-4 py-2 text-accent-red font-medium hover:text-red-700 transition-colors text-sm lg:text-base"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-red-300 hover:text-white hover:bg-red-500/20 border border-red-500/30 hover:border-red-400 transition-all duration-200 ml-1"
                     >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
                       {t('logout')}
                     </button>
                   </>
@@ -103,13 +146,17 @@ export default function Navbar() {
                   <>
                     <Link
                       href="/login"
-                      className="px-3 lg:px-4 py-2 text-brand-navy font-medium hover:text-accent-red transition-colors text-sm lg:text-base"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-blue-200 hover:text-white hover:bg-white/10 transition-all duration-200"
                     >
                       {t('login')}
                     </Link>
                     <Link
                       href="/register"
-                      className="btn-primary text-sm lg:text-base px-4 lg:px-6 py-2"
+                      className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-sm font-bold text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                      style={{
+                        background: 'linear-gradient(135deg, #e94560, #c0392b)',
+                        boxShadow: '0 4px 15px rgba(233, 69, 96, 0.4)',
+                      }}
                     >
                       {t('register')}
                     </Link>
@@ -120,30 +167,15 @@ export default function Navbar() {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                className="md:hidden p-2 rounded-lg text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/30"
                 aria-label="Toggle menu"
                 aria-expanded={mobileMenuOpen}
               >
-                <svg
-                  className="w-6 h-6 text-brand-navy"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {mobileMenuOpen ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   )}
                 </svg>
               </button>
@@ -153,84 +185,69 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {!isAuthPage && mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200 animate-fadeIn">
-            <div className="flex flex-col space-y-2">
+          <div
+            className="md:hidden pb-4 animate-fadeIn"
+            style={{
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div className="flex flex-col space-y-1 pt-3">
+
               {/* Language Switcher */}
-              <div className="pb-3 border-b border-gray-200 px-2">
+              <div className="px-2 pb-3 mb-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <LanguageSwitcher />
               </div>
-              
-              {/* User Greeting (Mobile) */}
+
+              {/* User Greeting */}
               {isAuthenticated && customerName && (
-                <div className="px-4 py-2 text-gray-600 font-medium border-b border-gray-200">
-                  Hi, {customerName}
+                <div className="px-4 py-2 flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-blue-200 text-sm">Hi, <span className="text-white font-semibold">{customerName}</span></span>
                 </div>
               )}
-              
+
               {isAuthenticated ? (
                 <>
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-3 text-brand-navy font-medium hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                    {t('dashboard')}
-                  </Link>
-                  <Link
-                    href="/dashboard/buy"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-3 text-brand-navy font-medium hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    Buy & History
-                  </Link>
-                  <Link
-                    href="/plans"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-3 text-brand-navy font-medium hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                    </svg>
-                    Browse Plans
-                  </Link>
+                  <MobileNavLink href="/dashboard" label={t('dashboard')} onClick={() => setMobileMenuOpen(false)}
+                    icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />}
+                  />
+                  <MobileNavLink href="/dashboard/buy" label="Buy & History" onClick={() => setMobileMenuOpen(false)}
+                    icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />}
+                  />
+                  <MobileNavLink href="/plans" label="Browse Plans" onClick={() => setMobileMenuOpen(false)}
+                    icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />}
+                  />
                   <button
                     onClick={handleLogout}
-                    className="px-4 py-3 text-accent-red font-medium hover:bg-red-50 rounded-lg transition-colors text-left flex items-center gap-2"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-300 hover:text-white hover:bg-red-500/20 transition-all duration-200 text-left mx-1"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    {t('logout')}
+                    <span className="font-medium">{t('logout')}</span>
                   </button>
                 </>
               ) : (
                 <>
-                  <Link
-                    href="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-3 text-brand-navy font-medium hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    {t('login')}
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="mx-4 btn-primary text-center flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                    {t('register')}
-                  </Link>
+                  <MobileNavLink href="/login" label={t('login')} onClick={() => setMobileMenuOpen(false)}
+                    icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />}
+                  />
+                  <div className="px-1 pt-1">
+                    <Link
+                      href="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-lg text-white font-bold transition-all duration-200"
+                      style={{
+                        background: 'linear-gradient(135deg, #e94560, #c0392b)',
+                        boxShadow: '0 4px 15px rgba(233, 69, 96, 0.3)',
+                      }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                      {t('register')}
+                    </Link>
+                  </div>
                 </>
               )}
             </div>
@@ -238,5 +255,57 @@ export default function Navbar() {
         )}
       </div>
     </nav>
+  );
+}
+
+// Desktop nav link component
+function NavLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
+  const pathname = usePathname();
+  const isActive = pathname === href || pathname.startsWith(href + '/');
+
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+        isActive
+          ? 'text-white bg-white/15 border border-white/20'
+          : 'text-blue-200 hover:text-white hover:bg-white/10'
+      }`}
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {icon}
+      </svg>
+      {label}
+    </Link>
+  );
+}
+
+// Mobile nav link component
+function MobileNavLink({
+  href, label, icon, onClick,
+}: {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+}) {
+  const pathname = usePathname();
+  const isActive = pathname === href || pathname.startsWith(href + '/');
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 mx-1 ${
+        isActive
+          ? 'text-white bg-white/15 border border-white/20'
+          : 'text-blue-200 hover:text-white hover:bg-white/10'
+      }`}
+    >
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {icon}
+      </svg>
+      <span className="font-medium">{label}</span>
+    </Link>
   );
 }
