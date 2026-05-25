@@ -176,12 +176,27 @@ export default function ActivationWaiting({
 
           {/* Main message */}
           <div
-            className="rounded-xl p-4"
+            className="rounded-xl p-4 overflow-hidden"
             style={{ background: 'rgba(255,255,255,0.05)' }}
           >
-            <p className="text-white text-base font-semibold mb-2">
-              📺 Keep your TV <span className="text-yellow-300">switched ON</span>
-            </p>
+            {/* Animated scrolling ticker */}
+            <div className="overflow-hidden rounded-lg mb-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <div className="flex whitespace-nowrap animate-marquee py-2">
+                {[0, 1].map((i) => (
+                  <span key={i} className="flex items-center gap-6 px-4 text-sm font-semibold">
+                    <span className="text-yellow-300">📺 Keep your TV ON</span>
+                    <span className="text-white">•</span>
+                    <span className="text-blue-300">📡 Keep your STB ON</span>
+                    <span className="text-white">•</span>
+                    <span className="text-green-300">⏱ Stay on for 5 minutes</span>
+                    <span className="text-white">•</span>
+                    <span className="text-purple-300">✨ Channels loading soon</span>
+                    <span className="text-white">•</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
             <p className="text-gray-300 text-sm leading-relaxed">
               Your recharge is almost done — it takes a little time to activate.
               <br /><br />
