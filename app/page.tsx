@@ -94,15 +94,15 @@ export default function HomePage() {
             </span>
           </div>
 
-          <h1 className="animate-fadeInUp-delay-1 font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 sm:mb-6 leading-tight">
-            Your TV. Your Plans
+          <h1 className="animate-fadeInUp-delay-1 font-display text-3xl sm:text-5xl md:text-6xl font-bold mb-5 sm:mb-6 leading-tight tracking-tight">
+            Your TV. Your Plans.
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-red via-accent-orange to-accent-red bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">
-              Recharged in Seconds
+              Recharged in Seconds.
             </span>
           </h1>
 
-          <p className="animate-fadeInUp-delay-2 text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-10 max-w-2xl mx-auto px-2 leading-relaxed">
+          <p className="animate-fadeInUp-delay-2 text-base sm:text-lg text-gray-300 mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed font-normal">
             Recharge your cable TV from your phone — anytime, anywhere with instant activation
             and 100% secure payments.
           </p>
@@ -167,7 +167,7 @@ export default function HomePage() {
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3">
               How It Works
             </h2>
-            <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto">
+            <p className="text-gray-500 text-base max-w-xl mx-auto">
               Recharge your cable connection in 3 simple steps
             </p>
           </div>
@@ -182,7 +182,7 @@ export default function HomePage() {
                 <span className="font-display text-2xl sm:text-3xl font-bold text-accent-red">1</span>
               </div>
               <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">Create Account</h3>
-              <p className="text-sm sm:text-base text-gray-500 leading-relaxed max-w-[260px] mx-auto">
+              <p className="text-sm text-gray-500 leading-relaxed max-w-[240px] mx-auto">
                 Sign up with your STB number and mobile in under a minute
               </p>
             </div>
@@ -193,7 +193,7 @@ export default function HomePage() {
                 <span className="font-display text-2xl sm:text-3xl font-bold text-accent-blue">2</span>
               </div>
               <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">Choose a Plan</h3>
-              <p className="text-sm sm:text-base text-gray-500 leading-relaxed max-w-[260px] mx-auto">
+              <p className="text-sm text-gray-500 leading-relaxed max-w-[240px] mx-auto">
                 Pick from our affordable plans starting at just ₹199/month
               </p>
             </div>
@@ -204,7 +204,7 @@ export default function HomePage() {
                 <span className="font-display text-2xl sm:text-3xl font-bold text-success">3</span>
               </div>
               <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">Pay & Watch</h3>
-              <p className="text-sm sm:text-base text-gray-500 leading-relaxed max-w-[260px] mx-auto">
+              <p className="text-sm text-gray-500 leading-relaxed max-w-[240px] mx-auto">
                 Pay securely online and your connection is activated instantly
               </p>
             </div>
@@ -216,13 +216,13 @@ export default function HomePage() {
       <section id="plans" className="py-14 sm:py-20 bg-gray-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14">
-            <span className="inline-block bg-gradient-accent text-white text-sm font-semibold px-5 py-1.5 rounded-full mb-4 shadow-sm">
+            <span className="inline-block bg-gradient-accent text-white text-xs font-semibold px-5 py-1.5 rounded-full mb-4 shadow-sm tracking-wide uppercase">
               Our Plans
             </span>
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3 sm:mb-4">
               Choose Your Perfect Plan
             </h2>
-            <p className="text-gray-500 text-base sm:text-lg px-4 max-w-xl mx-auto">
+            <p className="text-gray-500 text-base px-4 max-w-xl mx-auto">
               All plans include instant activation and 24/7 customer support
             </p>
           </div>
@@ -278,7 +278,7 @@ export default function HomePage() {
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3">
               Why Choose CCN Networks?
             </h2>
-            <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto">
+            <p className="text-gray-500 text-base max-w-xl mx-auto">
               We make cable TV recharge simple, fast, and reliable
             </p>
           </div>
@@ -291,9 +291,9 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">Instant Activation</h3>
-              <p className="text-sm sm:text-base text-gray-500 leading-relaxed">
-                Your recharge is activated within minutes by our operators — no waiting around
+              <h3 className="font-display text-lg font-bold text-brand-navy mb-2">Instant Activation</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Your recharge is activated within minutes — no waiting around
               </p>
             </div>
 
@@ -304,9 +304,9 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">Secure Payments</h3>
-              <p className="text-sm sm:text-base text-gray-500 leading-relaxed">
-                All transactions are secured with Cashfree payment gateway — UPI, cards & more
+              <h3 className="font-display text-lg font-bold text-brand-navy mb-2">Secure Payments</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                All transactions secured with Cashfree — UPI, cards & more
               </p>
             </div>
 
@@ -317,8 +317,8 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">Full History</h3>
-              <p className="text-sm sm:text-base text-gray-500 leading-relaxed">
+              <h3 className="font-display text-lg font-bold text-brand-navy mb-2">Full History</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
                 Track all your recharges, view expiry dates, and manage your connection online
               </p>
             </div>
