@@ -114,7 +114,7 @@ export default function HomePage() {
                   onClick={() => router.push('/register')}
                   className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
                 >
-                  Get Started Free
+                  Get Started
                 </button>
                 <button
                   onClick={() => router.push('/login')}

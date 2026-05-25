@@ -86,10 +86,7 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">
-                  CCN Cable
-                </span>
-                <span className="text-[10px] text-blue-300 font-medium tracking-widest uppercase hidden sm:block">
-                  Network
+                  CCN Networks
                 </span>
               </div>
             </Link>
