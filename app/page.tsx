@@ -95,16 +95,16 @@ export default function HomePage() {
           </div>
 
           <h1 className="animate-fadeInUp-delay-1 font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 sm:mb-6 leading-tight">
-            Your Entertainment,
+            Your TV. Your Plans
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-red via-accent-orange to-accent-red bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">
-              Simplified
+              Recharged in Seconds
             </span>
           </h1>
 
           <p className="animate-fadeInUp-delay-2 text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-10 max-w-2xl mx-auto px-2 leading-relaxed">
-            Recharge your cable TV online in seconds. Instant activation, secure payments,
-            and plans starting at just ₹199/month.
+            Recharge your cable TV from your phone — anytime, anywhere with instant activation
+            and 100% secure payments.
           </p>
 
           <div className="animate-fadeInUp-delay-3 flex flex-col sm:flex-row gap-4 justify-center items-center">

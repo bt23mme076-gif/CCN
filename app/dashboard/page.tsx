@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import StatusBadge from '@/components/StatusBadge';
+import ActivationWaiting from '@/components/ActivationWaiting';
 import { formatCurrency, formatDateTime, getDaysRemaining } from '@/lib/utils';
 
 interface Customer {
@@ -29,7 +30,9 @@ export default function DashboardPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [recharges, setRecharges] = useState<Recharge[]>([]);
   const [loading, setLoading] = useState(true);
-  const [paymentMessage, setPaymentMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [showActivationScreen, setShowActivationScreen] = useState(false);
+  const [justPaidRecharge, setJustPaidRecharge] = useState<Recharge | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -38,44 +41,36 @@ export default function DashboardPage() {
   }, []);
 
   const checkPaymentStatus = async () => {
-    // Check if redirected from payment
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('order_id');
-    
+
     if (orderId) {
       try {
-        // Verify payment status
         const verifyResponse = await fetch('/api/recharge/verify-payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId }),
         });
-
         const verifyData = await verifyResponse.json();
 
         if (verifyData.success) {
-          // Show success message
-          setPaymentMessage({
-            type: 'success',
-            text: 'Payment successful! Your recharge will be activated shortly by our operator.'
-          });
+          // Fetch recharges to find the just-paid one
+          const rechargesRes = await fetch('/api/recharge/history', { cache: 'no-store' });
+          const rechargesData = await rechargesRes.json();
+          const paid = (rechargesData.recharges || []).find(
+            (r: Recharge) => r.status === 'paid'
+          );
+          if (paid) {
+            setJustPaidRecharge(paid);
+            setShowActivationScreen(true);
+          }
         } else {
-          // Show error message
-          setPaymentMessage({
-            type: 'error',
-            text: 'Payment verification failed. Please contact support if amount was deducted.'
-          });
+          setPaymentError('Payment verification failed. Please contact support if amount was deducted.');
         }
-      } catch (error) {
-        console.error('Payment verification error:', error);
-        setPaymentMessage({
-          type: 'error',
-          text: 'Unable to verify payment. Please contact support if amount was deducted.'
-        });
+      } catch {
+        setPaymentError('Unable to verify payment. Please contact support if amount was deducted.');
       } finally {
-        // Clean up URL
         window.history.replaceState({}, '', '/dashboard');
-        // Refresh data to show updated status
         setTimeout(() => fetchData(), 1000);
       }
     }
@@ -125,6 +120,21 @@ export default function DashboardPage() {
     );
   }
 
+  // Show full-screen activation waiting screen after successful payment
+  if (showActivationScreen && justPaidRecharge) {
+    return (
+      <ActivationWaiting
+        rechargeId={justPaidRecharge.id}
+        planName={justPaidRecharge.plan_name}
+        amount={justPaidRecharge.amount}
+        onActivated={() => {
+          setShowActivationScreen(false);
+          fetchData();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-1">
       {/* Header */}
@@ -158,32 +168,15 @@ export default function DashboardPage() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Payment Status Message */}
-        {paymentMessage && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            paymentMessage.type === 'success' 
-              ? 'bg-green-50 border border-green-200 text-green-800' 
-              : 'bg-red-50 border border-red-200 text-red-800'
-          }`}>
+        {/* Payment Error Message */}
+        {paymentError && (
+          <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                {paymentMessage.type === 'success' ? (
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">{paymentMessage.text}</p>
-              </div>
-              <button
-                onClick={() => setPaymentMessage(null)}
-                className="flex-shrink-0 text-gray-400 hover:text-gray-600"
-              >
+              <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <p className="text-sm font-medium flex-1">{paymentError}</p>
+              <button onClick={() => setPaymentError(null)} className="text-gray-400 hover:text-gray-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -210,22 +203,32 @@ export default function DashboardPage() {
 
         {/* Pending Activation Notice */}
         {pendingActivation && (
-          <div className="card bg-yellow-50 border-l-4 border-yellow-500 mb-6 sm:mb-8">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          <div className="card mb-6 sm:mb-8" style={{
+            background: 'linear-gradient(135deg, #1e1b4b, #312e81)',
+            border: '1px solid rgba(139,92,246,0.3)',
+          }}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-start gap-3 flex-1">
+                <div className="w-10 h-10 rounded-full bg-yellow-400/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl animate-pulse">📺</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-white mb-1">Activation In Progress</h3>
+                  <p className="text-sm text-blue-200">
+                    <strong className="text-white">{pendingActivation.plan_name}</strong> ({formatCurrency(pendingActivation.amount)}) — Payment confirmed. Keep your TV on!
+                  </p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-yellow-900 mb-1">Payment Confirmed - Activation Pending</h3>
-                <p className="text-sm text-yellow-800 mb-2">
-                  Your payment for <strong>{pendingActivation.plan_name}</strong> ({formatCurrency(pendingActivation.amount)}) has been received successfully.
-                </p>
-                <p className="text-sm text-yellow-800">
-                  Our operator will activate your plan shortly. You will receive confirmation once activated.
-                </p>
-              </div>
+              <button
+                onClick={() => {
+                  setJustPaidRecharge(pendingActivation);
+                  setShowActivationScreen(true);
+                }}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white whitespace-nowrap"
+                style={{ background: 'linear-gradient(135deg, #e94560, #c0392b)' }}
+              >
+                View Status
+              </button>
             </div>
           </div>
         )}

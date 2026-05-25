@@ -86,7 +86,7 @@ export default function Navbar() {
               />
               <Image
                 src="/logo.jpg"
-                alt="CCN Cable"
+                alt="CCN Networks"
                 width={40}
                 height={40}
                 className="relative h-10 w-10 rounded-lg object-cover border border-white/20"
@@ -94,7 +94,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col leading-tight">
               <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">
-                CCN Cable
+                CCN Networks
               </span>
               <span className="text-[10px] text-blue-300 font-medium tracking-widest uppercase hidden sm:block">
                 Network
