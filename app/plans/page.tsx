@@ -13,6 +13,7 @@ interface Plan {
   duration_days: number;
   channels: string[];
   is_popular: boolean;
+  isCustomPrice?: boolean;
 }
 
 interface Customer {

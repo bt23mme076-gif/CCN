@@ -22,7 +22,96 @@ export default function CustomersPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  useEffect(() => { fetchCustomers(); }, [search]); // eslint-disable-line
+  // States for Price Overrides
+  const [selectedCustForPrice, setSelectedCustForPrice] = useState<{ id: string; name: string } | null>(null);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [overrides, setOverrides] = useState<any[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [customPriceVal, setCustomPriceVal] = useState('');
+  const [noteVal, setNoteVal] = useState('');
+  const [loadingOverrides, setLoadingOverrides] = useState(false);
+  const [savingOverride, setSavingOverride] = useState(false);
+
+  useEffect(() => {
+    fetchCustomers();
+    fetchPlans();
+  }, [search]); // eslint-disable-line
+
+  const fetchPlans = async () => {
+    try {
+      const data = await (await fetch('/api/admin/plans')).json();
+      setPlans(data.plans || []);
+    } catch {
+      setPlans([]);
+    }
+  };
+
+  const fetchOverrides = async (customerId: string) => {
+    setLoadingOverrides(true);
+    try {
+      const data = await (await fetch(`/api/admin/customers/${customerId}/price-overrides`)).json();
+      setOverrides(data.overrides || []);
+    } catch {
+      setOverrides([]);
+    } finally {
+      setLoadingOverrides(false);
+    }
+  };
+
+  const handleManagePrices = (customer: { id: string; name: string }) => {
+    setSelectedCustForPrice(customer);
+    setSelectedPlanId('');
+    setCustomPriceVal('');
+    setNoteVal('');
+    fetchOverrides(customer.id);
+  };
+
+  const handleSaveOverride = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCustForPrice || !selectedPlanId || !customPriceVal) return;
+    setSavingOverride(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${selectedCustForPrice.id}/price-overrides`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: selectedPlanId,
+          customPrice: parseFloat(customPriceVal),
+          note: noteVal
+        })
+      });
+      if (res.ok) {
+        setSelectedPlanId('');
+        setCustomPriceVal('');
+        setNoteVal('');
+        fetchOverrides(selectedCustForPrice.id);
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Failed to save override');
+      }
+    } catch {
+      alert('Failed to save override');
+    } finally {
+      setSavingOverride(false);
+    }
+  };
+
+  const handleDeleteOverride = async (planId: string) => {
+    if (!selectedCustForPrice) return;
+    try {
+      const res = await fetch(`/api/admin/customers/${selectedCustForPrice.id}/price-overrides?planId=${planId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchOverrides(selectedCustForPrice.id);
+      } else {
+        alert('Failed to delete override');
+      }
+    } catch {
+      alert('Failed to delete override');
+    }
+  };
+
 
   const fetchCustomers = async () => {
     try {
@@ -153,7 +242,7 @@ export default function CustomersPage() {
           <>
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full admin-table">
-                <thead><tr><th>Name</th><th>Mobile</th><th>STB Number</th><th>Area</th><th>Recharges</th><th>Last Plan</th><th>Action</th></tr></thead>
+                <thead><tr><th>Name</th><th>Mobile</th><th>STB Number</th><th>Area</th><th>Recharges</th><th>Last Plan</th><th>Actions</th></tr></thead>
                 <tbody>
                   {customers.map(({ customer, rechargeCount, lastRecharge }) => (
                     <tr key={customer.mobile}>
@@ -169,13 +258,20 @@ export default function CustomersPage() {
                       </td>
                       <td className="text-gray-400">{lastRecharge || '—'}</td>
                       <td>
-                        <button onClick={() => handleDelete(customer.id, customer.name)} disabled={deleting === customer.id}
-                          className="text-xs font-semibold transition-colors disabled:opacity-50"
-                          style={{ color: '#f87171' }}
-                          onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#ef4444'}
-                          onMouseLeave={(e) => (e.target as HTMLElement).style.color = '#f87171'}>
-                          {deleting === customer.id ? 'Deleting...' : 'Delete'}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => handleManagePrices(customer)}
+                            className="text-xs font-semibold transition-colors text-indigo-400 hover:text-indigo-300">
+                            Set Prices
+                          </button>
+                          <span className="text-gray-700">|</span>
+                          <button onClick={() => handleDelete(customer.id, customer.name)} disabled={deleting === customer.id}
+                            className="text-xs font-semibold transition-colors disabled:opacity-50"
+                            style={{ color: '#f87171' }}
+                            onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#ef4444'}
+                            onMouseLeave={(e) => (e.target as HTMLElement).style.color = '#f87171'}>
+                            {deleting === customer.id ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -200,17 +296,121 @@ export default function CustomersPage() {
                     <p>Area: <span className="text-gray-200">{customer.area}</span></p>
                     <p>Last Plan: <span className="text-gray-200">{lastRecharge || '—'}</span></p>
                   </div>
-                  <button onClick={() => handleDelete(customer.id, customer.name)} disabled={deleting === customer.id}
-                    className="w-full py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
-                    style={{ background: 'rgba(230,57,70,0.12)', color: '#f87171', border: '1px solid rgba(230,57,70,0.25)' }}>
-                    {deleting === customer.id ? 'Deleting...' : 'Delete Customer'}
-                  </button>
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={() => handleManagePrices(customer)}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                      style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.3)' }}>
+                      Set Custom Prices
+                    </button>
+                    <button onClick={() => handleDelete(customer.id, customer.name)} disabled={deleting === customer.id}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                      style={{ background: 'rgba(230,57,70,0.12)', color: '#f87171', border: '1px solid rgba(230,57,70,0.25)' }}>
+                      {deleting === customer.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           </>
         )}
       </div>
+
+      {/* Price Overrides Modal */}
+      {selectedCustForPrice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-2xl p-5 sm:p-6 overflow-y-auto max-h-[90vh] shadow-2xl border"
+               style={{ background: '#121214', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="font-display text-xl font-bold text-white">Custom Prices</h3>
+                <p className="text-xs text-gray-400 mt-1">Configure special plan pricing for <span className="text-amber-400 font-semibold">{selectedCustForPrice.name}</span></p>
+              </div>
+              <button onClick={() => setSelectedCustForPrice(null)} className="text-gray-400 hover:text-white transition-colors text-xl font-bold">
+                ✕
+              </button>
+            </div>
+
+            {/* Existing Overrides List */}
+            <div className="mb-6">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Active Price Overrides</h4>
+              {loadingOverrides ? (
+                <div className="flex justify-center py-6">
+                  <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+                       style={{ borderColor: '#e63946', borderTopColor: 'transparent' }}></div>
+                </div>
+              ) : overrides.length === 0 ? (
+                <p className="text-xs text-gray-500 py-3 italic bg-white/5 border border-white/5 rounded-xl px-4 text-center">
+                  No custom prices configured for this customer yet. They will pay standard regular prices.
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {overrides.map((ov) => (
+                    <div key={ov.id} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 rounded-xl bg-white/5 border border-white/10 text-sm gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-white truncate">{ov.planName}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Regular: ₹{ov.originalPrice / 100} • <span className="text-green-400 font-medium">Custom: ₹{ov.customPrice / 100}</span>
+                        </p>
+                        {ov.note && <p className="text-xs text-indigo-300 italic mt-0.5 break-words">Note: {ov.note}</p>}
+                      </div>
+                      <button onClick={() => handleDeleteOverride(ov.planId)} className="text-xs font-bold text-red-400 hover:text-red-300 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 transition-all w-full sm:w-auto text-center">
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Set New Override Form */}
+            <div className="border-t border-white/10 pt-5">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Add / Update Custom Price</h4>
+              <form onSubmit={handleSaveOverride} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-300 mb-2">Select Plan</label>
+                    <select value={selectedPlanId} onChange={(e) => setSelectedPlanId(e.target.value)} required
+                            className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all text-white border"
+                            style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                      <option value="" disabled className="bg-slate-900 text-gray-400">-- Choose Plan --</option>
+                      {plans.filter(p => p.is_active).map((p) => (
+                        <option key={p.id} value={p.id} className="bg-slate-950 text-white">
+                          {p.name} (Regular: ₹{p.price / 100})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-300 mb-2">Custom Price (₹)</label>
+                    <input type="number" step="0.01" value={customPriceVal} onChange={(e) => setCustomPriceVal(e.target.value)}
+                           placeholder="Enter custom rate e.g. 150" required
+                           className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all text-white border"
+                           style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.1)' }} />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-2">Admin Note (optional)</label>
+                  <input type="text" value={noteVal} onChange={(e) => setNoteVal(e.target.value)}
+                         placeholder="e.g. Special area price discount"
+                         className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all text-white border"
+                         style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.1)' }} />
+                </div>
+                <div className="flex flex-col sm:flex-row justify-end gap-2.5 pt-2">
+                  <button type="button" onClick={() => setSelectedCustForPrice(null)}
+                          className="px-5 py-2.5 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition-all bg-white/5 border border-white/10 w-full sm:w-auto text-center order-2 sm:order-1">
+                    Close
+                  </button>
+                  <button type="submit" disabled={savingOverride}
+                          className="px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50 w-full sm:w-auto text-center order-1 sm:order-2"
+                          style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)' }}>
+                    {savingOverride ? 'Saving...' : 'Apply Custom Price'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

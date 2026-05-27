@@ -12,6 +12,7 @@ interface PlanCardProps {
     duration_days: number;
     channels: string[];
     is_popular: boolean;
+    isCustomPrice?: boolean;
   };
   onSelect: (planId: string) => void;
 }
@@ -30,16 +31,28 @@ export default function PlanCard({ plan, onSelect }: PlanCardProps) {
           {t('popularPlan')}
         </div>
       )}
+      {plan.isCustomPrice && !plan.is_popular && (
+        <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-center py-1.5 text-xs font-bold uppercase tracking-wider">
+          Special Price Assigned
+        </div>
+      )}
 
-      <div className={`p-6 sm:p-8 ${plan.is_popular ? 'pt-10' : ''}`}>
+      <div className={`p-6 sm:p-8 ${plan.is_popular ? 'pt-10' : plan.isCustomPrice ? 'pt-10' : ''}`}>
         <div className="text-center mb-6">
           <h3 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-3">
             {plan.name}
           </h3>
-          <div className="flex items-baseline justify-center gap-1">
-            <span className="text-3xl sm:text-4xl font-bold text-brand-navy">
-              {formatCurrency(plan.price)}
-            </span>
+          <div className="flex flex-col items-center justify-center gap-1">
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="text-3xl sm:text-4xl font-bold text-brand-navy">
+                {formatCurrency(plan.price)}
+              </span>
+            </div>
+            {plan.isCustomPrice && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-extrabold bg-green-100 text-green-700 border border-green-200 mt-1 uppercase tracking-wide">
+                ✓ Special Custom Price
+              </span>
+            )}
           </div>
           <p className="text-gray-400 text-sm mt-1">
             for {plan.duration_days} {t('days')}

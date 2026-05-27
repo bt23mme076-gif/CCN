@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plans, recharges, customers } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { plans, recharges, customers, customerPriceOverrides } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 
@@ -29,6 +29,20 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Check if there is a customer price override for this plan
+    const override = await db
+      .select()
+      .from(customerPriceOverrides)
+      .where(
+        and(
+          eq(customerPriceOverrides.customer_id, user.customerId),
+          eq(customerPriceOverrides.plan_id, planId)
+        )
+      )
+      .limit(1);
+
+    const finalPrice = override.length > 0 ? override[0].custom_price : plan[0].price;
 
     // Get customer details
     const customer = await db
@@ -62,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     const orderData = {
       order_id: rechargeId,
-      order_amount: (plan[0].price / 100).toFixed(2), // Convert paise to rupees
+      order_amount: (finalPrice / 100).toFixed(2), // Convert paise to rupees
       order_currency: 'INR',
       customer_details: {
         customer_id: user.customerId,
@@ -77,7 +91,7 @@ export async function POST(request: NextRequest) {
     console.log('Creating Cashfree order with:', {
       url: cashfreeApiUrl,
       orderId: rechargeId,
-      amount: (plan[0].price / 100).toFixed(2),
+      amount: (finalPrice / 100).toFixed(2),
       returnUrl: orderData.order_meta.return_url,
       env: process.env.CASHFREE_ENV,
     });
@@ -132,7 +146,7 @@ export async function POST(request: NextRequest) {
       customer_id: user.customerId,
       plan_id: plan[0].id,
       plan_name: plan[0].name,
-      amount: plan[0].price,
+      amount: finalPrice,
       status: 'pending',
       cashfree_order_id: cashfreeOrder.order_id || rechargeId,
     });
@@ -141,7 +155,7 @@ export async function POST(request: NextRequest) {
       orderId: rechargeId,
       cashfreeOrderId: cashfreeOrder.order_id,
       paymentSessionId: cashfreeOrder.payment_session_id,
-      amount: plan[0].price,
+      amount: finalPrice,
       currency: 'INR',
     });
   } catch (error) {

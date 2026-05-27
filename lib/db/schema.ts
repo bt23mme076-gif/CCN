@@ -54,13 +54,30 @@ export const announcements = pgTable('announcements', {
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Customer-specific plan price overrides
+export const customerPriceOverrides = pgTable('customer_price_overrides', {
+  id: text('id').primaryKey(),
+  customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  plan_id: text('plan_id').notNull().references(() => plans.id, { onDelete: 'cascade' }),
+  custom_price: integer('custom_price').notNull(), // in paise
+  note: text('note'), // optional admin note e.g. "Loyal customer discount"
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
   recharges: many(recharges),
+  priceOverrides: many(customerPriceOverrides),
 }));
 
 export const plansRelations = relations(plans, ({ many }) => ({
   recharges: many(recharges),
+  priceOverrides: many(customerPriceOverrides),
+}));
+
+export const customerPriceOverridesRelations = relations(customerPriceOverrides, ({ one }) => ({
+  customer: one(customers, { fields: [customerPriceOverrides.customer_id], references: [customers.id] }),
+  plan: one(plans, { fields: [customerPriceOverrides.plan_id], references: [plans.id] }),
 }));
 
 export const rechargesRelations = relations(recharges, ({ one }) => ({
