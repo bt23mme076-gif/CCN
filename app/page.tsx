@@ -161,7 +161,7 @@ export default function HomePage() {
       </section>
 
       {/* Plans Section */}
-      <section id="plans" className="py-14 sm:py-20 bg-gray-1">
+      <section id="plans" className="py-14 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14">
             <span className="inline-block bg-gradient-accent text-white text-xs font-semibold px-5 py-1.5 rounded-full mb-4 shadow-sm tracking-wide uppercase">
@@ -220,7 +220,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-14 sm:py-20 bg-white">
+      <section className="py-14 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14">
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3">

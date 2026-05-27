@@ -11,10 +11,28 @@
     -moz-osx-font-smoothing: grayscale;
   }
   body {
-    @apply bg-white text-gray-900;
+    @apply text-gray-900;
     font-family: 'Inter', sans-serif;
     font-size: 16px;
     line-height: 1.6;
+    background-color: #f8f7ff;
+    background-image:
+      /* Soft purple-blue radial glow top-left */
+      radial-gradient(ellipse 80% 60% at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
+      /* Warm red-orange glow top-right */
+      radial-gradient(ellipse 60% 50% at 100% 0%, rgba(230, 57, 70, 0.06) 0%, transparent 55%),
+      /* Blue glow bottom-right */
+      radial-gradient(ellipse 70% 50% at 100% 100%, rgba(72, 202, 228, 0.07) 0%, transparent 60%),
+      /* Dark grid lines */
+      linear-gradient(rgba(15, 15, 40, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 15, 40, 0.045) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      100% 100%,
+      100% 100%,
+      40px 40px,
+      40px 40px;
+    background-attachment: fixed;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
@@ -70,7 +88,10 @@
   }
   
   .card {
-    @apply bg-white rounded-xl shadow-md p-6;
+    @apply rounded-xl shadow-md p-6;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
   }
   
   .status-badge {
