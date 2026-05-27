@@ -151,7 +151,45 @@ body::after {
     box-shadow: 0 4px 24px rgba(30, 20, 80, 0.08), 0 1px 4px rgba(30, 20, 80, 0.04);
   }
   
-  .status-badge {
+  .admin-card {
+    border-radius: 1rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+  }
+
+  .admin-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    color: white;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .admin-input::placeholder { color: rgba(156, 163, 175, 0.6); }
+  .admin-input:focus { border-color: rgba(99, 102, 241, 0.6); }
+
+  .admin-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(156, 163, 175, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .admin-table td {
+    padding: 0.875rem 1rem;
+    color: rgba(229, 231, 235, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 0.875rem;
+  }
+  .admin-table tr:last-child td { border-bottom: none; }
+  .admin-table tr:hover td { background: rgba(255, 255, 255, 0.03); }
     @apply px-3 py-1 rounded-full text-sm font-medium inline-block;
   }
   
