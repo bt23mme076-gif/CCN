@@ -160,58 +160,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-14 sm:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 sm:mb-14">
-            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3">
-              How It Works
-            </h2>
-            <p className="text-gray-500 text-base max-w-xl mx-auto">
-              Recharge your cable connection in 3 simple steps
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12 max-w-4xl mx-auto relative">
-            {/* Connector line (desktop) */}
-            <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-accent-red via-accent-orange to-accent-cyan" />
-
-            {/* Step 1 */}
-            <div className="text-center relative">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-4 ring-red-100 shadow-sm">
-                <span className="font-display text-2xl sm:text-3xl font-bold text-accent-red">1</span>
-              </div>
-              <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">Create Account</h3>
-              <p className="text-sm text-gray-500 leading-relaxed max-w-[240px] mx-auto">
-                Sign up with your STB number and mobile in under a minute
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="text-center relative">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-4 ring-blue-100 shadow-sm">
-                <span className="font-display text-2xl sm:text-3xl font-bold text-accent-blue">2</span>
-              </div>
-              <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">Choose a Plan</h3>
-              <p className="text-sm text-gray-500 leading-relaxed max-w-[240px] mx-auto">
-                Pick from our affordable plans starting at just ₹199/month
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="text-center relative">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-4 ring-green-100 shadow-sm">
-                <span className="font-display text-2xl sm:text-3xl font-bold text-success">3</span>
-              </div>
-              <h3 className="font-display text-lg sm:text-xl font-bold text-brand-navy mb-2">Pay & Watch</h3>
-              <p className="text-sm text-gray-500 leading-relaxed max-w-[240px] mx-auto">
-                Pay securely online and your connection is activated instantly
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Plans Section */}
       <section id="plans" className="py-14 sm:py-20 bg-gray-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
