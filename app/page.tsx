@@ -74,7 +74,19 @@ export default function HomePage() {
   const displayPlans = plans.filter(p => p.price !== 100);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Floating animated orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute w-96 h-96 rounded-full opacity-20 animate-float"
+          style={{ background: 'radial-gradient(circle, #6366f1, transparent)', top: '10%', left: '5%', filter: 'blur(60px)' }} />
+        <div className="absolute w-80 h-80 rounded-full opacity-15 animate-float-delay"
+          style={{ background: 'radial-gradient(circle, #e63946, transparent)', top: '20%', right: '8%', filter: 'blur(50px)' }} />
+        <div className="absolute w-72 h-72 rounded-full opacity-15 animate-float"
+          style={{ background: 'radial-gradient(circle, #48cae4, transparent)', bottom: '15%', left: '15%', filter: 'blur(55px)', animationDelay: '2s' }} />
+        <div className="absolute w-64 h-64 rounded-full opacity-10 animate-float-delay"
+          style={{ background: 'radial-gradient(circle, #533483, transparent)', bottom: '25%', right: '10%', filter: 'blur(45px)' }} />
+      </div>
+
       <Navbar />
 
       {/* Hero Section */}
@@ -161,7 +173,7 @@ export default function HomePage() {
       </section>
 
       {/* Plans Section */}
-      <section id="plans" className="py-14 sm:py-20">
+      <section id="plans" className="py-14 sm:py-20 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14">
             <span className="inline-block bg-gradient-accent text-white text-xs font-semibold px-5 py-1.5 rounded-full mb-4 shadow-sm tracking-wide uppercase">
@@ -232,44 +244,102 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
+
             {/* Instant Activation */}
-            <div className="group bg-white rounded-2xl p-6 sm:p-8 border border-gray-100 hover:border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7 text-accent-red" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+            <div className="group relative rounded-2xl p-6 sm:p-8 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default"
+              style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)', border: '1px solid rgba(99,102,241,0.3)' }}>
+              {/* Glow on hover */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
+                style={{ background: 'radial-gradient(circle at 50% 0%, rgba(230,57,70,0.15), transparent 70%)' }} />
+              {/* Top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
+                style={{ background: 'linear-gradient(90deg, #e63946, #f77f00)' }} />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300"
+                  style={{ background: 'linear-gradient(135deg, rgba(230,57,70,0.2), rgba(247,127,0,0.2))', border: '1px solid rgba(230,57,70,0.3)' }}>
+                  <svg className="w-7 h-7" fill="none" stroke="url(#grad1)" strokeWidth={2} viewBox="0 0 24 24">
+                    <defs>
+                      <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#e63946" />
+                        <stop offset="100%" stopColor="#f77f00" />
+                      </linearGradient>
+                    </defs>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h3 className="font-display text-xl font-bold text-white mb-3">Instant Activation</h3>
+                <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                  Your recharge is activated within minutes — no waiting around, no delays.
+                </p>
+                <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#f77f00' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                  Live activation status
+                </div>
               </div>
-              <h3 className="font-display text-lg font-bold text-brand-navy mb-2">Instant Activation</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Your recharge is activated within minutes — no waiting around
-              </p>
             </div>
 
             {/* Secure Payments */}
-            <div className="group bg-white rounded-2xl p-6 sm:p-8 border border-gray-100 hover:border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7 text-accent-blue" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+            <div className="group relative rounded-2xl p-6 sm:p-8 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default"
+              style={{ background: 'linear-gradient(135deg, #0f1f3d 0%, #1a2f5e 60%, #0f3460 100%)', border: '1px solid rgba(72,202,228,0.3)' }}>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
+                style={{ background: 'radial-gradient(circle at 50% 0%, rgba(72,202,228,0.15), transparent 70%)' }} />
+              <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
+                style={{ background: 'linear-gradient(90deg, #457b9d, #48cae4)' }} />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300"
+                  style={{ background: 'linear-gradient(135deg, rgba(69,123,157,0.2), rgba(72,202,228,0.2))', border: '1px solid rgba(72,202,228,0.3)' }}>
+                  <svg className="w-7 h-7" fill="none" stroke="url(#grad2)" strokeWidth={2} viewBox="0 0 24 24">
+                    <defs>
+                      <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#457b9d" />
+                        <stop offset="100%" stopColor="#48cae4" />
+                      </linearGradient>
+                    </defs>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="font-display text-xl font-bold text-white mb-3">Secure Payments</h3>
+                <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                  All transactions secured with Cashfree — UPI, cards, net banking & more.
+                </p>
+                <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#48cae4' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  256-bit SSL encrypted
+                </div>
               </div>
-              <h3 className="font-display text-lg font-bold text-brand-navy mb-2">Secure Payments</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                All transactions secured with Cashfree — UPI, cards & more
-              </p>
             </div>
 
             {/* Full History */}
-            <div className="group bg-white rounded-2xl p-6 sm:p-8 border border-gray-100 hover:border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="w-14 h-14 bg-green-50 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7 text-success" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+            <div className="group relative rounded-2xl p-6 sm:p-8 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default"
+              style={{ background: 'linear-gradient(135deg, #0d2818 0%, #1a3a2a 60%, #1e4d35 100%)', border: '1px solid rgba(45,106,79,0.4)' }}>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
+                style={{ background: 'radial-gradient(circle at 50% 0%, rgba(45,106,79,0.2), transparent 70%)' }} />
+              <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
+                style={{ background: 'linear-gradient(90deg, #2d6a4f, #52b788)' }} />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300"
+                  style={{ background: 'linear-gradient(135deg, rgba(45,106,79,0.25), rgba(82,183,136,0.2))', border: '1px solid rgba(82,183,136,0.3)' }}>
+                  <svg className="w-7 h-7" fill="none" stroke="url(#grad3)" strokeWidth={2} viewBox="0 0 24 24">
+                    <defs>
+                      <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#2d6a4f" />
+                        <stop offset="100%" stopColor="#52b788" />
+                      </linearGradient>
+                    </defs>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-display text-xl font-bold text-white mb-3">Full History</h3>
+                <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                  Track all your recharges, view expiry dates, and manage your connection online.
+                </p>
+                <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#52b788' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  Real-time updates
+                </div>
               </div>
-              <h3 className="font-display text-lg font-bold text-brand-navy mb-2">Full History</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Track all your recharges, view expiry dates, and manage your connection online
-              </p>
             </div>
+
           </div>
         </div>
       </section>
