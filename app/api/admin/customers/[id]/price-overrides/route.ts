@@ -1,167 +1,104 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { customerPriceOverrides, customers, plans } from '@/lib/db/schema';
+import { customerPriceOverrides, plans } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { randomBytes } from 'crypto';
-import { z } from 'zod';
+import { nanoid } from 'nanoid';
 
-const overrideSchema = z.object({
-  planId: z.string().min(1, 'Plan ID is required'),
-  customPrice: z.number().positive('Price must be positive'), // In Rupees, we'll convert to paise
-  note: z.string().optional(),
-});
-
-// GET /api/admin/customers/[id]/price-overrides
+// GET — list all overrides for a customer
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await requireAdminAuth();
-    const customerId = params.id;
-
-    // Check if customer exists
-    const customerExists = await db
-      .select()
-      .from(customers)
-      .where(eq(customers.id, customerId))
-      .limit(1);
-
-    if (customerExists.length === 0) {
-      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
-    }
-
     const overrides = await db
       .select({
         id: customerPriceOverrides.id,
-        customerId: customerPriceOverrides.customer_id,
-        planId: customerPriceOverrides.plan_id,
-        customPrice: customerPriceOverrides.custom_price,
+        plan_id: customerPriceOverrides.plan_id,
+        custom_price: customerPriceOverrides.custom_price,
         note: customerPriceOverrides.note,
-        createdAt: customerPriceOverrides.created_at,
-        planName: plans.name,
-        originalPrice: plans.price,
+        created_at: customerPriceOverrides.created_at,
+        plan_name: plans.name,
+        plan_price: plans.price,
       })
       .from(customerPriceOverrides)
-      .innerJoin(plans, eq(customerPriceOverrides.plan_id, plans.id))
-      .where(eq(customerPriceOverrides.customer_id, customerId));
+      .leftJoin(plans, eq(customerPriceOverrides.plan_id, plans.id))
+      .where(eq(customerPriceOverrides.customer_id, params.id));
 
     return NextResponse.json({ overrides });
   } catch (error) {
-    console.error('Fetch price overrides error:', error);
-    return NextResponse.json({ error: 'Failed to fetch price overrides' }, { status: 500 });
+    console.error('Get price overrides error:', error);
+    return NextResponse.json({ error: 'Failed to fetch overrides' }, { status: 500 });
   }
 }
 
-// POST /api/admin/customers/[id]/price-overrides
+// POST — set/update a price override
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await requireAdminAuth();
-    const customerId = params.id;
+    const { plan_id, custom_price, note } = await request.json();
 
-    const body = await request.json();
-    const validated = overrideSchema.parse(body);
-
-    // Verify customer exists
-    const customerExists = await db
-      .select()
-      .from(customers)
-      .where(eq(customers.id, customerId))
-      .limit(1);
-
-    if (customerExists.length === 0) {
-      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    if (!plan_id || typeof custom_price !== 'number' || custom_price <= 0) {
+      return NextResponse.json({ error: 'Invalid plan or price' }, { status: 400 });
     }
 
-    // Verify plan exists
-    const planExists = await db
-      .select()
-      .from(plans)
-      .where(eq(plans.id, validated.planId))
-      .limit(1);
+    const customPricePaise = Math.round(custom_price * 100);
 
-    if (planExists.length === 0) {
-      return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
-    }
-
-    const priceInPaise = Math.round(validated.customPrice * 100);
-
-    // Check if override already exists
+    // Upsert — update if exists, insert if not
     const existing = await db
       .select()
       .from(customerPriceOverrides)
-      .where(
-        and(
-          eq(customerPriceOverrides.customer_id, customerId),
-          eq(customerPriceOverrides.plan_id, validated.planId)
-        )
-      )
+      .where(and(
+        eq(customerPriceOverrides.customer_id, params.id),
+        eq(customerPriceOverrides.plan_id, plan_id)
+      ))
       .limit(1);
 
     if (existing.length > 0) {
-      // Update
       await db
         .update(customerPriceOverrides)
-        .set({
-          custom_price: priceInPaise,
-          note: validated.note || null,
-        })
+        .set({ custom_price: customPricePaise, note: note || null })
         .where(eq(customerPriceOverrides.id, existing[0].id));
     } else {
-      // Insert
-      const id = `cpo_${randomBytes(8).toString('hex')}`;
       await db.insert(customerPriceOverrides).values({
-        id,
-        customer_id: customerId,
-        plan_id: validated.planId,
-        custom_price: priceInPaise,
-        note: validated.note || null,
+        id: `cpo_${nanoid(12)}`,
+        customer_id: params.id,
+        plan_id,
+        custom_price: customPricePaise,
+        note: note || null,
       });
     }
 
-    return NextResponse.json({ success: true, message: 'Price override saved successfully' });
+    return NextResponse.json({ success: true, message: 'Price override saved!' });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
-    }
-    console.error('Save price override error:', error);
-    return NextResponse.json({ error: 'Failed to save price override' }, { status: 500 });
+    console.error('Set price override error:', error);
+    return NextResponse.json({ error: 'Failed to save override' }, { status: 500 });
   }
 }
 
-// DELETE /api/admin/customers/[id]/price-overrides
+// DELETE — remove a price override
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await requireAdminAuth();
-    const customerId = params.id;
-    const { searchParams } = new URL(request.url);
-    const planId = searchParams.get('planId');
+    const { plan_id } = await request.json();
 
-    if (planId) {
-      await db
-        .delete(customerPriceOverrides)
-        .where(
-          and(
-            eq(customerPriceOverrides.customer_id, customerId),
-            eq(customerPriceOverrides.plan_id, planId)
-          )
-        );
-    } else {
-      await db
-        .delete(customerPriceOverrides)
-        .where(eq(customerPriceOverrides.customer_id, customerId));
-    }
+    await db
+      .delete(customerPriceOverrides)
+      .where(and(
+        eq(customerPriceOverrides.customer_id, params.id),
+        eq(customerPriceOverrides.plan_id, plan_id)
+      ));
 
-    return NextResponse.json({ success: true, message: 'Price override deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Price override removed' });
   } catch (error) {
     console.error('Delete price override error:', error);
-    return NextResponse.json({ error: 'Failed to delete price override' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to remove override' }, { status: 500 });
   }
 }

@@ -15,8 +15,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { orderId } = verifyPaymentSchema.parse(body);
 
-    console.log('Verifying payment for order:', orderId);
-
     // Check if Cashfree is configured
     if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
       return NextResponse.json(
@@ -29,8 +27,6 @@ export async function POST(request: NextRequest) {
     const cashfreeApiUrl = process.env.CASHFREE_ENV === 'production'
       ? `https://api.cashfree.com/pg/orders/${orderId}/payments`
       : `https://sandbox.cashfree.com/pg/orders/${orderId}/payments`;
-
-    console.log('Fetching payment status from Cashfree:', cashfreeApiUrl);
 
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: 'GET',
@@ -51,10 +47,6 @@ export async function POST(request: NextRequest) {
     }
 
     const payments = await cashfreeResponse.json();
-    console.log('Cashfree payments response:', {
-      count: payments?.length || 0,
-      firstPaymentStatus: payments?.[0]?.payment_status,
-    });
 
     if (!payments || payments.length === 0) {
       return NextResponse.json(
@@ -67,8 +59,6 @@ export async function POST(request: NextRequest) {
 
     // Check payment status
     if (payment.payment_status === 'SUCCESS') {
-      console.log('Payment successful, updating recharge status');
-      // Update recharge status to paid
       await db
         .update(recharges)
         .set({
@@ -78,11 +68,8 @@ export async function POST(request: NextRequest) {
         })
         .where(eq(recharges.id, orderId));
 
-      console.log('Recharge updated to paid:', orderId);
       return NextResponse.json({ success: true });
     } else if (payment.payment_status === 'FAILED') {
-      console.log('Payment failed');
-      // Update recharge status to failed
       await db
         .update(recharges)
         .set({ status: 'failed' })
@@ -93,7 +80,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     } else {
-      console.log('Payment still pending:', payment.payment_status);
       return NextResponse.json(
         { success: false, error: 'Payment pending' },
         { status: 400 }

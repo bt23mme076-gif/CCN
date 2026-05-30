@@ -88,14 +88,6 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    console.log('Creating Cashfree order with:', {
-      url: cashfreeApiUrl,
-      orderId: rechargeId,
-      amount: (finalPrice / 100).toFixed(2),
-      returnUrl: orderData.order_meta.return_url,
-      env: process.env.CASHFREE_ENV,
-    });
-
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: 'POST',
       headers: {
@@ -108,8 +100,6 @@ export async function POST(request: NextRequest) {
     });
 
     const responseText = await cashfreeResponse.text();
-    console.log('Cashfree response status:', cashfreeResponse.status);
-    console.log('Cashfree response body:', responseText);
 
     if (!cashfreeResponse.ok) {
       let errorData;
@@ -126,12 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     const cashfreeOrder = JSON.parse(responseText);
-    console.log('Cashfree order created:', {
-      orderId: cashfreeOrder.order_id,
-      hasPaymentSessionId: !!cashfreeOrder.payment_session_id,
-    });
 
-    // Validate payment_session_id
     if (!cashfreeOrder.payment_session_id) {
       console.error('Missing payment_session_id in Cashfree response:', cashfreeOrder);
       return NextResponse.json(

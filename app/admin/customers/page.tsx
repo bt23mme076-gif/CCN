@@ -75,10 +75,10 @@ export default function CustomersPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          planId: selectedPlanId,
-          customPrice: parseFloat(customPriceVal),
-          note: noteVal
-        })
+          plan_id: selectedPlanId,
+          custom_price: parseFloat(customPriceVal),
+          note: noteVal,
+        }),
       });
       if (res.ok) {
         setSelectedPlanId('');
@@ -99,8 +99,10 @@ export default function CustomersPage() {
   const handleDeleteOverride = async (planId: string) => {
     if (!selectedCustForPrice) return;
     try {
-      const res = await fetch(`/api/admin/customers/${selectedCustForPrice.id}/price-overrides?planId=${planId}`, {
-        method: 'DELETE'
+      const res = await fetch(`/api/admin/customers/${selectedCustForPrice.id}/price-overrides`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan_id: planId }),
       });
       if (res.ok) {
         fetchOverrides(selectedCustForPrice.id);
@@ -347,13 +349,13 @@ export default function CustomersPage() {
                   {overrides.map((ov) => (
                     <div key={ov.id} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 rounded-xl bg-white/5 border border-white/10 text-sm gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-white truncate">{ov.planName}</p>
+                        <p className="font-semibold text-white truncate">{ov.plan_name}</p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          Regular: ₹{ov.originalPrice / 100} • <span className="text-green-400 font-medium">Custom: ₹{ov.customPrice / 100}</span>
+                          Regular: ₹{(ov.plan_price / 100).toFixed(0)} • <span className="text-green-400 font-medium">Custom: ₹{(ov.custom_price / 100).toFixed(0)}</span>
                         </p>
                         {ov.note && <p className="text-xs text-indigo-300 italic mt-0.5 break-words">Note: {ov.note}</p>}
                       </div>
-                      <button onClick={() => handleDeleteOverride(ov.planId)} className="text-xs font-bold text-red-400 hover:text-red-300 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 transition-all w-full sm:w-auto text-center">
+                      <button onClick={() => handleDeleteOverride(ov.plan_id)} className="text-xs font-bold text-red-400 hover:text-red-300 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/15 transition-all w-full sm:w-auto text-center">
                         Remove
                       </button>
                     </div>
