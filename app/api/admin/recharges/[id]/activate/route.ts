@@ -43,10 +43,24 @@ export async function POST(
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
 
-    // Calculate expiry date
-    const paidAt = rechargeData.paid_at || new Date();
-    const expiresAt = new Date(paidAt);
-    expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
+    // Calculate expiry date:
+    // Always starts from 1st of current month, ends on last day after N months
+    // e.g. 30-day plan activated in June → starts June 1, expires June 30 midnight
+    // e.g. 30-day plan activated on June 25 → still expires June 30 (end of month)
+    const now = new Date();
+
+    // Number of months the plan covers (round 30 days = 1 month, 60 = 2, etc.)
+    const months = Math.round(plan.duration_days / 30) || 1;
+
+    // Start = 1st of current month at midnight
+    const startMonth = now.getMonth();
+    const startYear = now.getFullYear();
+
+    // End = last day of (startMonth + months - 1), at 23:59:59
+    const endMonth = startMonth + months; // e.g. June(5) + 1 = July(6)
+    // Last day of the target month = day 0 of the next month
+    const expiresAt = new Date(startYear, endMonth, 0, 23, 59, 59, 999);
+    // e.g. new Date(2026, 6, 0) = June 30, 2026
 
     // Update recharge
     await db
