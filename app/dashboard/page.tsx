@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import StatusBadge from '@/components/StatusBadge';
 import ActivationWaiting from '@/components/ActivationWaiting';
-import { formatCurrency, formatDateTime, getDaysRemaining } from '@/lib/utils';
+import { formatCurrency, formatDateTime, getDaysRemaining, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
 
 interface Customer {
   id: string;
@@ -21,6 +21,7 @@ interface Recharge {
   amount: number;
   status: string;
   created_at: string;
+  activated_at: string | null;
   expires_at: string | null;
   cashfree_order_id: string | null;
 }
@@ -238,14 +239,31 @@ export default function DashboardPage() {
           {activePlan ? (
             <div>
               <h3 className="font-display text-lg sm:text-xl font-bold mb-4">Active Plan</h3>
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <div className="flex-1">
-                  <p className="text-xl sm:text-2xl font-bold mb-2">{activePlan.plan_name}</p>
-                  <p className="text-sm sm:text-base text-gray-300">
-                    Expires: {formatDateTime(new Date(activePlan.expires_at!))}
-                  </p>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-6">
+                <div className="flex-1 w-full">
+                  <p className="text-xl sm:text-2xl font-bold mb-4">{activePlan.plan_name}</p>
+                  <div className="grid grid-cols-3 gap-4 text-xs sm:text-sm border-t border-indigo-950 pt-4">
+                    <div>
+                      <p className="text-gray-400 mb-1">Start Date</p>
+                      <p className="font-semibold text-white">
+                        {formatDateDMY(activePlan.activated_at)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 mb-1">End Date</p>
+                      <p className="font-semibold text-white">
+                        {formatDisplayEndDate(activePlan.expires_at)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 mb-1">Effective Date</p>
+                      <p className="font-semibold text-white">
+                        {formatDateDMY(activePlan.activated_at)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-center sm:text-right">
+                <div className="text-center sm:text-right flex-shrink-0 self-center sm:self-start">
                   <div className="text-4xl sm:text-5xl font-bold text-accent-red mb-1">
                     {getDaysRemaining(new Date(activePlan.expires_at!))}
                   </div>

@@ -43,24 +43,21 @@ export async function POST(
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
 
-    // Calculate expiry date:
-    // Always starts from 1st of current month, ends on last day after N months
-    // e.g. 30-day plan activated in June → starts June 1, expires June 30 midnight
-    // e.g. 30-day plan activated on June 25 → still expires June 30 (end of month)
-    const now = new Date();
+    // Calculate expiry date in IST (UTC+5:30)
+    // Expiry should be exactly at 12:00 AM (00:00:00) IST on the day of expiry
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // 5h 30m in ms
 
-    // Number of months the plan covers (round 30 days = 1 month, 60 = 2, etc.)
-    const months = Math.round(plan.duration_days / 30) || 1;
+    const nowUtc = new Date();
+    // Shift current time by IST offset so we can use UTC methods to manipulate IST dates
+    const expiryIstHelper = new Date(nowUtc.getTime() + IST_OFFSET_MS);
 
-    // Start = 1st of current month at midnight
-    const startMonth = now.getMonth();
-    const startYear = now.getFullYear();
+    // Add validity days
+    expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan.duration_days);
+    // Set time to 12:00 AM exactly (start of the day)
+    expiryIstHelper.setUTCHours(0, 0, 0, 0);
 
-    // End = last day of (startMonth + months - 1), at 23:59:59
-    const endMonth = startMonth + months; // e.g. June(5) + 1 = July(6)
-    // Last day of the target month = day 0 of the next month
-    const expiresAt = new Date(startYear, endMonth, 0, 23, 59, 59, 999);
-    // e.g. new Date(2026, 6, 0) = June 30, 2026
+    // Convert back to real UTC by subtracting the offset
+    const expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
 
     // Update recharge
     await db

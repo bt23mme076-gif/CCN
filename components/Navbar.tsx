@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import LanguageSwitcher from './LanguageSwitcher';
 import BulletinBar from './BulletinBar';
 import { useTranslation } from '@/lib/useTranslation';
 
@@ -95,10 +94,6 @@ export default function Navbar() {
               <>
                 {/* Desktop Menu */}
                 <div className="hidden md:flex gap-1 lg:gap-2 items-center">
-                  <div className="mr-2">
-                    <LanguageSwitcher />
-                  </div>
-
                   {isAuthenticated ? (
                     <>
                       {customerName && (
@@ -169,9 +164,6 @@ export default function Navbar() {
             <div className="md:hidden pb-4 animate-fadeIn"
               style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
               <div className="flex flex-col space-y-1 pt-3">
-                <div className="px-2 pb-3 mb-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                  <LanguageSwitcher />
-                </div>
                 {isAuthenticated && customerName && (
                   <div className="px-4 py-2 flex items-center gap-2 mb-1">
                     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />

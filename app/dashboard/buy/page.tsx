@@ -6,7 +6,7 @@ import Link from 'next/link';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
 import StatusBadge from '@/components/StatusBadge';
-import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { formatCurrency, formatDateTime, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
 
 interface Plan {
   id: string;
@@ -496,42 +496,53 @@ export default function BuyHistoryPage() {
                         {/* Bottom Section: Dates & Expiry */}
                         <div className={`pt-4 border-t ${isExpired ? 'border-gray-200' : 'border-gray-100'}`}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm">
-                            <div>
-                              <p className="text-gray-500 mb-1">Created</p>
-                              <p className="font-medium text-gray-700">
-                                {formatDateTime(new Date(recharge.created_at))}
-                              </p>
-                            </div>
-                            {recharge.paid_at && (
-                              <div>
-                                <p className="text-gray-500 mb-1">Paid</p>
-                                <p className="font-medium text-gray-700">
-                                  {formatDateTime(new Date(recharge.paid_at))}
-                                </p>
-                              </div>
-                            )}
-                            {recharge.activated_at && (
-                              <div>
-                                <p className="text-gray-500 mb-1">Activated</p>
-                                <p className="font-medium text-gray-700">
-                                  {formatDateTime(new Date(recharge.activated_at))}
-                                </p>
-                              </div>
-                            )}
-                            {recharge.expires_at && (
-                              <div>
-                                <p className="text-gray-500 mb-1">
-                                  {isExpired ? 'Expired On' : 'Expires On'}
-                                </p>
-                                <p className={`font-bold ${timeRemaining?.color || 'text-gray-700'}`}>
-                                  {formatFriendlyDate(new Date(recharge.expires_at))}
-                                </p>
-                                {timeRemaining && !isExpired && (
-                                  <p className={`text-xs font-semibold mt-1 ${timeRemaining.color}`}>
-                                    {timeRemaining.text}
+                            {recharge.status === 'activated' ? (
+                              <>
+                                <div>
+                                  <p className="text-gray-500 mb-1">Start Date</p>
+                                  <p className="font-medium text-gray-700">
+                                    {formatDateDMY(recharge.activated_at)}
                                   </p>
+                                </div>
+                                {recharge.expires_at && (
+                                  <div>
+                                    <p className="text-gray-500 mb-1">
+                                      {isExpired ? 'Expired On' : 'End Date'}
+                                    </p>
+                                    <p className={`font-bold ${timeRemaining?.color || 'text-gray-700'}`}>
+                                      {formatDisplayEndDate(recharge.expires_at)}
+                                    </p>
+                                    {timeRemaining && !isExpired && (
+                                      <p className={`text-xs font-semibold mt-1 ${timeRemaining.color}`}>
+                                        {timeRemaining.text}
+                                      </p>
+                                    )}
+                                  </div>
                                 )}
-                              </div>
+                                <div>
+                                  <p className="text-gray-500 mb-1">Effective Date</p>
+                                  <p className="font-medium text-gray-700">
+                                    {formatDateDMY(recharge.activated_at)}
+                                  </p>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div>
+                                  <p className="text-gray-500 mb-1">Created</p>
+                                  <p className="font-medium text-gray-700">
+                                    {formatDateTime(new Date(recharge.created_at))}
+                                  </p>
+                                </div>
+                                {recharge.paid_at && (
+                                  <div>
+                                    <p className="text-gray-500 mb-1">Paid</p>
+                                    <p className="font-medium text-gray-700">
+                                      {formatDateTime(new Date(recharge.paid_at))}
+                                    </p>
+                                  </div>
+                                )}
+                              </>
                             )}
                           </div>
                         </div>
