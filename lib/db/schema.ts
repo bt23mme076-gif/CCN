@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const customers = pgTable('customers', {
@@ -37,7 +37,13 @@ export const recharges = pgTable('recharges', {
   activated_by: text('activated_by'),
   expires_at: timestamp('expires_at'),
   created_at: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  // Foreign keys do NOT get an index automatically. The dashboard history query
+  // filters by customer_id and orders by created_at — index both to avoid
+  // full table scans as recharge volume grows.
+  customerIdx: index('recharges_customer_id_idx').on(table.customer_id),
+  statusIdx: index('recharges_status_idx').on(table.status),
+}));
 
 export const admins = pgTable('admins', {
   id: text('id').primaryKey(),
@@ -62,7 +68,10 @@ export const customerPriceOverrides = pgTable('customer_price_overrides', {
   custom_price: integer('custom_price').notNull(), // in paise
   note: text('note'), // optional admin note e.g. "Loyal customer discount"
   created_at: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  // /api/plans looks up overrides by customer_id on every logged-in page load.
+  customerIdx: index('price_overrides_customer_id_idx').on(table.customer_id),
+}));
 
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
