@@ -71,6 +71,19 @@ export const translations = {
     proceedPay: "Proceed to Pay",
     cancel: "Cancel",
     
+    // Accessories
+    accessories: "Accessories",
+    orderNow: "Order Now",
+    confirmOrder: "Confirm Order",
+    accessory: "Accessory",
+    accessoryDetails: "Accessory Details",
+    payWithCashfree: "Pay with Cashfree",
+    buyAccessories: "Buy Accessories",
+    accessoryOrders: "Accessory Orders",
+    delivered: "Delivered",
+    pendingDelivery: "Pending Delivery",
+    deliveryHistory: "Delivery History",
+    
     // Footer
     footerText: "Your trusted cable TV service provider",
     quickLinks: "Quick Links",
@@ -148,6 +161,19 @@ export const translations = {
     totalAmount: "कुल राशि",
     proceedPay: "भुगतान करें",
     cancel: "रद्द करें",
+    
+    // Accessories
+    accessories: "सहायक उपकरण",
+    orderNow: "अभी ऑर्डर करें",
+    confirmOrder: "ऑर्डर की पुष्टि करें",
+    accessory: "उत्पाद",
+    accessoryDetails: "उत्पाद विवरण",
+    payWithCashfree: "कैशफ्री से भुगतान करें",
+    buyAccessories: "उत्पाद खरीदें",
+    accessoryOrders: "उत्पाद इतिहास",
+    delivered: "वितरित",
+    pendingDelivery: "वितरण लंबित",
+    deliveryHistory: "वितरण इतिहास",
     
     // Footer
     footerText: "आपका विश्वसनीय केबल टीवी सेवा प्रदाता",

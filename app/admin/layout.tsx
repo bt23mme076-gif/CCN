@@ -49,8 +49,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { href: '/admin/pending', label: 'Pending', icon: '⏳', desc: 'Activations' },
     { href: '/admin/recharges', label: 'Recharges', icon: '💳', desc: 'All orders' },
+    { href: '/admin/deliveries', label: 'Deliveries', icon: '🚚', desc: 'Deliveries' },
     { href: '/admin/customers', label: 'Customers', icon: '👥', desc: 'Manage users' },
     { href: '/admin/plans', label: 'Plans', icon: '📋', desc: 'Manage plans' },
+    { href: '/admin/accessories', label: 'Accessories', icon: '📦', desc: 'Manage products' },
     { href: '/admin/settings', label: 'Settings', icon: '⚙️', desc: 'Config' },
   ];
 

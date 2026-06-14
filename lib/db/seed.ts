@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { db } from './index';
-import { plans, admins } from './schema';
+import { plans, admins, accessories } from './schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
@@ -99,6 +99,39 @@ async function main() {
     console.log('Password: admin123');
   } else {
     console.log('Admin already exists, skipping...');
+  }
+
+  // Seed accessories
+  const existingAccessories = await db.select().from(accessories);
+  if (existingAccessories.length === 0) {
+    console.log('Seeding accessories...');
+    const accessoriesData = [
+      {
+        id: 'acc_remote_stb',
+        name: 'STB Remote Control',
+        price: 25000, // ₹250 in paise
+        description: 'High-quality replacement remote control for your set-top box. Works with all standard CCN STBs.',
+        is_active: true,
+      },
+      {
+        id: 'acc_hdmi_cable',
+        name: 'HDMI Cable (1.5m)',
+        price: 15000, // ₹150 in paise
+        description: 'High-speed HDMI cable supporting 1080p and 4K resolutions.',
+        is_active: true,
+      },
+      {
+        id: 'acc_power_adapter',
+        name: 'STB Power Adapter (12V)',
+        price: 12000, // ₹120 in paise
+        description: 'Replacement 12V DC power adapter for CCN set-top boxes.',
+        is_active: true,
+      },
+    ];
+    await db.insert(accessories).values(accessoriesData);
+    console.log('Accessories seeded successfully!');
+  } else {
+    console.log('Accessories already exist, skipping...');
   }
 
   console.log('Seeding completed!');

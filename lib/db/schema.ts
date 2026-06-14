@@ -73,10 +73,39 @@ export const customerPriceOverrides = pgTable('customer_price_overrides', {
   customerIdx: index('price_overrides_customer_id_idx').on(table.customer_id),
 }));
 
+export const accessories = pgTable('accessories', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  price: integer('price').notNull(), // in paise
+  description: text('description'),
+  is_active: boolean('is_active').default(true).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const accessoryOrders = pgTable('accessory_orders', {
+  id: text('id').primaryKey(),
+  customer_id: text('customer_id').notNull().references(() => customers.id),
+  accessory_id: text('accessory_id').notNull().references(() => accessories.id),
+  accessory_name: text('accessory_name').notNull(),
+  amount: integer('amount').notNull(), // in paise
+  status: text('status').notNull(), // 'pending' | 'paid' | 'delivered' | 'failed'
+  cashfree_order_id: text('cashfree_order_id'),
+  cashfree_payment_id: text('cashfree_payment_id'),
+  cashfree_signature: text('cashfree_signature'),
+  paid_at: timestamp('paid_at'),
+  delivered_at: timestamp('delivered_at'),
+  delivered_by: text('delivered_by'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  customerIdx: index('acc_orders_customer_id_idx').on(table.customer_id),
+  statusIdx: index('acc_orders_status_idx').on(table.status),
+}));
+
 // Relations
 export const customersRelations = relations(customers, ({ many }) => ({
   recharges: many(recharges),
   priceOverrides: many(customerPriceOverrides),
+  accessoryOrders: many(accessoryOrders),
 }));
 
 export const plansRelations = relations(plans, ({ many }) => ({
@@ -97,5 +126,20 @@ export const rechargesRelations = relations(recharges, ({ one }) => ({
   plan: one(plans, {
     fields: [recharges.plan_id],
     references: [plans.id],
+  }),
+}));
+
+export const accessoriesRelations = relations(accessories, ({ many }) => ({
+  orders: many(accessoryOrders),
+}));
+
+export const accessoryOrdersRelations = relations(accessoryOrders, ({ one }) => ({
+  customer: one(customers, {
+    fields: [accessoryOrders.customer_id],
+    references: [customers.id],
+  }),
+  accessory: one(accessories, {
+    fields: [accessoryOrders.accessory_id],
+    references: [accessories.id],
   }),
 }));

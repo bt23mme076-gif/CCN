@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
+import AccessoryPaymentModal from '@/components/AccessoryPaymentModal';
+import AccessoryCard from '@/components/AccessoryCard';
 import StatusBadge from '@/components/StatusBadge';
 import { formatCurrency, formatDateTime, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface Plan {
   id: string;
@@ -16,6 +19,13 @@ interface Plan {
   channels: string[];
   is_popular: boolean;
   isCustomPrice?: boolean;
+}
+
+interface Accessory {
+  id: string;
+  name: string;
+  price: number;
+  description: string | null;
 }
 
 interface Customer {
@@ -94,12 +104,18 @@ function formatFriendlyDate(date: Date) {
 
 export default function BuyHistoryPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'buy' | 'history'>('history');
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<'buy' | 'accessories' | 'history'>('history');
+  const [historyType, setHistoryType] = useState<'recharges' | 'accessories'>('recharges');
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [accessoriesList, setAccessoriesList] = useState<Accessory[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [recharges, setRecharges] = useState<Recharge[]>([]);
+  const [accessoryOrdersList, setAccessoryOrdersList] = useState<any[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [selectedAccessory, setSelectedAccessory] = useState<Accessory | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showAccessoryModal, setShowAccessoryModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -120,10 +136,12 @@ export default function BuyHistoryPage() {
 
   const fetchData = async () => {
     try {
-      const [plansRes, customerRes, rechargesRes] = await Promise.all([
+      const [plansRes, customerRes, rechargesRes, accessoriesRes, accOrdersRes] = await Promise.all([
         fetch('/api/plans', { cache: 'no-store' }),
         fetch('/api/auth/me', { cache: 'no-store' }),
         fetch('/api/recharge/history', { cache: 'no-store' }),
+        fetch('/api/accessories', { cache: 'no-store' }),
+        fetch('/api/accessory/history', { cache: 'no-store' }),
       ]);
 
       if (!customerRes.ok) {
@@ -134,10 +152,14 @@ export default function BuyHistoryPage() {
       const plansData = await plansRes.json();
       const customerData = await customerRes.json();
       const rechargesData = await rechargesRes.json();
+      const accessoriesData = await accessoriesRes.json();
+      const accOrdersData = await accOrdersRes.json();
 
       setPlans(plansData.plans || []);
       setCustomer(customerData.customer);
       setRecharges(rechargesData.recharges || []);
+      setAccessoriesList(accessoriesData.accessories || []);
+      setAccessoryOrdersList(accOrdersData.orders || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -150,6 +172,14 @@ export default function BuyHistoryPage() {
     if (plan) {
       setSelectedPlan(plan);
       setShowPaymentModal(true);
+    }
+  };
+
+  const handleSelectAccessory = (accId: string) => {
+    const accessory = accessoriesList.find((a) => a.id === accId);
+    if (accessory) {
+      setSelectedAccessory(accessory);
+      setShowAccessoryModal(true);
     }
   };
 
@@ -300,6 +330,21 @@ export default function BuyHistoryPage() {
               </span>
             </button>
             <button
+              onClick={() => setActiveTab('accessories')}
+              className={`flex-1 py-3 px-4 text-center font-medium transition-colors text-sm sm:text-base ${
+                activeTab === 'accessories'
+                  ? 'text-accent-red border-b-2 border-accent-red'
+                  : 'text-gray-600 hover:text-brand-navy'
+              }`}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                {t('buyAccessories')}
+              </span>
+            </button>
+            <button
               onClick={() => setActiveTab('history')}
               className={`flex-1 py-3 px-4 text-center font-medium transition-colors text-sm sm:text-base ${
                 activeTab === 'history'
@@ -366,6 +411,32 @@ export default function BuyHistoryPage() {
           </div>
         )}
 
+        {/* Buy Accessories Tab Content */}
+        {activeTab === 'accessories' && (
+          <div>
+            <div className="mb-6">
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-black text-brand-navy mb-4 tracking-tight">
+                CCN Accessories & Hardware
+              </h2>
+              <p className="text-gray-600 text-sm sm:text-base">
+                Order accessories and have them delivered to your address
+              </p>
+            </div>
+
+            {accessoriesList.length === 0 ? (
+              <div className="card text-center py-12">
+                <p className="text-gray-600">No accessories available at the moment.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {accessoriesList.map((item) => (
+                  <AccessoryCard key={item.id} item={item} onSelect={handleSelectAccessory} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* History Tab Content */}
         {activeTab === 'history' && (
           <div>
@@ -374,8 +445,38 @@ export default function BuyHistoryPage() {
                 Purchase History
               </h2>
               
-              {/* Filter */}
-              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+              {/* History Sub-selector */}
+              <div className="flex bg-gray-100 p-1 rounded-xl">
+                <button
+                  onClick={() => setHistoryType('recharges')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    historyType === 'recharges'
+                      ? 'bg-white text-brand-navy shadow-sm'
+                      : 'text-gray-500 hover:text-brand-navy'
+                  }`}
+                >
+                  Recharges
+                </button>
+                <button
+                  onClick={() => setHistoryType('accessories')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    historyType === 'accessories'
+                      ? 'bg-white text-brand-navy shadow-sm'
+                      : 'text-gray-500 hover:text-brand-navy'
+                  }`}
+                >
+                  {t('accessories')}
+                </button>
+              </div>
+            </div>
+
+            {historyType === 'recharges' ? (
+              <div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                  <span className="text-sm text-gray-500">View plan purchase and activation history</span>
+                  
+                  {/* Filter */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
                 <button
                   onClick={() => setFilterStatus('all')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
@@ -553,6 +654,106 @@ export default function BuyHistoryPage() {
               </div>
             )}
           </div>
+        ) : (
+          <div>
+            {/* Accessories History Content */}
+            {accessoryOrdersList.length === 0 ? (
+                  <div className="card text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-600 mb-4">No accessory order history yet</p>
+                    <button
+                      onClick={() => setActiveTab('accessories')}
+                      className="btn-primary inline-block"
+                    >
+                      Browse Accessories
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {accessoryOrdersList.map((order) => {
+                      return (
+                        <div key={order.id} className="card hover:shadow-lg transition-shadow">
+                          <div className="flex flex-col gap-4">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 rounded-lg bg-accent-blue bg-opacity-10 flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-brand-navy text-base sm:text-lg">
+                                      {order.accessory_name}
+                                    </h3>
+                                    <p className="text-xs sm:text-sm text-gray-600">
+                                      Order ID: <span className="font-mono">{order.id}</span>
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 sm:text-right">
+                                <p className="text-xl sm:text-2xl font-bold text-brand-navy">
+                                  {formatCurrency(order.amount)}
+                                </p>
+                                <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                                  order.status === 'delivered'
+                                    ? 'bg-green-100 text-green-700 border border-green-200'
+                                    : order.status === 'paid'
+                                    ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                                    : order.status === 'failed'
+                                    ? 'bg-red-100 text-red-700 border border-red-200'
+                                    : 'bg-gray-100 text-gray-700 border border-gray-200'
+                                }`}>
+                                  {order.status === 'delivered' ? t('delivered') : order.status === 'paid' ? t('pendingDelivery') : order.status}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="pt-4 border-t border-gray-100">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs sm:text-sm">
+                                <div>
+                                  <p className="text-gray-500 mb-1">Ordered On</p>
+                                  <p className="font-medium text-gray-700">
+                                    {formatDateTime(new Date(order.created_at))}
+                                  </p>
+                                </div>
+                                {order.paid_at && (
+                                  <div>
+                                    <p className="text-gray-500 mb-1">Paid On</p>
+                                    <p className="font-medium text-gray-700">
+                                      {formatDateTime(new Date(order.paid_at))}
+                                    </p>
+                                  </div>
+                                )}
+                                {order.status === 'delivered' && order.delivered_at && (
+                                  <div>
+                                    <p className="text-gray-500 mb-1">Delivered On</p>
+                                    <p className="font-bold text-green-600">
+                                      {formatDateTime(new Date(order.delivered_at))}
+                                    </p>
+                                    {order.delivered_by && (
+                                      <p className="text-[10px] text-gray-500 mt-0.5">
+                                        Operator: {order.delivered_by}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -561,6 +762,15 @@ export default function BuyHistoryPage() {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         plan={selectedPlan}
+        stbNumber={customer?.stb_number || ''}
+        customerName={customer?.name || ''}
+        customerMobile={customer?.mobile || ''}
+      />
+
+      <AccessoryPaymentModal
+        isOpen={showAccessoryModal}
+        onClose={() => setShowAccessoryModal(false)}
+        accessory={selectedAccessory}
         stbNumber={customer?.stb_number || ''}
         customerName={customer?.name || ''}
         customerMobile={customer?.mobile || ''}

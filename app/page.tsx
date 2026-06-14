@@ -6,8 +6,12 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
+import AccessoryPaymentModal from '@/components/AccessoryPaymentModal';
+import AccessoryCard from '@/components/AccessoryCard';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import ContactSection from '@/components/ContactSection';
+import { formatCurrency } from '@/lib/utils';
+import { useTranslation } from '@/lib/useTranslation';
 
 interface Plan {
   id: string;
@@ -24,14 +28,26 @@ interface Customer {
   stb_number: string;
 }
 
+interface Accessory {
+  id: string;
+  name: string;
+  price: number;
+  description: string | null;
+}
+
 export default function HomePage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [accessoriesList, setAccessoriesList] = useState<Accessory[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  const [selectedAccessory, setSelectedAccessory] = useState<Accessory | null>(null);
+  const [showAccessoryModal, setShowAccessoryModal] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -40,9 +56,10 @@ export default function HomePage() {
 
   const fetchData = async () => {
     try {
-      const [plansRes, customerRes] = await Promise.all([
+      const [plansRes, customerRes, accessoriesRes] = await Promise.all([
         fetch('/api/plans', { cache: 'no-store' }),
         fetch('/api/auth/me', { cache: 'no-store' }),
+        fetch('/api/accessories', { cache: 'no-store' }),
       ]);
 
       const plansData = await plansRes.json();
@@ -51,6 +68,11 @@ export default function HomePage() {
       if (customerRes.ok) {
         const customerData = await customerRes.json();
         setCustomer(customerData.customer);
+      }
+
+      if (accessoriesRes.ok) {
+        const accData = await accessoriesRes.json();
+        setAccessoriesList(accData.accessories || []);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -68,6 +90,18 @@ export default function HomePage() {
     if (plan) {
       setSelectedPlan(plan);
       setShowPaymentModal(true);
+    }
+  };
+
+  const handleSelectAccessory = async (accId: string) => {
+    if (!customer) {
+      router.push('/login');
+      return;
+    }
+    const accessory = accessoriesList.find((a) => a.id === accId);
+    if (accessory) {
+      setSelectedAccessory(accessory);
+      setShowAccessoryModal(true);
     }
   };
 
@@ -173,7 +207,7 @@ export default function HomePage() {
       </section>
 
       {/* Plans Section */}
-      <section id="plans" className="py-14 sm:py-20 relative">
+      <section id="plans" className="pt-14 pb-0 sm:pt-20 sm:pb-0 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14">
             <span className="inline-block bg-gradient-accent text-white text-xs font-semibold px-5 py-1.5 rounded-full mb-4 shadow-sm tracking-wide uppercase">
@@ -200,6 +234,39 @@ export default function HomePage() {
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-600">No plans available at the moment.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Accessories Section */}
+      <section id="accessories" className="pt-10 pb-14 sm:pt-12 sm:pb-20 relative bg-gray-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-14">
+            <span className="inline-block bg-gradient-to-r from-accent-blue to-accent-cyan text-white text-xs font-semibold px-5 py-1.5 rounded-full mb-4 shadow-sm tracking-wide uppercase">
+              {t('accessories')}
+            </span>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-brand-navy mb-3 sm:mb-4 tracking-tight">
+              Need a Remote or Spare Parts?
+            </h2>
+            <p className="text-gray-500 text-base px-4 max-w-xl mx-auto">
+              Get genuine CCN accessories delivered right to your doorstep by our operator
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue"></div>
+            </div>
+          ) : accessoriesList.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6 sm:gap-8">
+              {accessoriesList.map((item) => (
+                <AccessoryCard key={item.id} item={item} onSelect={handleSelectAccessory} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No accessories available at the moment.</p>
             </div>
           )}
         </div>
@@ -357,6 +424,17 @@ export default function HomePage() {
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           plan={selectedPlan}
+          stbNumber={customer.stb_number}
+          customerName={customer.name}
+          customerMobile={customer.mobile}
+        />
+      )}
+
+      {customer && (
+        <AccessoryPaymentModal
+          isOpen={showAccessoryModal}
+          onClose={() => setShowAccessoryModal(false)}
+          accessory={selectedAccessory}
           stbNumber={customer.stb_number}
           customerName={customer.name}
           customerMobile={customer.mobile}
