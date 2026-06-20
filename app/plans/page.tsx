@@ -119,12 +119,12 @@ export default function PlansPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-8">
+        <div className="max-w-6xl mx-auto">
           {plans && plans.length > 0 ? (
             <>
               {/* Test Plan - If Available */}
               {plans.filter(p => p.price === 100).length > 0 && (
-                <div className="md:col-span-2 max-w-md mx-auto w-full">
+                <div className="max-w-md mx-auto w-full mb-8">
                   <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-500 rounded-xl p-4 sm:p-6">
                     <div className="flex items-center justify-center gap-2 mb-3">
                       <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,12 +143,14 @@ export default function PlansPage() {
               )}
 
               {/* Regular Plans */}
-              {plans.filter(p => p.price !== 100).map((plan) => (
-                <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
-              ))}
+              <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-12 md:gap-6 w-full">
+                {plans.filter(p => p.price !== 100).map((plan, index) => (
+                  <PlanCard key={plan.id} plan={plan} index={index} onSelect={handleSelectPlan} />
+                ))}
+              </div>
             </>
           ) : (
-            <div className="col-span-full text-center py-12">
+            <div className="text-center py-12">
               <p className="text-gray-600">No plans available at the moment.</p>
             </div>
           )}

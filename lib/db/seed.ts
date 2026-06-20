@@ -20,55 +20,28 @@ async function main() {
     const plansData = [
       {
         id: `plan_${randomBytes(8).toString('hex')}`,
-        name: 'Basic',
+        name: 'BASIC',
         price: 19900, // ₹199 in paise
         duration_days: 30,
-        channels: ['100+ SD Channels', 'Doordarshan', 'Local Channels'],
+        channels: ['100+ SD Channels', 'Doordarshan', 'Local Channels', 'FTA Channels'],
         is_popular: false,
         is_active: true,
       },
       {
         id: `plan_${randomBytes(8).toString('hex')}`,
-        name: 'ALL in ONE',
+        name: 'ALL IN ONE SD',
         price: 29900, // ₹299 in paise
         duration_days: 30,
-        channels: ['200+ SD Channels', 'Star Network', 'Sony Set', 'Colors'],
+        channels: ['Entertainment Pack', 'Sports Channels', 'Kids Channels', 'Infotainment', 'Local & FTA'],
         is_popular: true,
         is_active: true,
       },
       {
         id: `plan_${randomBytes(8).toString('hex')}`,
-        name: 'Royal HD',
+        name: 'ROYAL HD',
         price: 34900, // ₹349 in paise
         duration_days: 30,
-        channels: ['All HD Channels', 'Premium HD Quality', 'Sports HD', 'Movies HD'],
-        is_popular: false,
-        is_active: true,
-      },
-      {
-        id: `plan_${randomBytes(8).toString('hex')}`,
-        name: 'Gold',
-        price: 39900, // ₹399 in paise
-        duration_days: 30,
-        channels: ['300+ Channels', 'All SD+HD', 'Star Sports', 'Set Max'],
-        is_popular: false,
-        is_active: true,
-      },
-      {
-        id: `plan_${randomBytes(8).toString('hex')}`,
-        name: 'Platinum',
-        price: 59900, // ₹599 in paise
-        duration_days: 30,
-        channels: ['500+ Channels', 'Full HD Pack', 'Premium Sports', 'English Movies'],
-        is_popular: false,
-        is_active: true,
-      },
-      {
-        id: `plan_${randomBytes(8).toString('hex')}`,
-        name: 'ALL in ONE 3M',
-        price: 79900, // ₹799 in paise
-        duration_days: 90,
-        channels: ['200+ SD Channels', 'Star Network', 'Sony Set', 'Save ₹98'],
+        channels: ['HD Entertainment', 'HD Sports', 'HD Kids', 'HD Infotainment', 'Local & FTA'],
         is_popular: false,
         is_active: true,
       },

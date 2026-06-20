@@ -401,9 +401,9 @@ export default function BuyHistoryPage() {
                 )}
 
                 {/* Regular Plans */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {plans.filter(p => p.price !== 100).map((plan) => (
-                    <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
+                <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-12 md:gap-6 max-w-6xl mx-auto py-12 px-4">
+                  {plans.filter(p => p.price !== 100).map((plan, index) => (
+                    <PlanCard key={plan.id} plan={plan} index={index} onSelect={handleSelectPlan} />
                   ))}
                 </div>
               </>

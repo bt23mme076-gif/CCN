@@ -226,9 +226,9 @@ export default function HomePage() {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
             </div>
           ) : displayPlans.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6 sm:gap-8">
-              {displayPlans.map((plan) => (
-                <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
+            <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-12 md:gap-6 max-w-6xl mx-auto py-12 px-4">
+              {displayPlans.map((plan, index) => (
+                <PlanCard key={plan.id} plan={plan} index={index} onSelect={handleSelectPlan} />
               ))}
             </div>
           ) : (
