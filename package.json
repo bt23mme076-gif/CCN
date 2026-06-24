@@ -23,6 +23,7 @@
     "@cashfreepayments/cashfree-js": "^1.0.7",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
+    "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^2.4.3",
     "cashfree-pg": "^6.0.4",
     "dotenv": "^16.6.1",
