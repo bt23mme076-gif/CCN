@@ -206,7 +206,7 @@ export default function BuyHistoryPage() {
 
   // Find next expiring plan
   const nextExpiringPlan = recharges
-    .filter(r => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > currentTime)
+    .filter(r => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > currentTime && !r.plan_name.toUpperCase().startsWith('ALA CARTE'))
     .sort((a, b) => new Date(a.expires_at!).getTime() - new Date(b.expires_at!).getTime())[0];
 
   if (loading) {

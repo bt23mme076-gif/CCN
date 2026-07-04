@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, plans } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export async function POST(
   request: NextRequest,
@@ -47,17 +47,58 @@ export async function POST(
     // Expiry should be exactly at 12:00 AM (00:00:00) IST on the day of expiry
     const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // 5h 30m in ms
 
-    const nowUtc = new Date();
-    // Shift current time by IST offset so we can use UTC methods to manipulate IST dates
-    const expiryIstHelper = new Date(nowUtc.getTime() + IST_OFFSET_MS);
+    const isAlacarte = rechargeData.plan_name.toUpperCase().startsWith('ALA CARTE') || 
+                       (plan && plan.name.toUpperCase().startsWith('ALA CARTE'));
 
-    // Add validity days
-    expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan.duration_days);
-    // Set time to 12:00 AM exactly (start of the day)
-    expiryIstHelper.setUTCHours(0, 0, 0, 0);
+    let expiresAt: Date;
 
-    // Convert back to real UTC by subtracting the offset
-    const expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
+    if (isAlacarte) {
+      // Find customer's active base plan (not expired, not ala carte)
+      const activeBaseRecharges = await db
+        .select()
+        .from(recharges)
+        .where(
+          and(
+            eq(recharges.customer_id, rechargeData.customer_id),
+            eq(recharges.status, 'activated')
+          )
+        );
+
+      const activeBasePlans = activeBaseRecharges.filter((r) => {
+        const isExpired = r.expires_at ? new Date(r.expires_at) <= new Date() : true;
+        const isAla = r.plan_name.toUpperCase().startsWith('ALA CARTE');
+        return !isExpired && !isAla;
+      });
+
+      if (activeBasePlans.length > 0) {
+        // Sort by expires_at descending to get the furthest expiration date
+        activeBasePlans.sort((a, b) => {
+          const aTime = a.expires_at ? new Date(a.expires_at).getTime() : 0;
+          const bTime = b.expires_at ? new Date(b.expires_at).getTime() : 0;
+          return bTime - aTime;
+        });
+        expiresAt = activeBasePlans[0].expires_at!;
+      } else {
+        // Fallback: If no active base plan is found, standard duration
+        const nowUtc = new Date();
+        const expiryIstHelper = new Date(nowUtc.getTime() + IST_OFFSET_MS);
+        expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan.duration_days);
+        expiryIstHelper.setUTCHours(0, 0, 0, 0);
+        expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
+      }
+    } else {
+      const nowUtc = new Date();
+      // Shift current time by IST offset so we can use UTC methods to manipulate IST dates
+      const expiryIstHelper = new Date(nowUtc.getTime() + IST_OFFSET_MS);
+
+      // Add validity days
+      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan.duration_days);
+      // Set time to 12:00 AM exactly (start of the day)
+      expiryIstHelper.setUTCHours(0, 0, 0, 0);
+
+      // Convert back to real UTC by subtracting the offset
+      expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
+    }
 
     // Update recharge
     await db

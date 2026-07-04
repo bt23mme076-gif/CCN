@@ -17,6 +17,7 @@ export default function AllRechargesPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => { fetchRecharges(); }, [search]); // eslint-disable-line
 
@@ -37,6 +38,17 @@ export default function AllRechargesPage() {
       else alert('Failed to activate recharge');
     } catch { alert('Failed to activate recharge'); }
     finally { setActivating(null); }
+  };
+
+  const handleDelete = async (rechargeId: string) => {
+    if (!confirm('Are you sure you want to delete this recharge attempt?')) return;
+    setDeleting(rechargeId);
+    try {
+      const response = await fetch(`/api/admin/recharges/${rechargeId}`, { method: 'DELETE' });
+      if (response.ok) fetchRecharges();
+      else alert('Failed to delete recharge attempt');
+    } catch { alert('Failed to delete recharge attempt'); }
+    finally { setDeleting(null); }
   };
 
   return (
@@ -83,13 +95,22 @@ export default function AllRechargesPage() {
                       <td className="text-gray-400">{formatDateTime(new Date(recharge.created_at))}</td>
                       <td><StatusBadge status={recharge.status} /></td>
                       <td>
-                        {recharge.status === 'paid' && (
-                          <button onClick={() => handleActivate(recharge.id)} disabled={activating === recharge.id}
-                            className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
-                            style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
-                            {activating === recharge.id ? 'Activating...' : 'Activate'}
-                          </button>
-                        )}
+                        <div className="flex gap-2">
+                          {recharge.status === 'paid' && (
+                            <button onClick={() => handleActivate(recharge.id)} disabled={activating === recharge.id}
+                              className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
+                              style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
+                              {activating === recharge.id ? 'Activating...' : 'Activate'}
+                            </button>
+                          )}
+                          {(recharge.status === 'pending' || recharge.status === 'failed') && (
+                            <button onClick={() => handleDelete(recharge.id)} disabled={deleting === recharge.id}
+                              className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
+                              style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
+                              {deleting === recharge.id ? 'Deleting...' : 'Delete'}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -117,6 +138,13 @@ export default function AllRechargesPage() {
                       className="w-full py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
                       style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
                       {activating === recharge.id ? 'Activating...' : '✓ Activate'}
+                    </button>
+                  )}
+                  {(recharge.status === 'pending' || recharge.status === 'failed') && (
+                    <button onClick={() => handleDelete(recharge.id)} disabled={deleting === recharge.id}
+                      className="w-full py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
+                      style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
+                      {deleting === recharge.id ? 'Deleting...' : 'Delete'}
                     </button>
                   )}
                 </div>

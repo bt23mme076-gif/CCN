@@ -108,7 +108,7 @@ export default function DashboardPage() {
   };
 
   const activePlan = recharges.find(
-    (r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date()
+    (r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date() && !r.plan_name.toUpperCase().startsWith('ALA CARTE')
   );
 
   const pendingActivation = recharges.find(r => r.status === 'paid');

@@ -62,11 +62,47 @@ export async function POST(
     let expiresAt: Date;
     const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
+    const isAlacarte = plan.name.toUpperCase().startsWith('ALA CARTE');
+
     if (customExpiryDate) {
       const parsedDate = new Date(customExpiryDate);
       const helper = new Date(parsedDate.getTime() + IST_OFFSET_MS);
       helper.setUTCHours(0, 0, 0, 0);
       expiresAt = new Date(helper.getTime() - IST_OFFSET_MS);
+    } else if (isAlacarte) {
+      // Find customer's active base plan (not expired, not ala carte)
+      const activeBaseRecharges = await db
+        .select()
+        .from(recharges)
+        .where(
+          and(
+            eq(recharges.customer_id, customerId),
+            eq(recharges.status, 'activated')
+          )
+        );
+
+      const activeBasePlans = activeBaseRecharges.filter((r) => {
+        const isExpired = r.expires_at ? new Date(r.expires_at) <= new Date() : true;
+        const isAla = r.plan_name.toUpperCase().startsWith('ALA CARTE');
+        return !isExpired && !isAla;
+      });
+
+      if (activeBasePlans.length > 0) {
+        // Sort by expires_at descending to get the furthest expiration date
+        activeBasePlans.sort((a, b) => {
+          const aTime = a.expires_at ? new Date(a.expires_at).getTime() : 0;
+          const bTime = b.expires_at ? new Date(b.expires_at).getTime() : 0;
+          return bTime - aTime;
+        });
+        expiresAt = activeBasePlans[0].expires_at!;
+      } else {
+        // Fallback: standard duration
+        const nowUtc = new Date();
+        const expiryIstHelper = new Date(nowUtc.getTime() + IST_OFFSET_MS);
+        expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan.duration_days);
+        expiryIstHelper.setUTCHours(0, 0, 0, 0);
+        expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
+      }
     } else {
       const nowUtc = new Date();
       const expiryIstHelper = new Date(nowUtc.getTime() + IST_OFFSET_MS);
