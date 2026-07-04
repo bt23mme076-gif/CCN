@@ -82,6 +82,20 @@ export const accessories = pgTable('accessories', {
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const channels = pgTable('channels', {
+  id: integer('id').primaryKey(),
+  name: text('name').notNull(),
+  hd_sd: text('hd_sd').notNull(),
+  genre: text('genre').notNull(),
+  epg: integer('epg').notNull(),
+  type: text('type').notNull(),
+  mrp: integer('mrp').notNull(), // in paise
+  price: integer('price').notNull(), // in paise
+  is_active: boolean('is_active').default(true).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
+
 export const accessoryOrders = pgTable('accessory_orders', {
   id: text('id').primaryKey(),
   customer_id: text('customer_id').notNull().references(() => customers.id),

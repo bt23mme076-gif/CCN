@@ -84,6 +84,17 @@ export const translations = {
     pendingDelivery: "Pending Delivery",
     deliveryHistory: "Delivery History",
     
+    // Ala Carte
+    alaCarte: "Ala Carte Channels",
+    alaCarteSubtitle: "Recharge single-single channels. Add to selection and buy instantly.",
+    searchChannel: "Search channels...",
+    allGenres: "All Genres",
+    selectedChannels: "Selected Channels",
+    buySelected: "Buy Channels",
+    noChannelsFound: "No channels found matching your search.",
+    totalAmountText: "Total Amount",
+
+    
     // Footer
     footerText: "Your trusted cable TV service provider",
     quickLinks: "Quick Links",
@@ -174,6 +185,17 @@ export const translations = {
     delivered: "वितरित",
     pendingDelivery: "वितरण लंबित",
     deliveryHistory: "वितरण इतिहास",
+    
+    // Ala Carte
+    alaCarte: "अला कार्टे चैनल",
+    alaCarteSubtitle: "एक-एक करके चैनल रिचार्ज करें। चयन में जोड़ें और तुरंत खरीदें।",
+    searchChannel: "चैनल खोजें...",
+    allGenres: "सभी श्रेणियां",
+    selectedChannels: "चुने गए चैनल",
+    buySelected: "चैनल खरीदें",
+    noChannelsFound: "आपकी खोज से मेल खाने वाले कोई चैनल नहीं मिले।",
+    totalAmountText: "कुल राशि",
+
     
     // Footer
     footerText: "आपका विश्वसनीय केबल टीवी सेवा प्रदाता",

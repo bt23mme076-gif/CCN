@@ -32,6 +32,16 @@ export default function CustomersPage() {
   const [loadingOverrides, setLoadingOverrides] = useState(false);
   const [savingOverride, setSavingOverride] = useState(false);
 
+  // States for Manual Plan Activation
+  const [selectedCustForPlan, setSelectedCustForPlan] = useState<{ id: string; name: string } | null>(null);
+  const [selectedPlanToActivate, setSelectedPlanToActivate] = useState('');
+  const [customExpiryDate, setCustomExpiryDate] = useState('');
+  // States for Password/PIN Reset
+  const [selectedCustForReset, setSelectedCustForReset] = useState<{ id: string; name: string } | null>(null);
+  const [newPinVal, setNewPinVal] = useState('');
+  const [resettingPin, setResettingPin] = useState(false);
+  const [activatingPlan, setActivatingPlan] = useState(false);
+
   useEffect(() => {
     fetchCustomers();
     fetchPlans();
@@ -147,6 +157,96 @@ export default function CustomersPage() {
       else { const data = await response.json(); setMessage({ type: 'error', text: data.error || 'Failed to delete' }); }
     } catch { setMessage({ type: 'error', text: 'Failed to delete customer' }); }
     finally { setDeleting(null); }
+  };
+
+  const handleOpenActivatePlan = (customer: { id: string; name: string }) => {
+    setSelectedCustForPlan(customer);
+    setSelectedPlanToActivate('');
+    setCustomExpiryDate('');
+  };
+
+  const handlePlanChange = (planId: string) => {
+    setSelectedPlanToActivate(planId);
+    const plan = plans.find((p) => p.id === planId);
+    if (plan) {
+      const d = new Date();
+      d.setDate(d.getDate() + plan.duration_days);
+      setCustomExpiryDate(d.toISOString().split('T')[0]);
+    }
+  };
+
+  const handleActivatePlanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCustForPlan || !selectedPlanToActivate) return;
+    setActivatingPlan(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${selectedCustForPlan.id}/activate-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: selectedPlanToActivate,
+          customExpiryDate: customExpiryDate,
+        }),
+      });
+      if (res.ok) {
+        setSelectedCustForPlan(null);
+        setSelectedPlanToActivate('');
+        setCustomExpiryDate('');
+        alert('Plan activated successfully for customer!');
+        fetchCustomers();
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Failed to activate plan');
+      }
+    } catch {
+      alert('Failed to activate plan');
+    } finally {
+      setActivatingPlan(false);
+    }
+  };
+
+  const handleDeactivateCustomer = async (customerId: string, customerName: string) => {
+    if (!confirm(`Are you sure you want to deactivate all active plan subscriptions for "${customerName}"?`)) return;
+    try {
+      const res = await fetch(`/api/admin/customers/${customerId}/deactivate`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        alert('All active plan subscriptions deactivated successfully!');
+        fetchCustomers();
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Failed to deactivate subscriptions');
+      }
+    } catch {
+      alert('Failed to deactivate subscriptions');
+    }
+  };
+
+  const handleResetPinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCustForReset || !newPinVal) return;
+    setResettingPin(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${selectedCustForReset.id}/reset-pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: newPinVal }),
+      });
+      if (res.ok) {
+        setSelectedCustForReset(null);
+        setNewPinVal('');
+        alert('Customer PIN/Password reset successfully!');
+        fetchCustomers();
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Failed to reset PIN');
+      }
+    } catch {
+      alert('Failed to reset PIN');
+    } finally {
+      setResettingPin(false);
+    }
   };
 
   return (
@@ -266,6 +366,21 @@ export default function CustomersPage() {
                             Set Prices
                           </button>
                           <span className="text-gray-700">|</span>
+                          <button onClick={() => handleOpenActivatePlan(customer)}
+                            className="text-xs font-semibold transition-colors text-green-400 hover:text-green-300">
+                            Activate Plan
+                          </button>
+                          <span className="text-gray-700">|</span>
+                           <button onClick={() => handleDeactivateCustomer(customer.id, customer.name)}
+                             className="text-xs font-semibold transition-colors text-amber-400 hover:text-amber-300">
+                             Deactivate Plan
+                           </button>
+                           <span className="text-gray-700">|</span>
+                           <button onClick={() => setSelectedCustForReset(customer)}
+                             className="text-xs font-semibold transition-colors text-pink-400 hover:text-pink-300">
+                             Reset PIN
+                           </button>
+                           <span className="text-gray-700">|</span>
                           <button onClick={() => handleDelete(customer.id, customer.name)} disabled={deleting === customer.id}
                             className="text-xs font-semibold transition-colors disabled:opacity-50"
                             style={{ color: '#f87171' }}
@@ -298,17 +413,32 @@ export default function CustomersPage() {
                     <p>Area: <span className="text-gray-200">{customer.area}</span></p>
                     <p>Last Plan: <span className="text-gray-200">{lastRecharge || '—'}</span></p>
                   </div>
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex flex-wrap gap-2 pt-1">
                     <button onClick={() => handleManagePrices(customer)}
-                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
                       style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.3)' }}>
-                      Set Custom Prices
+                      Set Prices
                     </button>
-                    <button onClick={() => handleDelete(customer.id, customer.name)} disabled={deleting === customer.id}
-                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
-                      style={{ background: 'rgba(230,57,70,0.12)', color: '#f87171', border: '1px solid rgba(230,57,70,0.25)' }}>
-                      {deleting === customer.id ? 'Deleting...' : 'Delete'}
+                    <button onClick={() => handleOpenActivatePlan(customer)}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
+                      style={{ background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.25)' }}>
+                      Activate Plan
                     </button>
+                    <button onClick={() => handleDeactivateCustomer(customer.id, customer.name)}
+                       className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
+                       style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
+                       Deactivate
+                     </button>
+                     <button onClick={() => setSelectedCustForReset(customer)}
+                       className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
+                       style={{ background: 'rgba(236,72,153,0.12)', color: '#ec4899', border: '1px solid rgba(236,72,153,0.25)' }}>
+                       Reset PIN
+                     </button>
+                     <button onClick={() => handleDelete(customer.id, customer.name)} disabled={deleting === customer.id}
+                       className="flex-1 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 text-center"
+                       style={{ background: 'rgba(230,57,70,0.12)', color: '#f87171', border: '1px solid rgba(230,57,70,0.25)' }}>
+                       {deleting === customer.id ? 'Deleting...' : 'Delete'}
+                     </button>
                   </div>
                 </div>
               ))}
@@ -410,6 +540,109 @@ export default function CustomersPage() {
                 </div>
               </form>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Activate Plan Modal */}
+      {selectedCustForPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md rounded-2xl p-5 sm:p-6 overflow-y-auto max-h-[90vh] shadow-2xl border animate-scaleIn"
+               style={{ background: '#121214', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="font-display text-xl font-bold text-white">Activate Plan</h3>
+                <p className="text-xs text-gray-400 mt-1">Directly activate a package for <span className="text-amber-400 font-semibold">{selectedCustForPlan.name}</span></p>
+              </div>
+              <button onClick={() => setSelectedCustForPlan(null)} className="text-gray-400 hover:text-white transition-colors text-xl font-bold">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleActivatePlanSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2">Select Plan to Activate</label>
+                <select value={selectedPlanToActivate} onChange={(e) => handlePlanChange(e.target.value)} required
+                        className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all text-white border"
+                        style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <option value="" disabled className="bg-slate-900 text-gray-400">-- Choose Plan --</option>
+                  {plans.filter(p => p.is_active).map((p) => (
+                    <option key={p.id} value={p.id} className="bg-slate-950 text-white">
+                      {p.name} (₹{p.price / 100} • {p.duration_days} Days)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2">Expiry Date</label>
+                <input
+                  type="date"
+                  value={customExpiryDate}
+                  onChange={(e) => setCustomExpiryDate(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all text-white border"
+                  style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.1)' }}
+                />
+                <p className="text-[10px] text-gray-400 mt-1">Defaults to standard validity duration. Modify as needed.</p>
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-4">
+                <button type="button" onClick={() => setSelectedCustForPlan(null)}
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition-all bg-white/5 border border-white/10 w-full sm:w-auto text-center">
+                  Cancel
+                </button>
+                <button type="submit" disabled={activatingPlan}
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50 w-full sm:w-auto text-center"
+                        style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)' }}>
+                  {activatingPlan ? 'Activating...' : 'Activate Plan Now'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {selectedCustForReset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md rounded-2xl p-5 sm:p-6 overflow-y-auto max-h-[90vh] shadow-2xl border animate-scaleIn"
+               style={{ background: '#121214', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="font-display text-xl font-bold text-white">Reset PIN / Password</h3>
+                <p className="text-xs text-gray-400 mt-1">Set a new login PIN for <span className="text-amber-400 font-semibold">{selectedCustForReset.name}</span></p>
+              </div>
+              <button onClick={() => setSelectedCustForReset(null)} className="text-gray-400 hover:text-white transition-colors text-xl font-bold">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleResetPinSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2">New 4-digit PIN</label>
+                <input
+                  type="password"
+                  pattern="\d{4,}"
+                  placeholder="e.g. 1234"
+                  value={newPinVal}
+                  onChange={(e) => setNewPinVal(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all text-white border"
+                  style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.1)' }}
+                />
+                <p className="text-[10px] text-gray-400 mt-1">PIN must be at least 4 digits.</p>
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-4">
+                <button type="button" onClick={() => setSelectedCustForReset(null)}
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition-all bg-white/5 border border-white/10 w-full sm:w-auto text-center">
+                  Cancel
+                </button>
+                <button type="submit" disabled={resettingPin}
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50 w-full sm:w-auto text-center"
+                        style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)' }}>
+                  {resettingPin ? 'Resetting...' : 'Reset PIN Now'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

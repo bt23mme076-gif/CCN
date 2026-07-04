@@ -10,8 +10,10 @@ import AccessoryPaymentModal from '@/components/AccessoryPaymentModal';
 import AccessoryCard from '@/components/AccessoryCard';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import ContactSection from '@/components/ContactSection';
+import AlacartePaymentModal from '@/components/AlacartePaymentModal';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
+
 
 interface Plan {
   id: string;
@@ -49,6 +51,16 @@ export default function HomePage() {
   const [selectedAccessory, setSelectedAccessory] = useState<Accessory | null>(null);
   const [showAccessoryModal, setShowAccessoryModal] = useState(false);
 
+  const [channels, setChannels] = useState<any[]>([]);
+  const [selectedChannels, setSelectedChannels] = useState<number[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('All');
+  const [showAlacarteModal, setShowAlacarteModal] = useState(false);
+  const [rechargesList, setRechargesList] = useState<any[]>([]);
+  const [showPrerequisiteModal, setShowPrerequisiteModal] = useState(false);
+
+
+
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -56,10 +68,11 @@ export default function HomePage() {
 
   const fetchData = async () => {
     try {
-      const [plansRes, customerRes, accessoriesRes] = await Promise.all([
+      const [plansRes, customerRes, accessoriesRes, channelsRes] = await Promise.all([
         fetch('/api/plans', { cache: 'no-store' }),
         fetch('/api/auth/me', { cache: 'no-store' }),
         fetch('/api/accessories', { cache: 'no-store' }),
+        fetch('/api/channels'),
       ]);
 
       const plansData = await plansRes.json();
@@ -68,11 +81,23 @@ export default function HomePage() {
       if (customerRes.ok) {
         const customerData = await customerRes.json();
         setCustomer(customerData.customer);
+
+        // Fetch recharge history to check for active base plan prerequisite
+        const rechargesRes = await fetch('/api/recharge/history', { cache: 'no-store' });
+        if (rechargesRes.ok) {
+          const rechargesData = await rechargesRes.ok ? await rechargesRes.json() : { recharges: [] };
+          setRechargesList(rechargesData.recharges || []);
+        }
       }
 
       if (accessoriesRes.ok) {
         const accData = await accessoriesRes.json();
         setAccessoriesList(accData.accessories || []);
+      }
+
+      if (channelsRes.ok) {
+        const channelsData = await channelsRes.json();
+        setChannels(channelsData.channels || []);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -80,6 +105,8 @@ export default function HomePage() {
       setLoading(false);
     }
   };
+
+
 
   const handleSelectPlan = async (planId: string) => {
     if (!customer) {
@@ -105,9 +132,43 @@ export default function HomePage() {
     }
   };
 
+  const handleToggleChannel = (channelId: number) => {
+    setSelectedChannels((prev) =>
+      prev.includes(channelId)
+        ? prev.filter((id) => id !== channelId)
+        : [...prev, channelId]
+    );
+  };
+
+  const handleBuyAlacarte = () => {
+    if (!customer) {
+      router.push('/login');
+      return;
+    }
+    const hasActiveBaseBundle = rechargesList.some((r) => {
+      const isExpired = r.expires_at ? new Date(r.expires_at) <= new Date() : true;
+      const isAlacarte = r.plan_name.toUpperCase().startsWith('ALA CARTE');
+      return r.status === 'activated' && !isExpired && !isAlacarte;
+    });
+    if (!hasActiveBaseBundle) {
+      setShowPrerequisiteModal(true);
+      return;
+    }
+    setShowAlacarteModal(true);
+  };
+
+
   const displayPlans = plans.filter(p => p.price !== 100);
 
+  const filteredChannels = channels.filter((channel) => {
+    const matchesSearch = channel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          channel.epg.toString().includes(searchQuery);
+    const matchesGenre = selectedGenre === 'All' || channel.genre === selectedGenre;
+    return matchesSearch && matchesGenre;
+  });
+
   return (
+
     <div className="min-h-screen flex flex-col relative">
       {/* Floating animated orbs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -239,7 +300,218 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* A La Carte Section */}
+      <section id="alacarte" className="pt-14 pb-16 sm:pt-20 sm:pb-24 relative overflow-hidden">
+        {/* Animated background shape */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#faf5ff]/40 to-[#f3e8ff]/30" />
+        <div className="absolute top-10 right-0 w-80 h-80 rounded-full bg-pink-300/10 blur-3xl animate-float" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-14">
+            <span className="inline-block bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-bold px-5 py-1.5 rounded-full mb-4 shadow-md tracking-wide uppercase">
+              {t('alaCarte')}
+            </span>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-brand-navy mb-3 sm:mb-4 tracking-tight">
+              {t('alaCarte')}
+            </h2>
+            <p className="text-gray-500 text-base px-4 max-w-xl mx-auto">
+              {t('alaCarteSubtitle')}
+            </p>
+          </div>
+
+          <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-100 max-w-6xl mx-auto">
+            {/* Prerequisite base package check */}
+            {(() => {
+              const hasActiveBaseBundle = rechargesList.some((r) => {
+                const isExpired = r.expires_at ? new Date(r.expires_at) <= new Date() : true;
+                const isAlacarte = r.plan_name.toUpperCase().startsWith('ALA CARTE');
+                return r.status === 'activated' && !isExpired && !isAlacarte;
+              });
+
+              const totalOriginalPaise = selectedChannels.reduce(
+                (sum, id) => sum + (channels.find((c) => c.id === id)?.price || 0),
+                0
+              );
+              const totalOriginalRupees = totalOriginalPaise / 100;
+              const totalRoundedRupees = Math.ceil(totalOriginalRupees);
+              const totalRoundedPaise = totalRoundedRupees * 100;
+
+              return (
+                <>
+
+            {/* Search and Filters */}
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-8">
+              {/* Search Bar */}
+              <div className="relative w-full md:max-w-md">
+                <input
+                  type="text"
+                  placeholder={t('searchChannel')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-purple-100 bg-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-800 shadow-inner"
+                />
+                <svg className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              {/* Genre Tabs */}
+              <div className="w-full md:max-w-xl overflow-x-auto flex gap-2 pb-2 scrollbar-thin">
+                <button
+                  onClick={() => setSelectedGenre('All')}
+                  className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                    selectedGenre === 'All'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'bg-white/80 border border-purple-100 text-purple-700 hover:bg-purple-50'
+                  }`}
+                >
+                  {t('allGenres')}
+                </button>
+                {Array.from(new Set(channels.map((c) => c.genre))).sort().map((genre) => (
+                  <button
+                    key={genre}
+                    onClick={() => setSelectedGenre(genre)}
+                    className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                      selectedGenre === genre
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : 'bg-white/80 border border-purple-100 text-purple-700 hover:bg-purple-50'
+                    }`}
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Channels Grid Container */}
+            <div className="max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-200 scrollbar-track-transparent">
+              {filteredChannels.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredChannels.map((channel) => {
+                    const isSelected = selectedChannels.includes(channel.id);
+                    return (
+                      <div
+                        key={channel.id}
+                        onClick={() => handleToggleChannel(channel.id)}
+                        className={`p-4 rounded-2xl border cursor-pointer select-none transition-all duration-300 transform hover:-translate-y-1 ${
+                          isSelected
+                            ? 'bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-indigo-500/10 border-purple-500 shadow-md shadow-purple-500/5'
+                            : 'bg-white/40 border-purple-100 hover:border-purple-300 hover:shadow-lg'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start gap-2 mb-2">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-800 text-sm sm:text-base leading-tight">
+                              {channel.name}
+                            </span>
+                            <span className="text-[10px] sm:text-xs text-purple-600 font-medium">
+                              {channel.genre}
+                            </span>
+                          </div>
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
+                            channel.hd_sd === 'HD'
+                              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                              : 'bg-gray-200 text-gray-700'
+                          }`}>
+                            {channel.hd_sd}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-end mt-4">
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className="text-[10px] font-black text-gray-900 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded">Ch. No. {channel.epg}</span>
+                            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">{channel.type}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-black text-purple-700">
+                              ₹{(channel.price / 100).toFixed(2)}
+                            </span>
+                            <span className="text-[9px] text-gray-400 block">incl. tax</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 font-medium">{t('noChannelsFound')}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Selection Banner below channels list */}
+            {selectedChannels.length > 0 && (
+              <div className="mt-8 pt-6 border-t border-purple-100 flex flex-col md:flex-row justify-between items-center gap-6 animate-fadeInUp">
+                <div className="flex flex-col gap-2 w-full md:max-w-2xl">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse" />
+                    <span className="text-sm font-black text-gray-700">
+                      {selectedChannels.length} {t('selectedChannels')}
+                    </span>
+                  </div>
+                  {/* Selected Channels tag pills list */}
+                  <div className="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto pr-1">
+                    {selectedChannels.map((id) => {
+                      const channel = channels.find((c) => c.id === id);
+                      if (!channel) return null;
+                      return (
+                        <span
+                          key={id}
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-purple-50 text-xs font-bold text-purple-700 border border-purple-100"
+                        >
+                          {channel.name} ({channel.hd_sd})
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleChannel(id);
+                            }}
+                            className="text-purple-400 hover:text-purple-700 focus:outline-none ml-1 text-sm font-black"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto justify-end">
+                  <div className="text-center sm:text-right">
+                    <span className="text-xs text-gray-400 uppercase tracking-wider block font-semibold">
+                      {t('totalAmountText')}
+                    </span>
+                    <span className="text-3xl font-black text-purple-700">
+                      ₹{totalRoundedRupees.toFixed(2)}
+                    </span>
+                    {totalOriginalRupees !== totalRoundedRupees && (
+                      <span className="text-[10px] text-gray-400 block font-semibold">
+                        Adjusted from ₹{totalOriginalRupees.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleBuyAlacarte}
+                    className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-extrabold text-lg shadow-lg hover:shadow-purple-500/25 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    {t('buySelected')}
+                  </button>
+                </div>
+              </div>
+            )}
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      </section>
+
+
       {/* Accessories Section */}
+
       <section id="accessories" className="pt-14 pb-16 sm:pt-20 sm:pb-24 relative overflow-hidden">
         {/* Colorful decorative background */}
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/80 via-fuchsia-50/50 to-orange-50/60" />
@@ -448,6 +720,50 @@ export default function HomePage() {
           customerName={customer.name}
           customerMobile={customer.mobile}
         />
+      )}
+
+      {customer && (
+        <AlacartePaymentModal
+          isOpen={showAlacarteModal}
+          onClose={() => setShowAlacarteModal(false)}
+          selectedChannelIds={selectedChannels}
+          channelCount={selectedChannels.length}
+          totalPrice={(() => {
+            const totalOriginalPaise = selectedChannels.reduce(
+              (sum, id) => sum + (channels.find((c) => c.id === id)?.price || 0),
+              0
+            );
+            const totalOriginalRupees = totalOriginalPaise / 100;
+            const totalRoundedRupees = Math.ceil(totalOriginalRupees);
+            return totalRoundedRupees * 100;
+          })()}
+          stbNumber={customer.stb_number}
+          customerName={customer.name}
+          customerMobile={customer.mobile}
+          onSuccess={() => setSelectedChannels([])}
+        />
+      )}
+
+      {showPrerequisiteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-purple-100 text-center relative animate-scaleIn">
+            <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+              🔒
+            </div>
+            <h3 className="font-display text-xl font-bold text-gray-800 mb-2">
+              Prerequisite Required
+            </h3>
+            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+              Recharge first with the base plan then only you can do ala carte top up
+            </p>
+            <button
+              onClick={() => setShowPrerequisiteModal(false)}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold transition-all active:scale-95 shadow-md"
+            >
+              Okay, Got it
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
