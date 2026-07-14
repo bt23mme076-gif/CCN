@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
       id: rechargeId,
       customer_id: user.customerId,
       plan_id: dynamicPlanId,
-      plan_name: `ALA CARTE (${channelIds.length} Channels)`,
+      plan_name: `ALA CARTE: ${selectedChannelNames.join(', ')}`,
       amount: roundedAmountPaise,
       status: 'pending',
       cashfree_order_id: cashfreeOrder.order_id || rechargeId,

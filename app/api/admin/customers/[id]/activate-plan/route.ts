@@ -121,7 +121,9 @@ export async function POST(
         id: rechargeId,
         customer_id: customerId,
         plan_id: plan.id,
-        plan_name: plan.name,
+        plan_name: plan.name.toUpperCase().startsWith('ALA CARTE') && plan.channels?.length
+          ? `ALA CARTE: ${plan.channels.join(', ')}`
+          : plan.name,
         amount: amount,
         status: 'activated',
         cashfree_order_id: 'ADMIN_ACTIVATED',

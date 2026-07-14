@@ -58,6 +58,10 @@ export default function HomePage() {
   const [showAlacarteModal, setShowAlacarteModal] = useState(false);
   const [rechargesList, setRechargesList] = useState<any[]>([]);
   const [showPrerequisiteModal, setShowPrerequisiteModal] = useState(false);
+  const [channelPage, setChannelPage] = useState(0);
+  const [slideDir, setSlideDir] = useState<'left' | 'right'>('right');
+  const [sliding, setSliding] = useState(false);
+  const CHANNELS_PER_PAGE = 12;
 
 
 
@@ -166,6 +170,19 @@ export default function HomePage() {
     const matchesGenre = selectedGenre === 'All' || channel.genre === selectedGenre;
     return matchesSearch && matchesGenre;
   });
+
+  const totalChannelPages = Math.ceil(filteredChannels.length / CHANNELS_PER_PAGE);
+  const pagedChannels = filteredChannels.slice(channelPage * CHANNELS_PER_PAGE, (channelPage + 1) * CHANNELS_PER_PAGE);
+
+  const goToChannelPage = (next: number, dir: 'left' | 'right') => {
+    if (sliding || next < 0 || next >= totalChannelPages) return;
+    setSlideDir(dir);
+    setSliding(true);
+    setTimeout(() => {
+      setChannelPage(next);
+      setSliding(false);
+    }, 300);
+  };
 
   return (
 
@@ -347,7 +364,7 @@ export default function HomePage() {
                   type="text"
                   placeholder={t('searchChannel')}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => { setSearchQuery(e.target.value); setChannelPage(0); }}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-purple-100 bg-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-800 shadow-inner"
                 />
                 <svg className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,7 +375,7 @@ export default function HomePage() {
               {/* Genre Tabs */}
               <div className="w-full md:max-w-xl overflow-x-auto flex gap-2 pb-2 scrollbar-thin">
                 <button
-                  onClick={() => setSelectedGenre('All')}
+                  onClick={() => { setSelectedGenre('All'); setChannelPage(0); }}
                   className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                     selectedGenre === 'All'
                       ? 'bg-purple-600 text-white shadow-md'
@@ -370,7 +387,7 @@ export default function HomePage() {
                 {Array.from(new Set(channels.map((c) => c.genre))).sort().map((genre) => (
                   <button
                     key={genre}
-                    onClick={() => setSelectedGenre(genre)}
+                    onClick={() => { setSelectedGenre(genre); setChannelPage(0); }}
                     className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                       selectedGenre === genre
                         ? 'bg-purple-600 text-white shadow-md'
@@ -383,59 +400,106 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Channels Grid Container */}
-            <div className="max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-200 scrollbar-track-transparent">
-              {filteredChannels.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {filteredChannels.map((channel) => {
-                    const isSelected = selectedChannels.includes(channel.id);
-                    return (
-                      <div
-                        key={channel.id}
-                        onClick={() => handleToggleChannel(channel.id)}
-                        className={`p-4 rounded-2xl border cursor-pointer select-none transition-all duration-300 transform hover:-translate-y-1 ${
-                          isSelected
-                            ? 'bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-indigo-500/10 border-purple-500 shadow-md shadow-purple-500/5'
-                            : 'bg-white/40 border-purple-100 hover:border-purple-300 hover:shadow-lg'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start gap-2 mb-2">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-800 text-sm sm:text-base leading-tight">
-                              {channel.name}
-                            </span>
-                            <span className="text-[10px] sm:text-xs text-purple-600 font-medium">
-                              {channel.genre}
-                            </span>
-                          </div>
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
-                            channel.hd_sd === 'HD'
-                              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                              : 'bg-gray-200 text-gray-700'
-                          }`}>
-                            {channel.hd_sd}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-end mt-4">
-                          <div className="flex flex-col gap-1 items-start">
-                            <span className="text-[10px] font-black text-gray-900 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded">Ch. No. {channel.epg}</span>
-                            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">{channel.type}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-black text-purple-700">
-                              ₹{(channel.price / 100).toFixed(2)}
-                            </span>
-                            <span className="text-[9px] text-gray-400 block">incl. tax</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+            {/* Channels Grid — paginated slider */}
+            <div className="relative overflow-hidden">
+              {/* Prev / Next arrows */}
+              {totalChannelPages > 1 && (
+                <>
+                  <button
+                    onClick={() => goToChannelPage(channelPage - 1, 'left')}
+                    disabled={channelPage === 0 || sliding}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-purple-100 flex items-center justify-center text-purple-600 hover:bg-purple-50 disabled:opacity-30 transition-all -ml-4"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    onClick={() => goToChannelPage(channelPage + 1, 'right')}
+                    disabled={channelPage >= totalChannelPages - 1 || sliding}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-md border border-purple-100 flex items-center justify-center text-purple-600 hover:bg-purple-50 disabled:opacity-30 transition-all -mr-4"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
 
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 font-medium">{t('noChannelsFound')}</p>
+              <div
+                className="px-5"
+                style={{
+                  transition: sliding ? 'transform 0.3s ease, opacity 0.3s ease' : 'none',
+                  transform: sliding
+                    ? `translateX(${slideDir === 'right' ? '-40px' : '40px'})`
+                    : 'translateX(0)',
+                  opacity: sliding ? 0 : 1,
+                }}
+              >
+                {pagedChannels.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {pagedChannels.map((channel) => {
+                      const isSelected = selectedChannels.includes(channel.id);
+                      return (
+                        <div
+                          key={channel.id}
+                          onClick={() => handleToggleChannel(channel.id)}
+                          className={`p-4 rounded-2xl border cursor-pointer select-none transition-all duration-300 transform hover:-translate-y-1 ${
+                            isSelected
+                              ? 'bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-indigo-500/10 border-purple-500 shadow-md shadow-purple-500/5'
+                              : 'bg-white/40 border-purple-100 hover:border-purple-300 hover:shadow-lg'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start gap-2 mb-2">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-800 text-sm leading-tight">
+                                {channel.name}
+                              </span>
+                              <span className="text-[10px] text-purple-600 font-medium">
+                                {channel.genre}
+                              </span>
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
+                              channel.hd_sd === 'HD'
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                                : 'bg-gray-200 text-gray-700'
+                            }`}>
+                              {channel.hd_sd}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-end mt-4">
+                            <div className="flex flex-col gap-1 items-start">
+                              <span className="text-[10px] font-black text-gray-900 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded">Ch. No. {channel.epg}</span>
+                              <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">{channel.type}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm font-black text-purple-700">
+                                ₹{(channel.price / 100).toFixed(2)}
+                              </span>
+                              <span className="text-[9px] text-gray-400 block">incl. tax</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 font-medium">{t('noChannelsFound')}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Page indicator dots */}
+              {totalChannelPages > 1 && (
+                <div className="flex justify-center gap-2 mt-6">
+                  {Array.from({ length: totalChannelPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goToChannelPage(i, i > channelPage ? 'right' : 'left')}
+                      className={`rounded-full transition-all duration-300 ${
+                        i === channelPage
+                          ? 'w-6 h-2 bg-purple-600'
+                          : 'w-2 h-2 bg-purple-200 hover:bg-purple-400'
+                      }`}
+                    />
+                  ))}
                 </div>
               )}
             </div>
