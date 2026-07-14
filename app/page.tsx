@@ -441,13 +441,15 @@ export default function HomePage() {
                           {/* Logo block */}
                           <div
                             className="relative flex items-center justify-center h-20 sm:h-24 w-full overflow-hidden"
-                            style={{ background: isSelected ? '#f5f3ff' : '#f8f7ff' }}
+                            style={{
+                              background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)'
+                            }}
                           >
                             {logoUrl ? (
                               <img
                                 src={logoUrl}
                                 alt={channel.name}
-                                className="max-h-12 sm:max-h-14 max-w-[75%] object-contain drop-shadow-sm"
+                                className="max-h-12 sm:max-h-14 max-w-[75%] object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.2)] transition-transform duration-200 hover:scale-105"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none';
                                   const fb = e.currentTarget.nextElementSibling as HTMLElement | null;
