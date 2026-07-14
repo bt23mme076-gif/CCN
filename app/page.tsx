@@ -63,6 +63,7 @@ export default function HomePage() {
   const [slideDir, setSlideDir] = useState<'left' | 'right'>('right');
   const [sliding, setSliding] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [adsList, setAdsList] = useState<{ id: string; business_name: string; image_data: string; phone: string | null }[]>([]);
 
 
 
@@ -77,11 +78,12 @@ export default function HomePage() {
 
   const fetchData = async () => {
     try {
-      const [plansRes, customerRes, accessoriesRes, channelsRes] = await Promise.all([
+      const [plansRes, customerRes, accessoriesRes, channelsRes, adsRes] = await Promise.all([
         fetch('/api/plans', { cache: 'no-store' }),
         fetch('/api/auth/me', { cache: 'no-store' }),
         fetch('/api/accessories', { cache: 'no-store' }),
         fetch('/api/channels'),
+        fetch('/api/advertisements', { cache: 'no-store' }),
       ]);
 
       const plansData = await plansRes.json();
@@ -107,6 +109,11 @@ export default function HomePage() {
       if (channelsRes.ok) {
         const channelsData = await channelsRes.json();
         setChannels(channelsData.channels || []);
+      }
+
+      if (adsRes.ok) {
+        const adsData = await adsRes.json();
+        setAdsList(adsData.advertisements || []);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -634,6 +641,53 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Local Sponsors Section */}
+      {adsList.length > 0 && (
+        <section id="sponsors" className="pt-14 pb-10 sm:pt-20 sm:pb-14 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-amber-50/40 to-white" />
+          <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full bg-yellow-300/15 blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-orange-300/15 blur-3xl" />
+
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8 sm:mb-12">
+              <span className="inline-block bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-5 py-1.5 rounded-full mb-4 shadow-md tracking-wide uppercase">
+                Local Sponsors
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-gray-800 font-display">
+                Our Community Partners
+              </h2>
+              <p className="mt-3 text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
+                Supporting local businesses that support our community.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {adsList.map((ad) => (
+                <div key={ad.id} className="group relative rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="aspect-video overflow-hidden bg-gray-50">
+                    <img
+                      src={ad.image_data}
+                      alt={ad.business_name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="px-4 py-3 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-gray-800 text-sm">{ad.business_name}</p>
+                      {ad.phone && (
+                        <a href={`tel:${ad.phone}`} className="text-xs text-orange-500 hover:text-orange-600 font-medium">
+                          {ad.phone}
+                        </a>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-medium">Sponsored</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Accessories Section */}
 

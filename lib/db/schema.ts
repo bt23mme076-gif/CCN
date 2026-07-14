@@ -82,6 +82,16 @@ export const accessories = pgTable('accessories', {
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const advertisements = pgTable('advertisements', {
+  id: text('id').primaryKey(),
+  business_name: text('business_name').notNull(),
+  image_data: text('image_data').notNull(), // base64 data URL or external https URL
+  phone: text('phone'),
+  is_active: boolean('is_active').default(true).notNull(),
+  expires_at: timestamp('expires_at'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const channels = pgTable('channels', {
   id: integer('id').primaryKey(),
   name: text('name').notNull(),
