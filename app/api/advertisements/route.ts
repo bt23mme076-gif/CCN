@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { advertisements } from '@/lib/db/schema';
 import { eq, and, or, isNull, gt } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const now = new Date();

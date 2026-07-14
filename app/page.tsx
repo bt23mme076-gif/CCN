@@ -642,25 +642,25 @@ export default function HomePage() {
       </section>
 
       {/* Local Sponsors Section */}
-      {adsList.length > 0 && (
-        <section id="sponsors" className="pt-14 pb-10 sm:pt-20 sm:pb-14 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-white via-amber-50/40 to-white" />
-          <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full bg-yellow-300/15 blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-orange-300/15 blur-3xl" />
+      <section id="sponsors" className="pt-14 pb-10 sm:pt-20 sm:pb-14 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-amber-50/40 to-white" />
+        <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full bg-yellow-300/15 blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-orange-300/15 blur-3xl" />
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8 sm:mb-12">
-              <span className="inline-block bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-5 py-1.5 rounded-full mb-4 shadow-md tracking-wide uppercase">
-                Local Sponsors
-              </span>
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-gray-800 font-display">
-                Our Community Partners
-              </h2>
-              <p className="mt-3 text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
-                Supporting local businesses that support our community.
-              </p>
-            </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-12">
+            <span className="inline-block bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-5 py-1.5 rounded-full mb-4 shadow-md tracking-wide uppercase">
+              Local Sponsors
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-gray-800 font-display">
+              Our Community Partners
+            </h2>
+            <p className="mt-3 text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
+              Supporting local businesses that support our community.
+            </p>
+          </div>
 
+          {adsList.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {adsList.map((ad) => (
                 <div key={ad.id} className="group relative rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
@@ -685,9 +685,13 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <div className="text-center py-10">
+              <p className="text-gray-400 text-sm">No sponsors yet. Local businesses can advertise here.</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Accessories Section */}
 
