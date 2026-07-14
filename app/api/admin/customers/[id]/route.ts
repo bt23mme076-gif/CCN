@@ -1,8 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { customers, recharges } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { customers, recharges, plans } from '@/lib/db/schema';
+import { eq, desc } from 'drizzle-orm';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await requireAdminAuth();
+
+    const customerId = params.id;
+
+    const customer = await db
+      .select()
+      .from(customers)
+      .where(eq(customers.id, customerId))
+      .limit(1);
+
+    const rechargeHistory = await db
+      .select({
+        recharge: recharges,
+        plan: plans,
+      })
+      .from(recharges)
+      .leftJoin(plans, eq(recharges.plan_id, plans.id))
+      .where(eq(recharges.customer_id, customerId))
+      .orderBy(desc(recharges.created_at));
+
+    return NextResponse.json({
+      customer: customer[0] || null,
+      recharges: rechargeHistory,
+    });
+  } catch (error) {
+    console.error('Get customer details error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch customer details' },
+      { status: 500 }
+    );
+  }
+}
 
 export async function DELETE(
   request: NextRequest,

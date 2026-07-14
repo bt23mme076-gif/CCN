@@ -8,6 +8,34 @@ interface CustomerItem {
   lastRecharge: string | null;
 }
 
+interface CustomerDetailRecharge {
+  recharge: {
+    id: string;
+    plan_name: string;
+    amount: number;
+    status: string;
+    created_at: string;
+    paid_at: string | null;
+    activated_at: string | null;
+    expires_at: string | null;
+    cashfree_order_id: string | null;
+    cashfree_payment_id: string | null;
+  };
+  plan: { id: string; name: string; channels: string[]; duration_days: number } | null;
+}
+
+interface CustomerDetailResponse {
+  customer: {
+    id: string;
+    name: string;
+    mobile: string;
+    stb_number: string;
+    area: string;
+    created_at: string;
+  };
+  recharges: CustomerDetailRecharge[];
+}
+
 const cardStyle = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' };
 const inputStyle = { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' };
 const labelStyle = 'block text-sm font-medium text-gray-300 mb-2';
@@ -41,6 +69,10 @@ export default function CustomersPage() {
   const [newPinVal, setNewPinVal] = useState('');
   const [resettingPin, setResettingPin] = useState(false);
   const [activatingPlan, setActivatingPlan] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<CustomerDetailResponse | null>(null);
+  const [loadingCustomerDetail, setLoadingCustomerDetail] = useState(false);
+  const [customerDetailError, setCustomerDetailError] = useState('');
 
   useEffect(() => {
     fetchCustomers();
@@ -249,6 +281,33 @@ export default function CustomersPage() {
     }
   };
 
+  const openCustomerDetails = async (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setSelectedCustomerDetail(null);
+    setCustomerDetailError('');
+    setLoadingCustomerDetail(true);
+    try {
+      const response = await fetch(`/api/admin/customers/${customerId}`);
+      const data = await response.json();
+      if (!response.ok) {
+        setCustomerDetailError(data.error || 'Failed to load customer details');
+        return;
+      }
+      setSelectedCustomerDetail(data);
+    } catch {
+      setCustomerDetailError('Failed to load customer details');
+    } finally {
+      setLoadingCustomerDetail(false);
+    }
+  };
+
+  const closeCustomerDetails = () => {
+    setSelectedCustomerId(null);
+    setSelectedCustomerDetail(null);
+    setCustomerDetailError('');
+    setLoadingCustomerDetail(false);
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 sm:mb-8">
@@ -348,7 +407,15 @@ export default function CustomersPage() {
                 <tbody>
                   {customers.map(({ customer, rechargeCount, lastRecharge }) => (
                     <tr key={customer.mobile}>
-                      <td className="font-semibold text-white">{customer.name}</td>
+                      <td>
+                        <button
+                          type="button"
+                          onClick={() => openCustomerDetails(customer.id)}
+                          className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4"
+                        >
+                          {customer.name}
+                        </button>
+                      </td>
                       <td className="text-gray-400">{customer.mobile}</td>
                       <td className="text-gray-400">{customer.stb_number}</td>
                       <td className="text-gray-400">{customer.area}</td>
@@ -400,7 +467,13 @@ export default function CustomersPage() {
                 <div key={customer.mobile} className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold text-white">{customer.name}</p>
+                      <button
+                        type="button"
+                        onClick={() => openCustomerDetails(customer.id)}
+                        className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4"
+                      >
+                        {customer.name}
+                      </button>
                       <p className="text-xs text-gray-400">{customer.mobile}</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-bold"
@@ -443,6 +516,106 @@ export default function CustomersPage() {
                 </div>
               ))}
             </div>
+
+            {selectedCustomerId && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+                <div className="w-full max-w-4xl rounded-2xl p-5 sm:p-6 overflow-y-auto max-h-[90vh] shadow-2xl border text-white"
+                     style={{ background: '#121214', borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <div className="flex items-start justify-between gap-4 mb-5">
+                    <div>
+                      <h3 className="font-display text-xl font-bold text-white">Customer Details</h3>
+                      <p className="text-sm text-gray-400 mt-1">Full recharge history and channel information for admin</p>
+                    </div>
+                    <button onClick={closeCustomerDetails} className="text-gray-400 hover:text-white transition-colors text-xl font-bold">
+                      ✕
+                    </button>
+                  </div>
+
+                  {loadingCustomerDetail ? (
+                    <div className="flex items-center justify-center py-16">
+                      <div className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin"
+                        style={{ borderColor: '#e63946', borderTopColor: 'transparent' }} />
+                    </div>
+                  ) : customerDetailError ? (
+                    <p className="text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl p-4">{customerDetailError}</p>
+                  ) : selectedCustomerDetail ? (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div className="rounded-xl p-4 bg-white/5 border border-white/10">
+                          <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Customer</p>
+                          <p className="font-semibold text-white">{selectedCustomerDetail.customer.name}</p>
+                        </div>
+                        <div className="rounded-xl p-4 bg-white/5 border border-white/10">
+                          <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Mobile</p>
+                          <p className="font-semibold text-white">{selectedCustomerDetail.customer.mobile}</p>
+                        </div>
+                        <div className="rounded-xl p-4 bg-white/5 border border-white/10">
+                          <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">STB</p>
+                          <p className="font-semibold text-white">{selectedCustomerDetail.customer.stb_number}</p>
+                        </div>
+                        <div className="rounded-xl p-4 bg-white/5 border border-white/10">
+                          <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Area</p>
+                          <p className="font-semibold text-white">{selectedCustomerDetail.customer.area}</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-sm font-bold uppercase tracking-wider text-gray-400">Recharge History</h4>
+                          <span className="text-xs text-gray-500">{selectedCustomerDetail.recharges.length} record(s)</span>
+                        </div>
+                        <div className="space-y-3">
+                          {selectedCustomerDetail.recharges.length === 0 ? (
+                            <p className="text-gray-400 text-sm rounded-xl p-4 bg-white/5 border border-white/10">No recharge history found for this customer.</p>
+                          ) : (
+                            selectedCustomerDetail.recharges.map(({ recharge, plan }) => (
+                              <div key={recharge.id} className="rounded-2xl p-4 bg-white/5 border border-white/10 space-y-3">
+                                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                                  <div>
+                                    <p className="font-semibold text-white">{recharge.plan_name}</p>
+                                    <p className="text-xs text-gray-400 mt-1">Recharge ID: {recharge.id}</p>
+                                  </div>
+                                  <span className="px-3 py-1 rounded-full text-xs font-bold text-white bg-white/10 border border-white/10 self-start">
+                                    {recharge.status}
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-gray-300">
+                                  <p>Date: <span className="text-gray-100">{formatDateTime(new Date(recharge.created_at))}</span></p>
+                                  <p>Paid: <span className="text-gray-100">{recharge.paid_at ? formatDateTime(new Date(recharge.paid_at)) : '—'}</span></p>
+                                  <p>Activated: <span className="text-gray-100">{recharge.activated_at ? formatDateTime(new Date(recharge.activated_at)) : '—'}</span></p>
+                                  <p>Expiry: <span className="text-gray-100">{recharge.expires_at ? formatDateTime(new Date(recharge.expires_at)) : '—'}</span></p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-300">
+                                  <p>Cashfree Order: <span className="text-gray-100 break-all">{recharge.cashfree_order_id || '—'}</span></p>
+                                  <p>Cashfree Payment: <span className="text-gray-100 break-all">{recharge.cashfree_payment_id || '—'}</span></p>
+                                </div>
+
+                                <div>
+                                  <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Included Channels</p>
+                                  {plan?.channels?.length ? (
+                                    <div className="flex flex-wrap gap-2">
+                                      {plan.channels.map((channel) => (
+                                        <span key={channel} className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                                          {channel}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-gray-500 text-sm">No channel data available for this plan.</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
