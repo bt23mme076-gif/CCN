@@ -141,7 +141,7 @@ export default function AllRechargesPage() {
                 <thead>
                   <tr>
                     <th>Customer</th><th>Mobile</th><th>Plan</th>
-                    <th>Amount</th><th>Date</th><th>Status</th><th>Action</th>
+                    <th>Amount</th><th>Date</th><th>Status</th><th>Action</th><th>Receipt</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -178,6 +178,19 @@ export default function AllRechargesPage() {
                             </button>
                           )}
                         </div>
+                      </td>
+                      <td>
+                        {(recharge.status === 'paid' || recharge.status === 'activated') && (
+                          <a
+                            href={`/api/admin/receipt/${recharge.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-white inline-block hover:opacity-80 transition-opacity"
+                            style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
+                          >
+                            Receipt
+                          </a>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -219,6 +232,17 @@ export default function AllRechargesPage() {
                       style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
                       {deleting === recharge.id ? 'Deleting...' : 'Delete'}
                     </button>
+                  )}
+                  {(recharge.status === 'paid' || recharge.status === 'activated') && (
+                    <a
+                      href={`/api/admin/receipt/${recharge.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 rounded-xl text-sm font-bold text-white text-center block"
+                      style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
+                    >
+                      Download Receipt
+                    </a>
                   )}
                 </div>
               ))}
@@ -291,9 +315,20 @@ export default function AllRechargesPage() {
                               <p className="font-semibold text-white">{recharge.plan_name}</p>
                               <p className="text-xs text-gray-400 mt-1">Recharge ID: {recharge.id}</p>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
                               <span className="text-green-400 font-semibold">{formatCurrency(recharge.amount)}</span>
                               <StatusBadge status={recharge.status} />
+                              {(recharge.status === 'paid' || recharge.status === 'activated') && (
+                                <a
+                                  href={`/api/admin/receipt/${recharge.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3 py-1 rounded-lg text-xs font-bold text-white"
+                                  style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
+                                >
+                                  Receipt
+                                </a>
+                              )}
                             </div>
                           </div>
 

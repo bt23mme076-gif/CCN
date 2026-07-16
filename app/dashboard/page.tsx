@@ -334,6 +334,7 @@ export default function DashboardPage() {
                       <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm">Date</th>
                       <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm">Amount</th>
                       <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm">Status</th>
+                      <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm">Receipt</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -351,6 +352,18 @@ export default function DashboardPage() {
                         </td>
                         <td className="py-3 px-2 sm:px-4">
                           <StatusBadge status={recharge.status} />
+                        </td>
+                        <td className="py-3 px-2 sm:px-4">
+                          {(recharge.status === 'paid' || recharge.status === 'activated') && (
+                            <a
+                              href={`/api/receipt/${recharge.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap"
+                            >
+                              Download
+                            </a>
+                          )}
                         </td>
                       </tr>
                     ))}
