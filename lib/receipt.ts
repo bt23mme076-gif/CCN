@@ -211,7 +211,7 @@ export function generateReceiptHTML(data: ReceiptData): string {
         <td>
           ${recharge.plan_name}
           ${recharge.activated_at && recharge.expires_at
-            ? `<div style="font-size:10px;color:#555;margin-top:3px;">Valid: ${fmtDate(recharge.activated_at)} &mdash; ${fmtDate(recharge.expires_at)}</div>`
+            ? `<div style="font-size:10px;color:#555;margin-top:3px;">Valid: ${fmtDate(recharge.activated_at)} &mdash; ${fmtDate(new Date(new Date(recharge.expires_at).getTime() - 24 * 60 * 60 * 1000))}</div>`
             : ''}
         </td>
         <td>${months}</td>
