@@ -717,25 +717,6 @@ export default function HomePage() {
                 </div>
               </div>
             ))}
-
-            {/* "Advertise Here" placeholder card */}
-            <a
-              href="https://wa.me/919399974696?text=Hello%2C%20I%20want%20to%20advertise%20on%20CCN%20Networks%20website"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative rounded-2xl overflow-hidden border-2 border-dashed border-orange-200 bg-orange-50/50 hover:bg-orange-50 hover:border-orange-400 transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center p-8 text-center min-h-[200px]"
-            >
-              <div className="w-12 h-12 rounded-full bg-orange-100 group-hover:bg-orange-200 flex items-center justify-center mb-3 transition-colors">
-                <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <p className="font-bold text-gray-700 text-sm">Your Business Here</p>
-              <p className="text-xs text-gray-400 mt-1 mb-3">Reach 2,000+ local households</p>
-              <span className="px-4 py-1.5 rounded-full text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #f77f00, #d62828)' }}>
-                Contact Us on WhatsApp
-              </span>
-            </a>
           </div>
         </div>
       </section>
