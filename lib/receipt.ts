@@ -249,7 +249,7 @@ export function generateReceiptHTML(data: ReceiptData): string {
       </div>
 
       <div class="signature-block">
-        <img src="/signature.png" alt="Signature" style="height:60px; width:auto; display:block; margin-left:auto; margin-bottom:4px;" />
+        <img src="/signature.png" alt="Signature" style="height:60px; width:auto; display:block; margin:0 auto 4px;" />
         AUTHORISED SIGNATORY FOR<br>CHANDNI CABLE NETWORK
       </div>
     </div>
