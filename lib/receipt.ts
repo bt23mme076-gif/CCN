@@ -208,7 +208,12 @@ export function generateReceiptHTML(data: ReceiptData): string {
     </thead>
     <tbody>
       <tr>
-        <td>${recharge.plan_name}</td>
+        <td>
+          ${recharge.plan_name}
+          ${recharge.activated_at && recharge.expires_at
+            ? `<div style="font-size:10px;color:#555;margin-top:3px;">Valid: ${fmtDate(recharge.activated_at)} &mdash; ${fmtDate(recharge.expires_at)}</div>`
+            : ''}
+        </td>
         <td>${months}</td>
         <td>${fmtCurrency(ratePerMonth)}</td>
         <td>${fmtCurrency(recharge.amount)}</td>
