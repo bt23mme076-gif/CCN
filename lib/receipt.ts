@@ -83,7 +83,7 @@ export function generateReceiptHTML(data: ReceiptData): string {
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; font-size: 12px; color: #111; background: #f0f0f0; padding: 20px; }
-    .page { max-width: 700px; margin: 0 auto; background: white; padding: 0; }
+    .page { max-width: 700px; margin: 0 auto; background: white; padding: 0; border: 2px solid #111; }
 
     /* Top bar */
     .topbar { display: flex; justify-content: space-between; align-items: center; padding: 6px 16px; border-bottom: 1px solid #ccc; font-size: 11px; }
@@ -244,7 +244,7 @@ export function generateReceiptHTML(data: ReceiptData): string {
       </div>
 
       <div class="signature-block">
-        <br><br>
+        <img src="/signature.png" alt="Signature" style="height:60px; width:auto; display:block; margin-left:auto; margin-bottom:4px;" />
         AUTHORISED SIGNATORY FOR<br>CHANDNI CABLE NETWORK
       </div>
     </div>
