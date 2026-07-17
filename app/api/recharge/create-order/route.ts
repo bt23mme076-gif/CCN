@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (customer[0].outstanding_balance > 0) {
+      return NextResponse.json(
+        { error: `Recharge blocked. Please clear your outstanding due of ₹${customer[0].outstanding_balance} first.` },
+        { status: 403 }
+      );
+    }
+
     // Check if Cashfree is configured
     if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
       return NextResponse.json(

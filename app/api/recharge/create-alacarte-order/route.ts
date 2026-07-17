@@ -42,6 +42,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (customer[0].outstanding_balance > 0) {
+      return NextResponse.json(
+        { error: `Recharge blocked. Please clear your outstanding due of ₹${customer[0].outstanding_balance} first.` },
+        { status: 403 }
+      );
+    }
+
     // 2. Hard Prerequisite Validation: Customer must have an active base bundle (not expired, not A La Carte)
     const customerRecharges = await db
       .select()
