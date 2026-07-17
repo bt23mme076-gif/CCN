@@ -70,7 +70,7 @@ export default function ExpiringPage() {
             <span className="text-3xl font-black text-white">{items.length}</span>
             <div>
               <p className="text-white font-semibold text-sm">customers need a reminder</p>
-              <p className="text-gray-400 text-xs">Click "Send WhatsApp" to notify them directly</p>
+              <p className="text-gray-400 text-xs">Click Send WhatsApp button to notify them directly</p>
             </div>
           </div>
 
