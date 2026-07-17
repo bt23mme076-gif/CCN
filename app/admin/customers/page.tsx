@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { formatDateTime } from '@/lib/utils';
 
 interface CustomerItem {
-  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; };
+  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; outstanding_balance: number; };
   rechargeCount: number;
   lastRecharge: string | null;
 }
@@ -74,6 +74,11 @@ export default function CustomersPage() {
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<CustomerDetailResponse | null>(null);
   const [loadingCustomerDetail, setLoadingCustomerDetail] = useState(false);
   const [customerDetailError, setCustomerDetailError] = useState('');
+
+  // States for Dues
+  const [selectedCustForDues, setSelectedCustForDues] = useState<{ id: string; name: string; outstanding_balance: number } | null>(null);
+  const [duesAmount, setDuesAmount] = useState('');
+  const [savingDues, setSavingDues] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -310,6 +315,36 @@ export default function CustomersPage() {
     }
   };
 
+  const handleSaveDue = async () => {
+    if (!selectedCustForDues) return;
+    const amount = parseInt(duesAmount, 10);
+    if (isNaN(amount) || amount < 0) return;
+    setSavingDues(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${selectedCustForDues.id}/dues`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      });
+      if (!res.ok) throw new Error();
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.customer.id === selectedCustForDues.id
+            ? { ...c, customer: { ...c.customer, outstanding_balance: amount } }
+            : c
+        )
+      );
+      setMessage({ type: 'success', text: amount === 0
+        ? `${selectedCustForDues.name} ka due clear ho gaya`
+        : `${selectedCustForDues.name} ka due ₹${amount} set ho gaya` });
+      setSelectedCustForDues(null);
+    } catch {
+      setMessage({ type: 'error', text: 'Due update nahi hua, dobara try karo' });
+    } finally {
+      setSavingDues(false);
+    }
+  };
+
   const openCustomerDetails = async (customerId: string) => {
     setSelectedCustomerId(customerId);
     setSelectedCustomerDetail(null);
@@ -444,13 +479,21 @@ export default function CustomersPage() {
                   {customers.map(({ customer, rechargeCount, lastRecharge }) => (
                     <tr key={customer.mobile}>
                       <td>
-                        <button
-                          type="button"
-                          onClick={() => openCustomerDetails(customer.id)}
-                          className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4"
-                        >
-                          {customer.name}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openCustomerDetails(customer.id)}
+                            className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4"
+                          >
+                            {customer.name}
+                          </button>
+                          {customer.outstanding_balance > 0 && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                              style={{ background: 'rgba(230,57,70,0.2)', color: '#f87171', border: '1px solid rgba(230,57,70,0.4)' }}>
+                              DUE ₹{customer.outstanding_balance}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="text-gray-400">{customer.mobile}</td>
                       <td className="text-gray-400">{customer.stb_number}</td>
@@ -464,6 +507,12 @@ export default function CustomersPage() {
                       <td className="text-gray-400">{lastRecharge || '—'}</td>
                       <td>
                         <div className="flex items-center gap-3">
+                          <button onClick={() => { setSelectedCustForDues({ id: customer.id, name: customer.name, outstanding_balance: customer.outstanding_balance }); setDuesAmount(String(customer.outstanding_balance)); }}
+                            className="text-xs font-semibold transition-colors"
+                            style={{ color: customer.outstanding_balance > 0 ? '#f87171' : '#94a3b8' }}>
+                            {customer.outstanding_balance > 0 ? `Due ₹${customer.outstanding_balance}` : 'Set Due'}
+                          </button>
+                          <span className="text-gray-700">|</span>
                           <button onClick={() => handleManagePrices(customer)}
                             className="text-xs font-semibold transition-colors text-indigo-400 hover:text-indigo-300">
                             Set Prices
@@ -503,13 +552,21 @@ export default function CustomersPage() {
                 <div key={customer.mobile} className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <button
-                        type="button"
-                        onClick={() => openCustomerDetails(customer.id)}
-                        className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4"
-                      >
-                        {customer.name}
-                      </button>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => openCustomerDetails(customer.id)}
+                          className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4"
+                        >
+                          {customer.name}
+                        </button>
+                        {customer.outstanding_balance > 0 && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                            style={{ background: 'rgba(230,57,70,0.2)', color: '#f87171', border: '1px solid rgba(230,57,70,0.4)' }}>
+                            DUE ₹{customer.outstanding_balance}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-400">{customer.mobile}</p>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-xs font-bold"
@@ -523,6 +580,13 @@ export default function CustomersPage() {
                     <p>Last Plan: <span className="text-gray-200">{lastRecharge || '—'}</span></p>
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
+                    <button onClick={() => { setSelectedCustForDues({ id: customer.id, name: customer.name, outstanding_balance: customer.outstanding_balance }); setDuesAmount(String(customer.outstanding_balance)); }}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
+                      style={customer.outstanding_balance > 0
+                        ? { background: 'rgba(230,57,70,0.15)', color: '#f87171', border: '1px solid rgba(230,57,70,0.3)' }
+                        : { background: 'rgba(148,163,184,0.1)', color: '#94a3b8', border: '1px solid rgba(148,163,184,0.2)' }}>
+                      {customer.outstanding_balance > 0 ? `Due ₹${customer.outstanding_balance}` : 'Set Due'}
+                    </button>
                     <button onClick={() => handleManagePrices(customer)}
                       className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
                       style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.3)' }}>
@@ -853,6 +917,67 @@ export default function CustomersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Set Due Modal */}
+      {selectedCustForDues && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl p-5 sm:p-6 shadow-2xl border"
+               style={{ background: '#121214', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h3 className="font-display text-lg font-bold text-white">Outstanding Due</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{selectedCustForDues.name}</p>
+              </div>
+              <button onClick={() => setSelectedCustForDues(null)} className="text-gray-400 hover:text-white text-xl font-bold">✕</button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className={labelStyle}>Due Amount (₹ rupees)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={duesAmount}
+                  onChange={(e) => setDuesAmount(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all"
+                  style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(230,57,70,0.6)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                />
+                <p className="text-xs text-gray-500 mt-1">0 enter karo to due clear karo</p>
+              </div>
+
+              {selectedCustForDues.outstanding_balance > 0 && (
+                <div className="rounded-xl px-4 py-3 text-sm"
+                     style={{ background: 'rgba(230,57,70,0.1)', border: '1px solid rgba(230,57,70,0.25)' }}>
+                  <span className="text-red-400">Current due: </span>
+                  <span className="font-bold text-red-300">₹{selectedCustForDues.outstanding_balance}</span>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                {selectedCustForDues.outstanding_balance > 0 && (
+                  <button
+                    onClick={() => { setDuesAmount('0'); }}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
+                    style={{ background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.25)' }}>
+                    Mark Paid (Clear)
+                  </button>
+                )}
+                <button
+                  onClick={handleSaveDue}
+                  disabled={savingDues || duesAmount === ''}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)' }}>
+                  {savingDues ? 'Saving...' : 'Save Due'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

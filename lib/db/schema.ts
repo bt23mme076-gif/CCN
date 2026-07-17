@@ -8,6 +8,7 @@ export const customers = pgTable('customers', {
   stb_number: text('stb_number').notNull(),
   area: text('area').notNull(),
   pin_hash: text('pin_hash').notNull(),
+  outstanding_balance: integer('outstanding_balance').default(0).notNull(), // in rupees, cash dues
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 

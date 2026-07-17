@@ -19,6 +19,7 @@ export async function GET() {
         mobile: customers.mobile,
         stb_number: customers.stb_number,
         area: customers.area,
+        outstanding_balance: customers.outstanding_balance,
         created_at: customers.created_at,
       })
       .from(customers)

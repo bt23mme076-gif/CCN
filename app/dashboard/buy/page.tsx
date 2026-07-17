@@ -34,6 +34,7 @@ interface Customer {
   mobile: string;
   stb_number: string;
   area: string;
+  outstanding_balance: number;
 }
 
 interface Recharge {
@@ -213,6 +214,43 @@ export default function BuyHistoryPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
+      </div>
+    );
+  }
+
+  if (customer && customer.outstanding_balance > 0) {
+    return (
+      <div className="min-h-screen bg-gray-1 flex flex-col">
+        <nav className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/" className="font-display text-2xl font-bold">
+                <span className="text-gradient-cool">CCN</span>{' '}
+                <span className="text-brand-navy">Networks</span>
+              </Link>
+              <button onClick={handleLogout} className="text-accent-red hover:underline font-medium text-sm">
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+        <div className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="w-full max-w-md text-center">
+            <div className="text-6xl mb-4">🔒</div>
+            <h2 className="font-display text-2xl font-bold text-brand-navy mb-2">Recharge Blocked</h2>
+            <p className="text-gray-600 mb-6 text-sm">
+              You have an outstanding due on your account. Please clear your dues to continue recharging.
+            </p>
+            <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-6 mb-6">
+              <p className="text-sm text-red-600 font-medium mb-1">Outstanding Due</p>
+              <p className="text-4xl font-black text-red-600">₹{customer.outstanding_balance}</p>
+              <p className="text-xs text-red-400 mt-1">Pay this amount to your cable operator to unlock recharge</p>
+            </div>
+            <p className="text-sm text-gray-500">
+              Contact <span className="font-semibold text-brand-navy">CCN Networks</span> to pay your dues and unlock your account.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
