@@ -25,22 +25,21 @@ function BarChart({ data, valueKey, labelKey, color }: {
 }) {
   const max = Math.max(...data.map((d) => d[valueKey]), 1);
   return (
-    <div className="flex items-end gap-1 h-36 w-full">
+    <div className="relative flex items-end gap-px w-full" style={{ height: 144 }}>
       {data.map((d, i) => {
         const pct = (d[valueKey] / max) * 100;
         return (
-          <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+          <div key={i} className="flex-1 relative group" style={{ height: '100%' }}>
             {/* Tooltip */}
             <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-white/10">
               {fmt(d[valueKey])}
-              <br />
-              <span className="text-gray-400">{d[labelKey]}</span>
             </div>
+            {/* Bar anchored to bottom */}
             <div
-              className="w-full rounded-t-sm transition-all duration-300"
+              className="absolute bottom-0 left-0 right-0 rounded-t-sm transition-all duration-300"
               style={{
-                height: `${Math.max(pct, 2)}%`,
-                background: pct > 0 ? color : 'rgba(255,255,255,0.05)',
+                height: `${Math.max(pct, pct > 0 ? 2 : 0)}%`,
+                background: pct > 0 ? color : 'transparent',
               }}
             />
           </div>
@@ -53,27 +52,29 @@ function BarChart({ data, valueKey, labelKey, color }: {
 function MonthChart({ data }: { data: { label: string; total: number; count: number }[] }) {
   const max = Math.max(...data.map((d) => d.total), 1);
   return (
-    <div className="flex items-end gap-2 sm:gap-3 h-44 w-full">
+    <div className="flex items-end gap-2 sm:gap-3 w-full" style={{ height: 176 }}>
       {data.map((d, i) => {
         const pct = (d.total / max) * 100;
         const isLast = i === data.length - 1;
         return (
-          <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative">
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-white/10">
+          <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative" style={{ height: '100%' }}>
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-white/10">
               {fmt(d.total)}
               <br />
               <span className="text-gray-400">{d.count} recharges</span>
             </div>
-            <div
-              className="w-full rounded-t-md transition-all duration-500"
-              style={{
-                height: `${Math.max(pct, 3)}%`,
-                background: isLast
-                  ? 'linear-gradient(180deg, #e63946, #f77f00)'
-                  : 'linear-gradient(180deg, rgba(99,102,241,0.8), rgba(99,102,241,0.4))',
-              }}
-            />
-            <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium">{d.label}</span>
+            <div className="flex-1 w-full relative">
+              <div
+                className="absolute bottom-0 left-0 right-0 rounded-t-md transition-all duration-500"
+                style={{
+                  height: `${Math.max(pct, pct > 0 ? 3 : 0)}%`,
+                  background: isLast
+                    ? 'linear-gradient(180deg, #e63946, #f77f00)'
+                    : 'linear-gradient(180deg, rgba(99,102,241,0.8), rgba(99,102,241,0.4))',
+                }}
+              />
+            </div>
+            <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium flex-shrink-0">{d.label}</span>
           </div>
         );
       })}

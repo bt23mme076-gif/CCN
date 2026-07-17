@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
-import { eq, and, gte, lte, not, ilike } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,12 +26,10 @@ export async function GET() {
       .from(recharges)
       .leftJoin(customers, eq(recharges.customer_id, customers.id))
       .where(
-        and(
-          eq(recharges.status, 'activated'),
-          gte(recharges.expires_at, now),
-          lte(recharges.expires_at, in3Days),
-          not(ilike(recharges.plan_name, 'ALA CARTE%'))
-        )
+        sql`${recharges.status} = 'activated'
+          AND ${recharges.expires_at} >= ${now.toISOString()}
+          AND ${recharges.expires_at} <= ${in3Days.toISOString()}
+          AND ${recharges.plan_name} NOT ILIKE 'ALA CARTE%'`
       )
       .orderBy(recharges.expires_at);
 

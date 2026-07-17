@@ -19,7 +19,7 @@ export async function GET() {
 
     const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
 
-    const [[thisMonth], [lastMonth], [today], [totalAll]] = await Promise.all([
+    const [thisMonthRes, lastMonthRes, todayRes, totalAllRes] = await Promise.all([
       db.select({ total: sql<number>`coalesce(sum(${recharges.amount}),0)::int`, count: sql<number>`count(*)::int` })
         .from(recharges)
         .where(sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${thisMonthStart.toISOString()}`),
@@ -36,6 +36,11 @@ export async function GET() {
         .from(recharges)
         .where(sql`${recharges.status} IN ('paid','activated')`),
     ]);
+
+    const thisMonth = thisMonthRes[0] ?? { total: 0, count: 0 };
+    const lastMonth = lastMonthRes[0] ?? { total: 0 };
+    const today = todayRes[0] ?? { total: 0, count: 0 };
+    const totalAll = totalAllRes[0] ?? { total: 0, count: 0 };
 
     // --- Last 30 days daily ---
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
