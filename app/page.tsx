@@ -11,6 +11,7 @@ import AccessoryCard from '@/components/AccessoryCard';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import ContactSection from '@/components/ContactSection';
 import AlacartePaymentModal from '@/components/AlacartePaymentModal';
+import SponsorSlideshow from '@/components/SponsorSlideshow';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
 import { getChannelLogo, getChannelColor } from '@/lib/channelLogos';
@@ -691,33 +692,24 @@ export default function HomePage() {
             </a>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {adsList.map((ad) => (
-              <div key={ad.id} className="group relative rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                <div className="aspect-video overflow-hidden bg-gray-50">
-                  <img
-                    src={ad.image_data}
-                    alt={ad.business_name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="px-4 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-800 text-sm">{ad.business_name}</p>
-                    {ad.phone && (
-                      <a href={`tel:${ad.phone}`} className="text-xs text-orange-500 hover:text-orange-600 font-semibold flex items-center gap-1 mt-0.5">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        {ad.phone}
-                      </a>
-                    )}
-                  </div>
-                  <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-medium">Sponsored</span>
-                </div>
+          {(() => {
+            // Group ads by business_name so multiple entries = slideshow slides
+            const grouped = adsList.reduce<Record<string, { images: string[]; phone: string | null }>>((acc, ad) => {
+              if (!acc[ad.business_name]) {
+                acc[ad.business_name] = { images: [], phone: ad.phone };
+              }
+              acc[ad.business_name].images.push(ad.image_data);
+              return acc;
+            }, {});
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {Object.entries(grouped).map(([name, { images, phone }]) => (
+                  <SponsorSlideshow key={name} businessName={name} images={images} phone={phone} />
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </div>
       </section>
 
