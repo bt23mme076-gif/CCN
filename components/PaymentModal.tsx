@@ -107,7 +107,7 @@ export default function PaymentModal({
       });
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Failed to initiate payment. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.');
       setLoading(false);
     }
   };
