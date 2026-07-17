@@ -44,7 +44,8 @@ export default function PaymentModal({
       });
 
       if (!orderResponse.ok) {
-        throw new Error('Failed to create order');
+        const errData = await orderResponse.json();
+        throw new Error(errData.error || 'Failed to create order');
       }
 
       const orderData = await orderResponse.json();
