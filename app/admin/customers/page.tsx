@@ -192,6 +192,34 @@ export default function CustomersPage() {
     finally { setDeleting(null); }
   };
 
+  const handleExportCSV = async () => {
+    try {
+      const data = await (await fetch('/api/admin/customers')).json();
+      const all: CustomerItem[] = data.customers || [];
+      const rows = [
+        ['Name', 'Mobile', 'STB Number', 'Area', 'Total Recharges', 'Last Recharge'],
+        ...all.map(({ customer, rechargeCount, lastRecharge }) => [
+          customer.name,
+          customer.mobile,
+          customer.stb_number,
+          customer.area,
+          rechargeCount,
+          lastRecharge ? new Date(lastRecharge).toLocaleDateString('en-IN') : 'Never',
+        ]),
+      ];
+      const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CCN_Customers_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Export failed. Please try again.');
+    }
+  };
+
   const handleOpenActivatePlan = (customer: { id: string; name: string }) => {
     setSelectedCustForPlan(customer);
     setSelectedPlanToActivate('');
@@ -313,11 +341,18 @@ export default function CustomersPage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 sm:mb-8">
         <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">Customers</h1>
-        <button onClick={() => setShowForm(!showForm)}
-          className="px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 w-full sm:w-auto"
-          style={{ background: showForm ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #e63946, #f77f00)', border: showForm ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
-          {showForm ? 'Cancel' : '+ Add Customer'}
-        </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button onClick={handleExportCSV}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105"
+            style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}>
+            ↓ Export CSV
+          </button>
+          <button onClick={() => setShowForm(!showForm)}
+            className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105"
+            style={{ background: showForm ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #e63946, #f77f00)', border: showForm ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
+            {showForm ? 'Cancel' : '+ Add Customer'}
+          </button>
+        </div>
       </div>
 
       {message && (
