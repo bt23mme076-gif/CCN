@@ -163,11 +163,11 @@ export default function AllRechargesPage() {
                       <td><StatusBadge status={recharge.status} /></td>
                       <td>
                         <div className="flex gap-2">
-                          {recharge.status === 'paid' && (
+                          {(recharge.status === 'paid' || recharge.status === 'pending') && (
                             <button onClick={() => handleActivate(recharge.id)} disabled={activating === recharge.id}
                               className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
                               style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
-                              {activating === recharge.id ? 'Activating...' : 'Activate'}
+                              {activating === recharge.id ? 'Activating...' : recharge.status === 'pending' ? 'Force Activate' : 'Activate'}
                             </button>
                           )}
                           {(recharge.status === 'pending' || recharge.status === 'failed') && (
@@ -219,11 +219,11 @@ export default function AllRechargesPage() {
                     <p>Amount: <span className="text-green-400 font-semibold">{formatCurrency(recharge.amount)}</span></p>
                     <p>Date: {formatDateTime(new Date(recharge.created_at))}</p>
                   </div>
-                  {recharge.status === 'paid' && (
+                  {(recharge.status === 'paid' || recharge.status === 'pending') && (
                     <button onClick={() => handleActivate(recharge.id)} disabled={activating === recharge.id}
                       className="w-full py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
                       style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
-                      {activating === recharge.id ? 'Activating...' : '✓ Activate'}
+                      {activating === recharge.id ? 'Activating...' : recharge.status === 'pending' ? '⚡ Force Activate' : '✓ Activate'}
                     </button>
                   )}
                   {(recharge.status === 'pending' || recharge.status === 'failed') && (

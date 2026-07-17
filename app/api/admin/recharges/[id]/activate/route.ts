@@ -32,9 +32,9 @@ export async function POST(
 
     const { recharge: rechargeData, plan } = recharge[0];
 
-    if (rechargeData.status !== 'paid') {
+    if (rechargeData.status !== 'paid' && rechargeData.status !== 'pending') {
       return NextResponse.json(
-        { error: 'Recharge must be paid before activation' },
+        { error: 'Recharge must be paid or pending before activation' },
         { status: 400 }
       );
     }
@@ -100,11 +100,12 @@ export async function POST(
       expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
     }
 
-    // Update recharge
+    // Update recharge (also set paid_at if it was pending — admin manually confirmed payment)
     await db
       .update(recharges)
       .set({
         status: 'activated',
+        paid_at: rechargeData.paid_at ?? new Date(),
         activated_at: new Date(),
         activated_by: admin.username,
         expires_at: expiresAt,
