@@ -80,6 +80,9 @@ export default function CustomersPage() {
   const [duesAmount, setDuesAmount] = useState('');
   const [savingDues, setSavingDues] = useState(false);
 
+  // Dropdown
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
   useEffect(() => {
     fetchCustomers();
     fetchPlans();
@@ -474,17 +477,14 @@ export default function CustomersPage() {
           <>
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full admin-table">
-                <thead><tr><th>Name</th><th>Mobile</th><th>STB Number</th><th>Area</th><th>Recharges</th><th>Last Plan</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Name</th><th>Mobile</th><th>STB</th><th>Area</th><th>Plans</th><th></th></tr></thead>
                 <tbody>
                   {customers.map(({ customer, rechargeCount, lastRecharge }) => (
                     <tr key={customer.mobile}>
                       <td>
                         <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openCustomerDetails(customer.id)}
-                            className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4"
-                          >
+                          <button type="button" onClick={() => openCustomerDetails(customer.id)}
+                            className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4">
                             {customer.name}
                           </button>
                           {customer.outstanding_balance > 0 && (
@@ -494,52 +494,48 @@ export default function CustomersPage() {
                             </span>
                           )}
                         </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{lastRecharge || '—'}</p>
                       </td>
-                      <td className="text-gray-400">{customer.mobile}</td>
-                      <td className="text-gray-400">{customer.stb_number}</td>
-                      <td className="text-gray-400">{customer.area}</td>
+                      <td className="text-gray-400 text-sm">{customer.mobile}</td>
+                      <td className="text-gray-400 text-sm">{customer.stb_number}</td>
+                      <td className="text-gray-400 text-sm">{customer.area}</td>
                       <td>
                         <span className="px-2.5 py-1 rounded-full text-xs font-bold"
                           style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.3)' }}>
                           {rechargeCount}
                         </span>
                       </td>
-                      <td className="text-gray-400">{lastRecharge || '—'}</td>
                       <td>
-                        <div className="flex items-center gap-3">
-                          <button onClick={() => { setSelectedCustForDues({ id: customer.id, name: customer.name, outstanding_balance: customer.outstanding_balance }); setDuesAmount(String(customer.outstanding_balance)); }}
-                            className="text-xs font-semibold transition-colors"
-                            style={{ color: customer.outstanding_balance > 0 ? '#f87171' : '#94a3b8' }}>
-                            {customer.outstanding_balance > 0 ? `Due ₹${customer.outstanding_balance}` : 'Set Due'}
+                        <div className="relative">
+                          <button
+                            onClick={() => setOpenDropdown(openDropdown === customer.id ? null : customer.id)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                            style={{ background: 'rgba(255,255,255,0.06)' }}>
+                            ⋯
                           </button>
-                          <span className="text-gray-700">|</span>
-                          <button onClick={() => handleManagePrices(customer)}
-                            className="text-xs font-semibold transition-colors text-indigo-400 hover:text-indigo-300">
-                            Set Prices
-                          </button>
-                          <span className="text-gray-700">|</span>
-                          <button onClick={() => handleOpenActivatePlan(customer)}
-                            className="text-xs font-semibold transition-colors text-green-400 hover:text-green-300">
-                            Activate Plan
-                          </button>
-                          <span className="text-gray-700">|</span>
-                           <button onClick={() => handleDeactivateCustomer(customer.id, customer.name)}
-                             className="text-xs font-semibold transition-colors text-amber-400 hover:text-amber-300">
-                             Deactivate Plan
-                           </button>
-                           <span className="text-gray-700">|</span>
-                           <button onClick={() => setSelectedCustForReset(customer)}
-                             className="text-xs font-semibold transition-colors text-pink-400 hover:text-pink-300">
-                             Reset PIN
-                           </button>
-                           <span className="text-gray-700">|</span>
-                          <button onClick={() => handleDelete(customer.id, customer.name)} disabled={deleting === customer.id}
-                            className="text-xs font-semibold transition-colors disabled:opacity-50"
-                            style={{ color: '#f87171' }}
-                            onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#ef4444'}
-                            onMouseLeave={(e) => (e.target as HTMLElement).style.color = '#f87171'}>
-                            {deleting === customer.id ? 'Deleting...' : 'Delete'}
-                          </button>
+                          {openDropdown === customer.id && (
+                            <>
+                              <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)} />
+                              <div className="absolute right-0 mt-1 w-44 rounded-xl shadow-2xl z-20 overflow-hidden"
+                                style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
+                                {[
+                                  { label: '👁 View Details', action: () => { openCustomerDetails(customer.id); setOpenDropdown(null); }, color: '#e2e8f0' },
+                                  { label: customer.outstanding_balance > 0 ? `💰 Due ₹${customer.outstanding_balance}` : '💰 Set Due', action: () => { setSelectedCustForDues({ id: customer.id, name: customer.name, outstanding_balance: customer.outstanding_balance }); setDuesAmount(String(customer.outstanding_balance)); setOpenDropdown(null); }, color: customer.outstanding_balance > 0 ? '#f87171' : '#94a3b8' },
+                                  { label: '✅ Activate Plan', action: () => { handleOpenActivatePlan(customer); setOpenDropdown(null); }, color: '#34d399' },
+                                  { label: '⛔ Deactivate', action: () => { handleDeactivateCustomer(customer.id, customer.name); setOpenDropdown(null); }, color: '#f59e0b' },
+                                  { label: '💲 Set Prices', action: () => { handleManagePrices(customer); setOpenDropdown(null); }, color: '#a78bfa' },
+                                  { label: '🔑 Reset PIN', action: () => { setSelectedCustForReset(customer); setOpenDropdown(null); }, color: '#ec4899' },
+                                  { label: deleting === customer.id ? 'Deleting…' : '🗑 Delete', action: () => { handleDelete(customer.id, customer.name); setOpenDropdown(null); }, color: '#f87171' },
+                                ].map(({ label, action, color }) => (
+                                  <button key={label} onClick={action}
+                                    className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-white/5 transition-colors"
+                                    style={{ color }}>
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -549,15 +545,12 @@ export default function CustomersPage() {
             </div>
             <div className="md:hidden divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
               {customers.map(({ customer, rechargeCount, lastRecharge }) => (
-                <div key={customer.mobile} className="p-4 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
+                <div key={customer.mobile} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => openCustomerDetails(customer.id)}
-                          className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4"
-                        >
+                        <button type="button" onClick={() => openCustomerDetails(customer.id)}
+                          className="font-semibold text-white text-left hover:text-amber-300 transition-colors underline decoration-dotted underline-offset-4">
                           {customer.name}
                         </button>
                         {customer.outstanding_balance > 0 && (
@@ -567,51 +560,46 @@ export default function CustomersPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400">{customer.mobile}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{customer.mobile} · {customer.area}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">STB: {customer.stb_number}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.3)' }}>
+                          {rechargeCount} plans
+                        </span>
+                        {lastRecharge && <span className="text-[10px] text-gray-500">{lastRecharge}</span>}
+                      </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-bold"
-                      style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.3)' }}>
-                      {rechargeCount} recharges
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-400 space-y-1">
-                    <p>STB: <span className="text-gray-200">{customer.stb_number}</span></p>
-                    <p>Area: <span className="text-gray-200">{customer.area}</span></p>
-                    <p>Last Plan: <span className="text-gray-200">{lastRecharge || '—'}</span></p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <button onClick={() => { setSelectedCustForDues({ id: customer.id, name: customer.name, outstanding_balance: customer.outstanding_balance }); setDuesAmount(String(customer.outstanding_balance)); }}
-                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
-                      style={customer.outstanding_balance > 0
-                        ? { background: 'rgba(230,57,70,0.15)', color: '#f87171', border: '1px solid rgba(230,57,70,0.3)' }
-                        : { background: 'rgba(148,163,184,0.1)', color: '#94a3b8', border: '1px solid rgba(148,163,184,0.2)' }}>
-                      {customer.outstanding_balance > 0 ? `Due ₹${customer.outstanding_balance}` : 'Set Due'}
-                    </button>
-                    <button onClick={() => handleManagePrices(customer)}
-                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
-                      style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.3)' }}>
-                      Set Prices
-                    </button>
-                    <button onClick={() => handleOpenActivatePlan(customer)}
-                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
-                      style={{ background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.25)' }}>
-                      Activate Plan
-                    </button>
-                    <button onClick={() => handleDeactivateCustomer(customer.id, customer.name)}
-                       className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
-                       style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
-                       Deactivate
-                     </button>
-                     <button onClick={() => setSelectedCustForReset(customer)}
-                       className="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center"
-                       style={{ background: 'rgba(236,72,153,0.12)', color: '#ec4899', border: '1px solid rgba(236,72,153,0.25)' }}>
-                       Reset PIN
-                     </button>
-                     <button onClick={() => handleDelete(customer.id, customer.name)} disabled={deleting === customer.id}
-                       className="flex-1 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 text-center"
-                       style={{ background: 'rgba(230,57,70,0.12)', color: '#f87171', border: '1px solid rgba(230,57,70,0.25)' }}>
-                       {deleting === customer.id ? 'Deleting...' : 'Delete'}
-                     </button>
+                    <div className="relative flex-shrink-0">
+                      <button onClick={() => setOpenDropdown(openDropdown === customer.id ? null : customer.id)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                        style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        ⋯
+                      </button>
+                      {openDropdown === customer.id && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)} />
+                          <div className="absolute right-0 mt-1 w-44 rounded-xl shadow-2xl z-20 overflow-hidden"
+                            style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
+                            {[
+                              { label: '👁 View Details', action: () => { openCustomerDetails(customer.id); setOpenDropdown(null); }, color: '#e2e8f0' },
+                              { label: customer.outstanding_balance > 0 ? `💰 Due ₹${customer.outstanding_balance}` : '💰 Set Due', action: () => { setSelectedCustForDues({ id: customer.id, name: customer.name, outstanding_balance: customer.outstanding_balance }); setDuesAmount(String(customer.outstanding_balance)); setOpenDropdown(null); }, color: customer.outstanding_balance > 0 ? '#f87171' : '#94a3b8' },
+                              { label: '✅ Activate Plan', action: () => { handleOpenActivatePlan(customer); setOpenDropdown(null); }, color: '#34d399' },
+                              { label: '⛔ Deactivate', action: () => { handleDeactivateCustomer(customer.id, customer.name); setOpenDropdown(null); }, color: '#f59e0b' },
+                              { label: '💲 Set Prices', action: () => { handleManagePrices(customer); setOpenDropdown(null); }, color: '#a78bfa' },
+                              { label: '🔑 Reset PIN', action: () => { setSelectedCustForReset(customer); setOpenDropdown(null); }, color: '#ec4899' },
+                              { label: deleting === customer.id ? 'Deleting…' : '🗑 Delete', action: () => { handleDelete(customer.id, customer.name); setOpenDropdown(null); }, color: '#f87171' },
+                            ].map(({ label, action, color }) => (
+                              <button key={label} onClick={action}
+                                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-white/5 transition-colors"
+                                style={{ color }}>
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
