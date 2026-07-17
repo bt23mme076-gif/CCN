@@ -56,7 +56,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className={`sticky top-0 z-50 ${scrolled ? 'shadow-2xl' : 'shadow-lg'}`}>
+    <div className={`sticky top-0 z-50 ${scrolled ? 'shadow-2xl' : 'shadow-lg'}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {/* Main navbar */}
       <nav
         style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)' }}
