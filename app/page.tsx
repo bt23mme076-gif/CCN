@@ -715,26 +715,17 @@ export default function HomePage() {
 
       {/* Accessories Section */}
 
-      <section id="accessories" className="pt-14 pb-16 sm:pt-20 sm:pb-24 relative overflow-hidden">
-        {/* Colorful decorative background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/80 via-fuchsia-50/50 to-orange-50/60" />
-        <div className="absolute top-0 left-0 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-purple-400/20 blur-3xl animate-float" />
-        <div className="absolute bottom-0 right-0 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-cyan-400/20 blur-3xl animate-float-delay" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-orange-300/10 blur-3xl" />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 sm:mb-14">
-            <span className="inline-block bg-gradient-to-r from-purple-500 via-fuchsia-500 to-orange-500 text-white text-xs font-bold px-5 py-1.5 rounded-full mb-4 shadow-md tracking-wide uppercase animate-fadeInUp">
-              {t('accessories')}
+      <section id="accessories" className="py-14 sm:py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12">
+            <span className="inline-block text-xs font-bold px-4 py-1.5 rounded-full mb-3 uppercase tracking-widest bg-brand-navy/10 text-brand-navy">
+              Accessories
             </span>
-            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-brand-navy mb-3 sm:mb-4 tracking-tight animate-fadeInUp-delay-1">
-              Need a Remote or{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-fuchsia-500 to-orange-500">
-                Spare Parts?
-              </span>
+            <h2 className="font-display text-3xl sm:text-4xl font-black text-brand-navy mb-3">
+              Need a Remote or Spare Parts?
             </h2>
-            <p className="text-gray-500 text-base px-4 max-w-xl mx-auto animate-fadeInUp-delay-2">
-              Get genuine CCN accessories delivered right to your doorstep by our operator
+            <p className="text-gray-500 text-base max-w-md mx-auto">
+              Genuine CCN accessories delivered to your doorstep by our operator
             </p>
           </div>
 
