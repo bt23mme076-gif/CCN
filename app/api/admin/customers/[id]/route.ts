@@ -42,6 +42,32 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await requireAdminAuth();
+    const customerId = params.id;
+    const body = await request.json();
+
+    const { name, mobile, stb_number, area } = body;
+    if (!name || !mobile || !stb_number || !area) {
+      return NextResponse.json({ error: 'All fields required' }, { status: 400 });
+    }
+    if (!/^\d{10}$/.test(mobile)) {
+      return NextResponse.json({ error: 'Mobile must be 10 digits' }, { status: 400 });
+    }
+
+    await db.update(customers).set({ name, mobile, stb_number, area }).where(eq(customers.id, customerId));
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Update customer error:', error);
+    return NextResponse.json({ error: 'Failed to update customer' }, { status: 500 });
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }

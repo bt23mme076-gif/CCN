@@ -75,6 +75,11 @@ export default function CustomersPage() {
   const [loadingCustomerDetail, setLoadingCustomerDetail] = useState(false);
   const [customerDetailError, setCustomerDetailError] = useState('');
 
+  // States for Edit Customer
+  const [selectedCustForEdit, setSelectedCustForEdit] = useState<{ id: string; name: string; mobile: string; stb_number: string; area: string } | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', mobile: '', stb_number: '', area: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+
   // States for Notes
   const [selectedCustForNotes, setSelectedCustForNotes] = useState<{ id: string; name: string; notes: string } | null>(null);
   const [notesVal, setNotesVal] = useState('');
@@ -361,6 +366,32 @@ export default function CustomersPage() {
     }
   };
 
+  const handleSaveEdit = async () => {
+    if (!selectedCustForEdit) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${selectedCustForEdit.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed'); }
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.customer.id === selectedCustForEdit.id
+            ? { ...c, customer: { ...c.customer, ...editForm } }
+            : c
+        )
+      );
+      setMessage({ type: 'success', text: `${editForm.name} ka details update ho gaya` });
+      setSelectedCustForEdit(null);
+    } catch (e: any) {
+      setMessage({ type: 'error', text: e.message || 'Update nahi hua, dobara try karo' });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const handleSaveNotes = async () => {
     if (!selectedCustForNotes) return;
     setSavingNotes(true);
@@ -622,6 +653,7 @@ export default function CustomersPage() {
               style={{ top: dropdownPos.top, right: dropdownPos.right, background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
               {[
                 { label: '👁 View Details', action: () => openCustomerDetails(c.id), color: '#e2e8f0' },
+                { label: '✏️ Edit', action: () => { setSelectedCustForEdit(c); setEditForm({ name: c.name, mobile: c.mobile, stb_number: c.stb_number, area: c.area }); }, color: '#60a5fa' },
                 { label: c.outstanding_balance > 0 ? `💰 Due ₹${c.outstanding_balance}` : '💰 Set Due', action: () => { setSelectedCustForDues({ id: c.id, name: c.name, outstanding_balance: c.outstanding_balance }); setDuesAmount(String(c.outstanding_balance)); }, color: c.outstanding_balance > 0 ? '#f87171' : '#94a3b8' },
                 { label: '📝 Notes', action: () => { setSelectedCustForNotes({ id: c.id, name: c.name, notes: c.notes || '' }); setNotesVal(c.notes || ''); }, color: '#a78bfa' },
                 { label: '✅ Activate Plan', action: () => handleOpenActivatePlan(c), color: '#34d399' },
@@ -996,6 +1028,56 @@ export default function CustomersPage() {
                   className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
                   style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)' }}>
                   {savingDues ? 'Saving...' : 'Save Due'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Customer Modal */}
+      {selectedCustForEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl p-5 sm:p-6 shadow-2xl border"
+               style={{ background: '#121214', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h3 className="font-display text-lg font-bold text-white">Edit Customer</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{selectedCustForEdit.name}</p>
+              </div>
+              <button onClick={() => setSelectedCustForEdit(null)} className="text-gray-400 hover:text-white text-xl font-bold">✕</button>
+            </div>
+            <div className="space-y-3">
+              {[
+                { label: 'Name', key: 'name', type: 'text', placeholder: 'Full name' },
+                { label: 'Mobile', key: 'mobile', type: 'tel', placeholder: '10-digit mobile' },
+                { label: 'STB Number', key: 'stb_number', type: 'text', placeholder: 'Set-top box number' },
+                { label: 'Area', key: 'area', type: 'text', placeholder: 'Area/locality' },
+              ].map(({ label, key, type, placeholder }) => (
+                <div key={key}>
+                  <label className={labelStyle}>{label}</label>
+                  <input
+                    type={type}
+                    value={editForm[key as keyof typeof editForm]}
+                    onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })}
+                    placeholder={placeholder}
+                    maxLength={key === 'mobile' ? 10 : undefined}
+                    className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all"
+                    style={inputStyle}
+                    onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  />
+                </div>
+              ))}
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setSelectedCustForEdit(null)}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition-all bg-white/5 border border-white/10">
+                  Cancel
+                </button>
+                <button onClick={handleSaveEdit} disabled={savingEdit}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }}>
+                  {savingEdit ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>
