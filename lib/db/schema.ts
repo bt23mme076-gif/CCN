@@ -9,6 +9,7 @@ export const customers = pgTable('customers', {
   area: text('area').notNull(),
   pin_hash: text('pin_hash').notNull(),
   outstanding_balance: integer('outstanding_balance').default(0).notNull(), // in rupees, cash dues
+  notes: text('notes'),
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -124,6 +125,17 @@ export const accessoryOrders = pgTable('accessory_orders', {
 }, (table) => ({
   customerIdx: index('acc_orders_customer_id_idx').on(table.customer_id),
   statusIdx: index('acc_orders_status_idx').on(table.status),
+}));
+
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  id: text('id').primaryKey(),
+  customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  customerIdx: index('push_subs_customer_id_idx').on(table.customer_id),
 }));
 
 // Relations

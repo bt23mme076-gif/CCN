@@ -7,6 +7,23 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // A completely basic fetch handler is enough to trigger the Chrome PWA install prompt
   e.respondWith(fetch(e.request).catch(() => new Response('Offline.')));
+});
+
+self.addEventListener('push', (e) => {
+  if (!e.data) return;
+  const { title, body, url } = e.data.json();
+  e.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url: url || '/dashboard' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow(e.notification.data.url || '/dashboard'));
 });

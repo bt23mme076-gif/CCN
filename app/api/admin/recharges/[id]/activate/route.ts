@@ -3,6 +3,7 @@ import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, plans } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { sendPushToCustomer } from '@/lib/push';
 
 export async function POST(
   request: NextRequest,
@@ -118,6 +119,14 @@ export async function POST(
       .from(recharges)
       .where(eq(recharges.id, rechargeId))
       .limit(1);
+
+    // Send push notification to customer (fire-and-forget)
+    const expiryStr = expiresAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    sendPushToCustomer(rechargeData.customer_id, {
+      title: '✅ Plan Activated!',
+      body: `${rechargeData.plan_name} activated. Valid till ${expiryStr}. Enjoy your channels!`,
+      url: '/dashboard',
+    });
 
     return NextResponse.json({ recharge: updatedRecharge[0] });
   } catch (error) {

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { formatDateTime } from '@/lib/utils';
 
 interface CustomerItem {
-  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; outstanding_balance: number; };
+  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; outstanding_balance: number; notes: string | null; };
   rechargeCount: number;
   lastRecharge: string | null;
 }
@@ -74,6 +74,11 @@ export default function CustomersPage() {
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<CustomerDetailResponse | null>(null);
   const [loadingCustomerDetail, setLoadingCustomerDetail] = useState(false);
   const [customerDetailError, setCustomerDetailError] = useState('');
+
+  // States for Notes
+  const [selectedCustForNotes, setSelectedCustForNotes] = useState<{ id: string; name: string; notes: string } | null>(null);
+  const [notesVal, setNotesVal] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
 
   // States for Dues
   const [selectedCustForDues, setSelectedCustForDues] = useState<{ id: string; name: string; outstanding_balance: number } | null>(null);
@@ -356,6 +361,32 @@ export default function CustomersPage() {
     }
   };
 
+  const handleSaveNotes = async () => {
+    if (!selectedCustForNotes) return;
+    setSavingNotes(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${selectedCustForNotes.id}/notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: notesVal.trim() || null }),
+      });
+      if (!res.ok) throw new Error();
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.customer.id === selectedCustForNotes.id
+            ? { ...c, customer: { ...c.customer, notes: notesVal.trim() || null } }
+            : c
+        )
+      );
+      setMessage({ type: 'success', text: `${selectedCustForNotes.name} ka note save ho gaya` });
+      setSelectedCustForNotes(null);
+    } catch {
+      setMessage({ type: 'error', text: 'Note save nahi hua, dobara try karo' });
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
   const openCustomerDetails = async (customerId: string) => {
     setSelectedCustomerId(customerId);
     setSelectedCustomerDetail(null);
@@ -501,6 +532,12 @@ export default function CustomersPage() {
                               DUE ₹{customer.outstanding_balance}
                             </span>
                           )}
+                          {customer.notes && (
+                            <span title={customer.notes} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold cursor-help"
+                              style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.3)' }}>
+                              📝
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{lastRecharge || '—'}</p>
                       </td>
@@ -542,6 +579,12 @@ export default function CustomersPage() {
                             DUE ₹{customer.outstanding_balance}
                           </span>
                         )}
+                        {customer.notes && (
+                          <span title={customer.notes} className="px-1.5 py-0.5 rounded-full text-[10px] font-bold cursor-help"
+                            style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.3)' }}>
+                            📝
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-gray-400 mt-0.5">{customer.mobile} · {customer.area}</p>
                       <p className="text-xs text-gray-500 mt-0.5">STB: {customer.stb_number}</p>
@@ -580,6 +623,7 @@ export default function CustomersPage() {
               {[
                 { label: '👁 View Details', action: () => openCustomerDetails(c.id), color: '#e2e8f0' },
                 { label: c.outstanding_balance > 0 ? `💰 Due ₹${c.outstanding_balance}` : '💰 Set Due', action: () => { setSelectedCustForDues({ id: c.id, name: c.name, outstanding_balance: c.outstanding_balance }); setDuesAmount(String(c.outstanding_balance)); }, color: c.outstanding_balance > 0 ? '#f87171' : '#94a3b8' },
+                { label: '📝 Notes', action: () => { setSelectedCustForNotes({ id: c.id, name: c.name, notes: c.notes || '' }); setNotesVal(c.notes || ''); }, color: '#a78bfa' },
                 { label: '✅ Activate Plan', action: () => handleOpenActivatePlan(c), color: '#34d399' },
                 { label: '⛔ Deactivate', action: () => handleDeactivateCustomer(c.id, c.name), color: '#f59e0b' },
                 { label: '💲 Set Prices', action: () => handleManagePrices(c), color: '#a78bfa' },
@@ -952,6 +996,53 @@ export default function CustomersPage() {
                   className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
                   style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)' }}>
                   {savingDues ? 'Saving...' : 'Save Due'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notes Modal */}
+      {selectedCustForNotes && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl p-5 sm:p-6 shadow-2xl border"
+               style={{ background: '#121214', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}>
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h3 className="font-display text-lg font-bold text-white">Admin Notes</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{selectedCustForNotes.name}</p>
+              </div>
+              <button onClick={() => setSelectedCustForNotes(null)} className="text-gray-400 hover:text-white text-xl font-bold">✕</button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className={labelStyle}>Note</label>
+                <textarea
+                  rows={4}
+                  value={notesVal}
+                  onChange={(e) => setNotesVal(e.target.value)}
+                  placeholder="e.g. Frequently delays payment. Needs follow-up."
+                  className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all resize-none"
+                  style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                />
+                <p className="text-xs text-gray-500 mt-1">Sirf admin ko dikhega. Blank karo to note delete hoga.</p>
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setSelectedCustForNotes(null)}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition-all bg-white/5 border border-white/10">
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveNotes}
+                  disabled={savingNotes}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}>
+                  {savingNotes ? 'Saving...' : 'Save Note'}
                 </button>
               </div>
             </div>
