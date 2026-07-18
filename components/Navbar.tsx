@@ -106,11 +106,11 @@ export default function Navbar() {
                       <div className="relative">
                         <button
                           onClick={() => setShowDropdown((p) => !p)}
-                          className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/15 transition-colors border border-white/20"
+                          className="flex flex-col gap-1.5 justify-center items-center w-9 h-9 rounded-lg hover:bg-white/15 transition-colors border border-white/20"
                         >
-                          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
-                          </svg>
+                          <span className="block w-4 h-0.5 bg-white rounded-full" />
+                          <span className="block w-4 h-0.5 bg-white rounded-full" />
+                          <span className="block w-4 h-0.5 bg-white rounded-full" />
                         </button>
                         {showDropdown && (
                           <>
