@@ -180,3 +180,13 @@ export const accessoryOrdersRelations = relations(accessoryOrders, ({ one }) => 
     references: [accessories.id],
   }),
 }));
+
+export const expenses = pgTable('expenses', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  amount: integer('amount').notNull(), // in rupees
+  category: text('category').notNull(), // 'salary' | 'rent' | 'maintenance' | 'fuel' | 'other'
+  note: text('note'),
+  date: timestamp('date').notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});

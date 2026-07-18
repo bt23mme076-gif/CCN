@@ -56,6 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/plans', label: 'Plans', icon: '📋', desc: 'Manage plans' },
     { href: '/admin/accessories', label: 'Accessories', icon: '📦', desc: 'Manage products' },
     { href: '/admin/advertisements', label: 'Ads', icon: '📢', desc: 'Business posters' },
+    { href: '/admin/expenses', label: 'Expenses', icon: '💰', desc: 'Payroll & costs' },
     { href: '/admin/settings', label: 'Settings', icon: '⚙️', desc: 'Config' },
   ];
 
