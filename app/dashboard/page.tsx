@@ -215,19 +215,17 @@ export default function DashboardPage() {
 
         {/* Outstanding Due Banner */}
         {customer && customer.outstanding_balance > 0 && (
-          <div className="mb-6 rounded-2xl p-4 sm:p-5 flex items-start gap-4"
-            style={{ background: 'linear-gradient(135deg, rgba(230,57,70,0.15), rgba(220,38,38,0.1))', border: '1px solid rgba(230,57,70,0.4)' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(230,57,70,0.2)' }}>
-              <span className="text-xl">⚠️</span>
+          <div className="mb-6 rounded-2xl p-4 sm:p-5 flex items-center gap-4"
+            style={{ background: 'linear-gradient(135deg, #7f1d1d, #991b1b)', border: '1px solid rgba(248,113,113,0.3)' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/20">
+              <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-red-400 text-base">Outstanding Due: ₹{customer.outstanding_balance}</p>
-              <p className="text-sm text-red-300 mt-0.5">
-                Aapke account par baki raashi hai. Recharge karne ke liye pehle apna due clear karein.
-              </p>
-              <p className="text-xs text-red-400 mt-2 font-medium">
-                CCN Networks se sampark karein apna due clear karne ke liye.
+              <p className="font-bold text-white text-sm sm:text-base">Outstanding Due: ₹{customer.outstanding_balance}</p>
+              <p className="text-xs sm:text-sm text-red-200 mt-0.5">
+                You have an unpaid balance. Please contact CCN Networks to clear your dues before recharging.
               </p>
             </div>
           </div>
