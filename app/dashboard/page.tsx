@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [retrackDone, setRetrackDone] = useState(false);
   const [retrackStb, setRetrackStb] = useState('');
   const [retrackEdited, setRetrackEdited] = useState(false);
+  const [showNavMenu, setShowNavMenu] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -186,24 +187,62 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-1">
       {/* Header */}
-      <nav className="bg-white shadow-sm">
+      <nav className="sticky top-0 z-30 shadow-lg" style={{
+        background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+      }}>
+        <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-display text-xl sm:text-2xl font-bold">
-              <span className="text-gradient-cool">CCN</span>{' '}
-              <span className="text-brand-navy">Networks</span>
+            <Link href="/" className="flex items-center gap-2">
+              <span className="font-display text-xl font-extrabold text-white tracking-wide">CCN</span>
+              <span className="font-display text-xl font-extrabold tracking-wide" style={{ color: '#e94560' }}>Networks</span>
             </Link>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Link href="/dashboard/buy" className="text-gray-600 hover:text-brand-navy font-medium text-sm sm:text-base">
-                <span className="hidden sm:inline">Buy & History</span>
-                <span className="sm:hidden">Buy</span>
-              </Link>
-              <span className="text-gray-600 text-sm sm:text-base hidden xs:inline">
-                Hi, {customer?.name}
+            <div className="flex items-center gap-3">
+              <span className="text-sm hidden sm:flex items-center gap-1.5" style={{ color: '#93c5fd' }}>
+                <span className="w-2 h-2 bg-green-400 rounded-full inline-block animate-pulse" />
+                Hi, <span className="text-white font-semibold">{customer?.name}</span>
               </span>
-              <button onClick={handleLogout} className="text-accent-red hover:underline font-medium text-sm sm:text-base">
-                Logout
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowNavMenu((p) => !p)}
+                  className="flex flex-col gap-1.5 justify-center items-center w-9 h-9 rounded-lg transition-colors hover:bg-white/10"
+                  style={{ border: '1px solid rgba(255,255,255,0.2)' }}
+                >
+                  <span className="block w-4 h-0.5 bg-white rounded-full" />
+                  <span className="block w-4 h-0.5 bg-white rounded-full" />
+                  <span className="block w-4 h-0.5 bg-white rounded-full" />
+                </button>
+                {showNavMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowNavMenu(false)} />
+                    <div className="absolute right-0 top-11 z-50 w-52 rounded-xl shadow-2xl py-1 overflow-hidden"
+                      style={{ background: '#1a1740', border: '1px solid rgba(255,255,255,0.12)' }}>
+                      <div className="px-4 py-2.5 sm:hidden" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                        <p className="text-xs text-blue-300">Logged in as</p>
+                        <p className="text-sm font-semibold text-white">{customer?.name}</p>
+                      </div>
+                      <Link href="/" onClick={() => setShowNavMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors">
+                        <span>🏠</span> Home
+                      </Link>
+                      <Link href="/dashboard" onClick={() => setShowNavMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors">
+                        <span>📊</span> Dashboard
+                      </Link>
+                      <Link href="/dashboard/buy" onClick={() => setShowNavMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors">
+                        <span>💳</span> Buy & History
+                      </Link>
+                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
+                      <button onClick={() => { setShowNavMenu(false); handleLogout(); }}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-white hover:bg-red-500/20 transition-colors w-full text-left">
+                        <span>🚪</span> Logout
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
