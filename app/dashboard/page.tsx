@@ -13,6 +13,7 @@ interface Customer {
   mobile: string;
   stb_number: string;
   area: string;
+  outstanding_balance: number;
 }
 
 interface Recharge {
@@ -208,6 +209,26 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Outstanding Due Banner */}
+        {customer && customer.outstanding_balance > 0 && (
+          <div className="mb-6 rounded-2xl p-4 sm:p-5 flex items-start gap-4"
+            style={{ background: 'linear-gradient(135deg, rgba(230,57,70,0.15), rgba(220,38,38,0.1))', border: '1px solid rgba(230,57,70,0.4)' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(230,57,70,0.2)' }}>
+              <span className="text-xl">⚠️</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-red-400 text-base">Outstanding Due: ₹{customer.outstanding_balance}</p>
+              <p className="text-sm text-red-300 mt-0.5">
+                Aapke account par baki raashi hai. Recharge karne ke liye pehle apna due clear karein.
+              </p>
+              <p className="text-xs text-red-400 mt-2 font-medium">
+                CCN Networks se sampark karein apna due clear karne ke liye.
+              </p>
             </div>
           </div>
         )}
