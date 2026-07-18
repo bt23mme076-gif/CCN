@@ -38,6 +38,7 @@ export default function DashboardPage() {
   const [showRetrackPopup, setShowRetrackPopup] = useState(false);
   const [retrackLoading, setRetrackLoading] = useState(false);
   const [retrackDone, setRetrackDone] = useState(false);
+  const [retrackStb, setRetrackStb] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -138,6 +139,7 @@ export default function DashboardPage() {
   };
 
   const handleRetrackRequest = async () => {
+    if (!retrackStb.trim()) return;
     setRetrackLoading(true);
     try {
       await fetch('/api/retrack', { method: 'POST' });
@@ -264,6 +266,80 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* STB Retrack */}
+        <div className="card mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 className="font-display text-base sm:text-lg font-bold text-brand-navy">STB Retrack</h3>
+              <p className="text-sm text-gray-500 mt-0.5">Channels not showing? Request a retrack for your STB.</p>
+            </div>
+            <button
+              onClick={() => { setShowRetrackPopup(true); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); }}
+              className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap"
+            >
+              📺 Request Retrack
+            </button>
+          </div>
+        </div>
+
+        {/* Retrack Popup */}
+        {showRetrackPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.6)' }}
+            onClick={(e) => { if (e.target === e.currentTarget && retrackDone) { setShowRetrackPopup(false); } }}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
+              {retrackDone ? (
+                <>
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="font-display text-xl font-bold text-gray-900 mb-2">Request Submitted!</h3>
+                  <p className="text-sm text-gray-600 mb-5">
+                    Keep your STB and TV <span className="font-bold text-green-600">ON</span> for the next 5 minutes.
+                  </p>
+                  <button
+                    onClick={() => setShowRetrackPopup(false)}
+                    className="w-full py-3 rounded-xl font-bold text-white"
+                    style={{ background: 'linear-gradient(135deg, #1a1a40, #2d2b69)' }}>
+                    OK, Got It
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="text-3xl mb-3">📺</div>
+                  <h3 className="font-display text-xl font-bold text-gray-900 mb-4">Request Retrack</h3>
+                  <div className="text-left mb-5">
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">STB Number</label>
+                    <input
+                      type="text"
+                      value={retrackStb}
+                      onChange={(e) => setRetrackStb(e.target.value)}
+                      placeholder="Enter your STB number"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-mono text-gray-800 outline-none focus:border-blue-400 transition-colors"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowRetrackPopup(false)}
+                      className="flex-1 py-3 rounded-xl font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleRetrackRequest}
+                      disabled={retrackLoading || !retrackStb.trim()}
+                      className="flex-1 py-3 rounded-xl font-bold text-white disabled:opacity-50 transition-all"
+                      style={{ background: 'linear-gradient(135deg, #e63946, #c0392b)' }}>
+                      {retrackLoading ? 'Sending...' : 'Send Request'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Pending Activation Notice */}
         {pendingActivation && (
           <div className="card mb-6 sm:mb-8" style={{
@@ -374,76 +450,6 @@ export default function DashboardPage() {
             >
               Browse Plans & History
             </Link>
-          </div>
-        )}
-
-        {/* STB Retrack */}
-        <div className="card mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h3 className="font-display text-base sm:text-lg font-bold text-brand-navy">STB Retrack</h3>
-              <p className="text-sm text-gray-500 mt-0.5">Request a signal retrack if your channels are not showing</p>
-            </div>
-            <button
-              onClick={() => { setShowRetrackPopup(true); setRetrackDone(false); }}
-              className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap"
-            >
-              📺 Request Retrack
-            </button>
-          </div>
-        </div>
-
-        {/* Retrack Popup */}
-        {showRetrackPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.6)' }}
-            onClick={(e) => { if (e.target === e.currentTarget && retrackDone) { setShowRetrackPopup(false); } }}>
-            <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
-              {retrackDone ? (
-                <>
-                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <h3 className="font-display text-xl font-bold text-gray-900 mb-2">Request Submitted!</h3>
-                  <p className="text-sm text-gray-600 mb-1">Your retrack request has been captured.</p>
-                  <p className="text-sm font-semibold text-gray-800 mb-5">
-                    Keep your STB and TV <span className="text-green-600">ON</span> for the next 5 minutes.
-                  </p>
-                  <button
-                    onClick={() => setShowRetrackPopup(false)}
-                    className="w-full py-3 rounded-xl font-bold text-white"
-                    style={{ background: 'linear-gradient(135deg, #1a1a40, #2d2b69)' }}>
-                    OK, Got It
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4 text-3xl">
-                    📺
-                  </div>
-                  <h3 className="font-display text-xl font-bold text-gray-900 mb-2">Request STB Retrack</h3>
-                  <p className="text-sm text-gray-600 mb-5">
-                    Our team will retrack your STB on the NXT Digital portal. Make sure your STB and TV are switched on.
-                  </p>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setShowRetrackPopup(false)}
-                      className="flex-1 py-3 rounded-xl font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors">
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleRetrackRequest}
-                      disabled={retrackLoading}
-                      className="flex-1 py-3 rounded-xl font-bold text-white disabled:opacity-60 transition-all"
-                      style={{ background: 'linear-gradient(135deg, #e63946, #c0392b)' }}>
-                      {retrackLoading ? 'Sending...' : 'Send Request'}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
           </div>
         )}
 
