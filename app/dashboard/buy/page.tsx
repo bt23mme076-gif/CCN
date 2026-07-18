@@ -221,11 +221,7 @@ export default function BuyHistoryPage() {
 
   if (customer && customer.outstanding_balance > 0) {
     return (
-      <div className="min-h-screen flex flex-col" style={{
-        backgroundColor: '#0a0a1a',
-        backgroundImage: 'linear-gradient(rgba(99,102,241,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.12) 1px, transparent 1px)',
-        backgroundSize: '44px 44px, 44px 44px',
-      }}>
+      <div className="min-h-screen flex flex-col">
         <nav className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -280,11 +276,7 @@ export default function BuyHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{
-      backgroundColor: '#0a0a1a',
-      backgroundImage: 'linear-gradient(rgba(99,102,241,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.12) 1px, transparent 1px)',
-      backgroundSize: '44px 44px, 44px 44px',
-    }}>
+    <div className="min-h-screen">
       {/* Header */}
       <nav className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
