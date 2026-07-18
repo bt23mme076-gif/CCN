@@ -215,18 +215,23 @@ export default function DashboardPage() {
 
         {/* Outstanding Due Banner */}
         {customer && customer.outstanding_balance > 0 && (
-          <div className="mb-6 rounded-2xl p-4 sm:p-5 flex items-center gap-4"
-            style={{ background: 'linear-gradient(135deg, #7f1d1d, #991b1b)', border: '1px solid rgba(248,113,113,0.3)' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/20">
-              <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-white text-sm sm:text-base">Outstanding Due: ₹{customer.outstanding_balance}</p>
-              <p className="text-xs sm:text-sm text-red-200 mt-0.5">
-                You have an unpaid balance. Please contact CCN Networks to clear your dues before recharging.
-              </p>
+          <div className="mb-6 rounded-2xl overflow-hidden"
+            style={{ boxShadow: '0 4px 24px rgba(220,38,38,0.35)' }}>
+            <div className="flex items-center gap-4 px-5 py-4"
+              style={{ background: 'linear-gradient(90deg, #dc2626 0%, #b91c1c 100%)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-white text-sm sm:text-base leading-tight">
+                  Outstanding Due: <span className="text-yellow-300">₹{customer.outstanding_balance}</span>
+                </p>
+                <p className="text-xs text-red-100 mt-0.5">
+                  Recharge is blocked. Contact CCN Networks to clear your dues.
+                </p>
+              </div>
             </div>
           </div>
         )}
