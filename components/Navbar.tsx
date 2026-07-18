@@ -15,6 +15,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [scrolled, setScrolled] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -97,26 +98,45 @@ export default function Navbar() {
                   {isAuthenticated ? (
                     <>
                       {customerName && (
-                        <span className="text-blue-200 text-sm hidden lg:flex items-center gap-1.5 mr-2">
+                        <span className="text-blue-200 text-sm flex items-center gap-1.5 mr-1">
                           <span className="w-2 h-2 bg-green-400 rounded-full inline-block animate-pulse" />
                           Hi, <span className="text-white font-semibold">{customerName}</span>
                         </span>
                       )}
-                      <NavLink href="/dashboard" label={t('dashboard')} icon={
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                      } />
-                      <NavLink href="/dashboard/buy" label="Buy & History" icon={
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                      } />
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-red-300 hover:text-white hover:bg-red-500/20 border border-red-500/30 hover:border-red-400 transition-all duration-200 ml-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        {t('logout')}
-                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowDropdown((p) => !p)}
+                          className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/15 transition-colors border border-white/20"
+                        >
+                          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
+                          </svg>
+                        </button>
+                        {showDropdown && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
+                            <div className="absolute right-0 top-11 z-50 w-48 rounded-xl shadow-2xl py-1 overflow-hidden"
+                              style={{ background: '#1a1740', border: '1px solid rgba(255,255,255,0.12)' }}>
+                              <Link href="/dashboard"
+                                onClick={() => setShowDropdown(false)}
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors">
+                                <span>🏠</span> Dashboard
+                              </Link>
+                              <Link href="/dashboard/buy"
+                                onClick={() => setShowDropdown(false)}
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors">
+                                <span>💳</span> Buy & History
+                              </Link>
+                              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
+                              <button
+                                onClick={() => { setShowDropdown(false); handleLogout(); }}
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-white hover:bg-red-500/20 transition-colors w-full text-left">
+                                <span>🚪</span> Logout
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <>
