@@ -3,14 +3,14 @@ import { db } from '@/lib/db';
 import { pushSubscriptions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-webpush.setVapidDetails(
-  'mailto:admin@ccn.atyant.in',
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export async function sendPushToCustomer(customerId: string, payload: { title: string; body: string; url?: string }) {
   try {
+    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    const privateKey = process.env.VAPID_PRIVATE_KEY;
+    if (!publicKey || !privateKey) return;
+
+    webpush.setVapidDetails('mailto:admin@ccn.atyant.in', publicKey, privateKey);
+
     const subs = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.customer_id, customerId));
     if (subs.length === 0) return;
 
@@ -20,7 +20,6 @@ export async function sendPushToCustomer(customerId: string, payload: { title: s
       JSON.stringify(payload)
     );
   } catch (error) {
-    // Subscription may be expired — ignore silently
     console.error('Push send error:', error);
   }
 }
