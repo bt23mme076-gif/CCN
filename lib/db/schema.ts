@@ -181,6 +181,16 @@ export const accessoryOrdersRelations = relations(accessoryOrders, ({ one }) => 
   }),
 }));
 
+export const retrackRequests = pgTable('retrack_requests', {
+  id: text('id').primaryKey(),
+  customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  customer_name: text('customer_name').notNull(),
+  stb_number: text('stb_number').notNull(),
+  mobile: text('mobile').notNull(),
+  status: text('status').notNull().default('pending'), // 'pending' | 'done'
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const expenses = pgTable('expenses', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
