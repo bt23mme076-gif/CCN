@@ -40,7 +40,6 @@ export default function DashboardPage() {
   const [retrackDone, setRetrackDone] = useState(false);
   const [retrackStb, setRetrackStb] = useState('');
   const [retrackEdited, setRetrackEdited] = useState(false);
-  const [showNavMenu, setShowNavMenu] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -194,43 +193,17 @@ export default function DashboardPage() {
               <span className="text-gradient-cool">CCN</span>{' '}
               <span className="text-brand-navy">Networks</span>
             </Link>
-            <div className="relative flex items-center gap-3">
-              <span className="text-sm text-gray-600 font-medium">
-                Hi, <span className="text-brand-navy font-semibold">{customer?.name}</span>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link href="/dashboard/buy" className="text-gray-600 hover:text-brand-navy font-medium text-sm sm:text-base">
+                <span className="hidden sm:inline">Buy & History</span>
+                <span className="sm:hidden">Buy</span>
+              </Link>
+              <span className="text-gray-600 text-sm sm:text-base hidden xs:inline">
+                Hi, {customer?.name}
               </span>
-              <button
-                onClick={() => setShowNavMenu((p) => !p)}
-                className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
-                style={{ border: '1.5px solid #e5e7eb' }}
-              >
-                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                  <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
-                </svg>
+              <button onClick={handleLogout} className="text-accent-red hover:underline font-medium text-sm sm:text-base">
+                Logout
               </button>
-              {showNavMenu && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowNavMenu(false)} />
-                  <div className="absolute right-0 top-12 z-50 w-48 bg-white rounded-xl shadow-xl py-1"
-                    style={{ border: '1px solid #f0f0f0' }}>
-                    <Link href="/dashboard"
-                      onClick={() => setShowNavMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                      <span>🏠</span> Dashboard
-                    </Link>
-                    <Link href="/dashboard/buy"
-                      onClick={() => setShowNavMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                      <span>💳</span> Buy & History
-                    </Link>
-                    <div style={{ borderTop: '1px solid #f5f5f5' }} className="my-1" />
-                    <button
-                      onClick={() => { setShowNavMenu(false); handleLogout(); }}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors w-full text-left">
-                      <span>🚪</span> Logout
-                    </button>
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </div>
