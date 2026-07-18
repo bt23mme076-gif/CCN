@@ -191,6 +191,14 @@ export const retrackRequests = pgTable('retrack_requests', {
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const adminPushSubscriptions = pgTable('admin_push_subscriptions', {
+  id: text('id').primaryKey(),
+  endpoint: text('endpoint').notNull().unique(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const expenses = pgTable('expenses', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),

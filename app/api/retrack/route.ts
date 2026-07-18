@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { retrackRequests, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
+import { sendPushToAdmin } from '@/lib/push';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +22,12 @@ export async function POST(request: NextRequest) {
       stb_number: body.stb_number || c.stb_number,
       mobile: c.mobile,
       status: 'pending',
+    });
+
+    sendPushToAdmin({
+      title: '📺 Retrack Request',
+      body: `${c.name} (STB: ${body.stb_number || c.stb_number}) ne retrack request bheja`,
+      url: '/admin/retrack',
     });
 
     return NextResponse.json({ success: true });

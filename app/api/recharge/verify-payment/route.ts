@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { recharges } from '@/lib/db/schema';
+import { recharges, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { sendPushToAdmin } from '@/lib/push';
 
 const verifyPaymentSchema = z.object({
   orderId: z.string(),
@@ -11,7 +12,7 @@ const verifyPaymentSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    await requireCustomerAuth();
+    const user = await requireCustomerAuth();
     const body = await request.json();
     const { orderId } = verifyPaymentSchema.parse(body);
 
@@ -67,6 +68,18 @@ export async function POST(request: NextRequest) {
           paid_at: new Date(),
         })
         .where(eq(recharges.id, orderId));
+
+      const recharge = await db.select().from(recharges).where(eq(recharges.id, orderId)).limit(1);
+      const customer = await db.select().from(customers).where(eq(customers.id, user.customerId)).limit(1);
+      if (recharge.length > 0 && customer.length > 0) {
+        const r = recharge[0];
+        const c = customer[0];
+        sendPushToAdmin({
+          title: '💳 New Recharge — Activation Pending',
+          body: `${c.name} ne ₹${(r.amount / 100).toFixed(0)} ka ${r.plan_name} plan kharida`,
+          url: '/admin/pending',
+        });
+      }
 
       return NextResponse.json({ success: true });
     } else if (payment.payment_status === 'FAILED') {

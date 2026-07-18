@@ -26,6 +26,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const registerAdminPush = async () => {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') return;
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+          });
+        }
+        const json = sub.toJSON();
+        await fetch('/api/admin/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: sub.endpoint, keys: json.keys }),
+        });
+      } catch { /* ignore */ }
+    };
+    registerAdminPush();
+  }, [isAuthenticated]);
+
   if (pathname === '/admin/login') return <>{children}</>;
 
   if (loading) return (

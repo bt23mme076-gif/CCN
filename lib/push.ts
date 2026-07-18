@@ -1,6 +1,6 @@
 import webpush from 'web-push';
 import { db } from '@/lib/db';
-import { pushSubscriptions } from '@/lib/db/schema';
+import { pushSubscriptions, adminPushSubscriptions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function sendPushToCustomer(customerId: string, payload: { title: string; body: string; url?: string }) {
@@ -21,5 +21,27 @@ export async function sendPushToCustomer(customerId: string, payload: { title: s
     );
   } catch (error) {
     console.error('Push send error:', error);
+  }
+}
+
+export async function sendPushToAdmin(payload: { title: string; body: string; url?: string }) {
+  try {
+    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    const privateKey = process.env.VAPID_PRIVATE_KEY;
+    if (!publicKey || !privateKey) return;
+
+    webpush.setVapidDetails('mailto:admin@ccn.atyant.in', publicKey, privateKey);
+
+    const subs = await db.select().from(adminPushSubscriptions);
+    await Promise.allSettled(
+      subs.map((sub) =>
+        webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          JSON.stringify(payload)
+        )
+      )
+    );
+  } catch (error) {
+    console.error('Admin push send error:', error);
   }
 }
