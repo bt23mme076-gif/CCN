@@ -121,6 +121,11 @@ export default function BuyHistoryPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showNavMenu, setShowNavMenu] = useState(false);
+  const [showRetrackPopup, setShowRetrackPopup] = useState(false);
+  const [retrackLoading, setRetrackLoading] = useState(false);
+  const [retrackDone, setRetrackDone] = useState(false);
+  const [retrackStb, setRetrackStb] = useState('');
+  const [retrackEdited, setRetrackEdited] = useState(false);
 
   // Update current time every minute for countdown
   useEffect(() => {
@@ -190,6 +195,21 @@ export default function BuyHistoryPage() {
     router.push('/');
   };
 
+  const handleRetrackRequest = async () => {
+    const stbToSend = retrackEdited ? retrackStb : (customer?.stb_number || '');
+    if (!stbToSend) return;
+    setRetrackLoading(true);
+    try {
+      await fetch('/api/retrack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stb_number: stbToSend }),
+      });
+      setRetrackDone(true);
+    } catch { /* ignore */ }
+    finally { setRetrackLoading(false); }
+  };
+
   const filteredRecharges = filterStatus === 'all' 
     ? recharges 
     : recharges.filter(r => r.status === filterStatus);
@@ -245,6 +265,7 @@ export default function BuyHistoryPage() {
                       <Link href="/" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>🏠</span> Home</Link>
                       <Link href="/dashboard" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>📊</span> Dashboard</Link>
                       <Link href="/dashboard/buy" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>💳</span> Buy & History</Link>
+                      <button onClick={() => { setShowNavMenu(false); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); setRetrackEdited(false); setShowRetrackPopup(true); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors w-full text-left"><span>📺</span> Request Retrack</button>
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
                       <button onClick={() => { setShowNavMenu(false); handleLogout(); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-white hover:bg-red-500/20 transition-colors w-full text-left"><span>🚪</span> Logout</button>
                     </div>
@@ -310,6 +331,7 @@ export default function BuyHistoryPage() {
                       <Link href="/" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>🏠</span> Home</Link>
                       <Link href="/dashboard" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>📊</span> Dashboard</Link>
                       <Link href="/dashboard/buy" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>💳</span> Buy & History</Link>
+                      <button onClick={() => { setShowNavMenu(false); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); setRetrackEdited(false); setShowRetrackPopup(true); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors w-full text-left"><span>📺</span> Request Retrack</button>
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
                       <button onClick={() => { setShowNavMenu(false); handleLogout(); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-white hover:bg-red-500/20 transition-colors w-full text-left"><span>🚪</span> Logout</button>
                     </div>
@@ -850,6 +872,59 @@ export default function BuyHistoryPage() {
         customerName={customer?.name || ''}
         customerMobile={customer?.mobile || ''}
       />
+
+      {/* Retrack Popup */}
+      {showRetrackPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
+            {retrackDone ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="font-display text-xl font-bold text-gray-900 mb-2">Request Submitted!</h3>
+                <p className="text-sm text-gray-600 mb-5">
+                  Keep your STB and TV <span className="font-bold text-green-600">ON</span> for the next 5 minutes.
+                </p>
+                <button onClick={() => setShowRetrackPopup(false)}
+                  className="w-full py-3 rounded-xl font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg, #1a1a40, #2d2b69)' }}>
+                  OK, Got It
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="text-3xl mb-3">📺</div>
+                <h3 className="font-display text-xl font-bold text-gray-900 mb-4">Request Retrack</h3>
+                <div className="text-left mb-5">
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">STB Number</label>
+                  <input type="text" inputMode="numeric"
+                    value={retrackEdited ? retrackStb : (customer?.stb_number || '')}
+                    onChange={(e) => { setRetrackEdited(true); setRetrackStb(e.target.value.replace(/\D/g, '')); }}
+                    onKeyDown={(e) => { if (!retrackEdited && e.key !== 'Tab' && e.key !== 'Enter') { setRetrackEdited(true); setRetrackStb(''); } }}
+                    placeholder="Enter your STB number"
+                    className="w-full px-4 py-3 rounded-xl border text-sm font-mono text-gray-800 outline-none transition-colors"
+                    style={{ borderColor: retrackEdited ? '#3b82f6' : '#e5e7eb' }} />
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowRetrackPopup(false)}
+                    className="flex-1 py-3 rounded-xl font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors">
+                    Cancel
+                  </button>
+                  <button onClick={handleRetrackRequest}
+                    disabled={retrackLoading || !(retrackEdited ? retrackStb : customer?.stb_number)}
+                    className="flex-1 py-3 rounded-xl font-bold text-white disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, #e63946, #c0392b)' }}>
+                    {retrackLoading ? 'Sending...' : 'Send Request'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

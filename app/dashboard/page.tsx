@@ -234,6 +234,10 @@ export default function DashboardPage() {
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors">
                         <span>💳</span> Buy & History
                       </Link>
+                      <button onClick={() => { setShowNavMenu(false); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); setRetrackEdited(false); setShowRetrackPopup(true); }}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors w-full text-left">
+                        <span>📺</span> Request Retrack
+                      </button>
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
                       <button onClick={() => { setShowNavMenu(false); handleLogout(); }}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-white hover:bg-red-500/20 transition-colors w-full text-left">
