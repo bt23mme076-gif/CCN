@@ -39,6 +39,7 @@ export default function DashboardPage() {
   const [retrackLoading, setRetrackLoading] = useState(false);
   const [retrackDone, setRetrackDone] = useState(false);
   const [retrackStb, setRetrackStb] = useState('');
+  const [retrackEdited, setRetrackEdited] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -139,10 +140,15 @@ export default function DashboardPage() {
   };
 
   const handleRetrackRequest = async () => {
-    if (!retrackStb.trim()) return;
+    const stbToSend = retrackEdited ? retrackStb : (customer?.stb_number || '');
+    if (!stbToSend) return;
     setRetrackLoading(true);
     try {
-      await fetch('/api/retrack', { method: 'POST' });
+      await fetch('/api/retrack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stb_number: stbToSend }),
+      });
       setRetrackDone(true);
     } catch { /* ignore */ }
     finally { setRetrackLoading(false); }
@@ -274,7 +280,7 @@ export default function DashboardPage() {
               <p className="text-sm text-gray-500 mt-0.5">Channels not showing? Request a retrack for your STB.</p>
             </div>
             <button
-              onClick={() => { setShowRetrackPopup(true); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); }}
+              onClick={() => { setShowRetrackPopup(true); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); setRetrackEdited(false); }}
               className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap"
             >
               📺 Request Retrack
@@ -314,10 +320,22 @@ export default function DashboardPage() {
                     <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">STB Number</label>
                     <input
                       type="text"
-                      value={retrackStb}
-                      onChange={(e) => setRetrackStb(e.target.value)}
+                      inputMode="numeric"
+                      value={retrackEdited ? retrackStb : (customer?.stb_number || '')}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '');
+                        setRetrackEdited(true);
+                        setRetrackStb(digits);
+                      }}
+                      onKeyDown={(e) => {
+                        if (!retrackEdited && e.key !== 'Tab' && e.key !== 'Enter') {
+                          setRetrackEdited(true);
+                          setRetrackStb('');
+                        }
+                      }}
                       placeholder="Enter your STB number"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-mono text-gray-800 outline-none focus:border-blue-400 transition-colors"
+                      className="w-full px-4 py-3 rounded-xl border text-sm font-mono text-gray-800 outline-none transition-colors"
+                      style={{ borderColor: retrackEdited ? '#3b82f6' : '#e5e7eb' }}
                     />
                   </div>
                   <div className="flex gap-3">
