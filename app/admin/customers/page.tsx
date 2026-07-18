@@ -82,6 +82,14 @@ export default function CustomersPage() {
 
   // Dropdown
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
+
+  const toggleDropdown = (id: string, e: React.MouseEvent<HTMLButtonElement>) => {
+    if (openDropdown === id) { setOpenDropdown(null); setDropdownPos(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDropdownPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    setOpenDropdown(id);
+  };
 
   useEffect(() => {
     fetchCustomers();
@@ -506,37 +514,12 @@ export default function CustomersPage() {
                         </span>
                       </td>
                       <td>
-                        <div className="relative">
-                          <button
-                            onClick={() => setOpenDropdown(openDropdown === customer.id ? null : customer.id)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                            style={{ background: 'rgba(255,255,255,0.06)' }}>
-                            ⋯
-                          </button>
-                          {openDropdown === customer.id && (
-                            <>
-                              <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)} />
-                              <div className="absolute right-0 mt-1 w-44 rounded-xl shadow-2xl z-20 overflow-hidden"
-                                style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
-                                {[
-                                  { label: '👁 View Details', action: () => { openCustomerDetails(customer.id); setOpenDropdown(null); }, color: '#e2e8f0' },
-                                  { label: customer.outstanding_balance > 0 ? `💰 Due ₹${customer.outstanding_balance}` : '💰 Set Due', action: () => { setSelectedCustForDues({ id: customer.id, name: customer.name, outstanding_balance: customer.outstanding_balance }); setDuesAmount(String(customer.outstanding_balance)); setOpenDropdown(null); }, color: customer.outstanding_balance > 0 ? '#f87171' : '#94a3b8' },
-                                  { label: '✅ Activate Plan', action: () => { handleOpenActivatePlan(customer); setOpenDropdown(null); }, color: '#34d399' },
-                                  { label: '⛔ Deactivate', action: () => { handleDeactivateCustomer(customer.id, customer.name); setOpenDropdown(null); }, color: '#f59e0b' },
-                                  { label: '💲 Set Prices', action: () => { handleManagePrices(customer); setOpenDropdown(null); }, color: '#a78bfa' },
-                                  { label: '🔑 Reset PIN', action: () => { setSelectedCustForReset(customer); setOpenDropdown(null); }, color: '#ec4899' },
-                                  { label: deleting === customer.id ? 'Deleting…' : '🗑 Delete', action: () => { handleDelete(customer.id, customer.name); setOpenDropdown(null); }, color: '#f87171' },
-                                ].map(({ label, action, color }) => (
-                                  <button key={label} onClick={action}
-                                    className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-white/5 transition-colors"
-                                    style={{ color }}>
-                                    {label}
-                                  </button>
-                                ))}
-                              </div>
-                            </>
-                          )}
-                        </div>
+                        <button
+                          onClick={(e) => toggleDropdown(customer.id, e)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                          style={{ background: 'rgba(255,255,255,0.06)' }}>
+                          ⋯
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -570,35 +553,12 @@ export default function CustomersPage() {
                         {lastRecharge && <span className="text-[10px] text-gray-500">{lastRecharge}</span>}
                       </div>
                     </div>
-                    <div className="relative flex-shrink-0">
-                      <button onClick={() => setOpenDropdown(openDropdown === customer.id ? null : customer.id)}
+                    <div className="flex-shrink-0">
+                      <button onClick={(e) => toggleDropdown(customer.id, e)}
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
                         style={{ background: 'rgba(255,255,255,0.06)' }}>
                         ⋯
                       </button>
-                      {openDropdown === customer.id && (
-                        <>
-                          <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)} />
-                          <div className="absolute right-0 mt-1 w-44 rounded-xl shadow-2xl z-20 overflow-hidden"
-                            style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
-                            {[
-                              { label: '👁 View Details', action: () => { openCustomerDetails(customer.id); setOpenDropdown(null); }, color: '#e2e8f0' },
-                              { label: customer.outstanding_balance > 0 ? `💰 Due ₹${customer.outstanding_balance}` : '💰 Set Due', action: () => { setSelectedCustForDues({ id: customer.id, name: customer.name, outstanding_balance: customer.outstanding_balance }); setDuesAmount(String(customer.outstanding_balance)); setOpenDropdown(null); }, color: customer.outstanding_balance > 0 ? '#f87171' : '#94a3b8' },
-                              { label: '✅ Activate Plan', action: () => { handleOpenActivatePlan(customer); setOpenDropdown(null); }, color: '#34d399' },
-                              { label: '⛔ Deactivate', action: () => { handleDeactivateCustomer(customer.id, customer.name); setOpenDropdown(null); }, color: '#f59e0b' },
-                              { label: '💲 Set Prices', action: () => { handleManagePrices(customer); setOpenDropdown(null); }, color: '#a78bfa' },
-                              { label: '🔑 Reset PIN', action: () => { setSelectedCustForReset(customer); setOpenDropdown(null); }, color: '#ec4899' },
-                              { label: deleting === customer.id ? 'Deleting…' : '🗑 Delete', action: () => { handleDelete(customer.id, customer.name); setOpenDropdown(null); }, color: '#f87171' },
-                            ].map(({ label, action, color }) => (
-                              <button key={label} onClick={action}
-                                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-white/5 transition-colors"
-                                style={{ color }}>
-                                {label}
-                              </button>
-                            ))}
-                          </div>
-                        </>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -607,6 +567,35 @@ export default function CustomersPage() {
           </>
         )}
       </div>
+
+      {/* Floating action dropdown — fixed position so it escapes overflow:hidden */}
+      {openDropdown && dropdownPos && (() => {
+        const c = customers.find((x) => x.customer.id === openDropdown)?.customer;
+        if (!c) return null;
+        return (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => { setOpenDropdown(null); setDropdownPos(null); }} />
+            <div className="fixed z-50 w-44 rounded-xl shadow-2xl overflow-hidden"
+              style={{ top: dropdownPos.top, right: dropdownPos.right, background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
+              {[
+                { label: '👁 View Details', action: () => openCustomerDetails(c.id), color: '#e2e8f0' },
+                { label: c.outstanding_balance > 0 ? `💰 Due ₹${c.outstanding_balance}` : '💰 Set Due', action: () => { setSelectedCustForDues({ id: c.id, name: c.name, outstanding_balance: c.outstanding_balance }); setDuesAmount(String(c.outstanding_balance)); }, color: c.outstanding_balance > 0 ? '#f87171' : '#94a3b8' },
+                { label: '✅ Activate Plan', action: () => handleOpenActivatePlan(c), color: '#34d399' },
+                { label: '⛔ Deactivate', action: () => handleDeactivateCustomer(c.id, c.name), color: '#f59e0b' },
+                { label: '💲 Set Prices', action: () => handleManagePrices(c), color: '#a78bfa' },
+                { label: '🔑 Reset PIN', action: () => setSelectedCustForReset(c), color: '#ec4899' },
+                { label: deleting === c.id ? 'Deleting…' : '🗑 Delete', action: () => handleDelete(c.id, c.name), color: '#f87171' },
+              ].map(({ label, action, color }) => (
+                <button key={label} onClick={() => { action(); setOpenDropdown(null); setDropdownPos(null); }}
+                  className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-white/5 transition-colors"
+                  style={{ color }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </>
+        );
+      })()}
 
       {/* Customer Details Modal */}
       {selectedCustomerId && (
