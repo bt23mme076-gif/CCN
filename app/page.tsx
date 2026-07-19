@@ -130,8 +130,7 @@ export default function HomePage() {
   const handleFastRecharge = () => {
     if (!customer) { router.push('/login'); return; }
     const amountInRupees = (customer.fast_recharge_amount / 100).toFixed(2);
-    const upiParams = `pa=itsjatinrai%40ybl&pn=CCN+Networks&am=${amountInRupees}&cu=INR&tn=CCN+Fast+Recharge`;
-    const upiLink = `upi://pay?${upiParams}`;
+    const upiLink = `upi://pay?pa=itsjatinrai@ybl&am=${amountInRupees}&cu=INR`;
     fetch('/api/recharge/create-upi-order', { method: 'POST' }).catch(() => {});
     window.location.href = upiLink;
   };
