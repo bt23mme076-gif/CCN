@@ -62,7 +62,6 @@ export default function AccessoryPaymentModal({
       const checkoutOptions = {
         paymentSessionId: orderData.paymentSessionId,
         returnUrl: `${window.location.origin}/dashboard/buy?order_id=${orderData.orderId}&type=accessory`,
-        components: ['order-details', 'card', 'upi', 'netbanking', 'wallet'],
       };
 
       // Open Cashfree checkout
