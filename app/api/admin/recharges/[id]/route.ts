@@ -43,7 +43,7 @@ export async function DELETE(
     await db.delete(recharges).where(eq(recharges.id, rechargeId));
 
     // 5. Clean up the dynamic ala carte plan if applicable
-    if (planId.startsWith('plan_alacarte_')) {
+    if (planId && planId.startsWith('plan_alacarte_')) {
       await db.delete(plans).where(eq(plans.id, planId));
     }
 
