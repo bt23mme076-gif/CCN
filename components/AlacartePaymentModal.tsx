@@ -60,6 +60,7 @@ export default function AlacartePaymentModal({
       const checkoutOptions = {
         paymentSessionId: orderData.paymentSessionId,
         returnUrl: `${window.location.origin}/dashboard?order_id=${orderData.orderId}`,
+        components: ['order-details', 'card', 'upi-collect', 'upi-intent', 'netbanking', 'wallet'],
       };
 
       // Open Cashfree checkout
