@@ -244,7 +244,7 @@ export default function BuyHistoryPage() {
       <div className="min-h-screen flex flex-col">
         <nav className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6">
             <div className="flex justify-between items-center h-16">
               <Link href="/" className="flex items-center gap-2">
                 <span className="font-display text-xl font-extrabold text-white tracking-wide">CCN</span>
@@ -301,7 +301,7 @@ export default function BuyHistoryPage() {
       {/* Header */}
       <nav className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center gap-2">
               <span className="font-display text-xl font-extrabold text-white tracking-wide">CCN</span>
