@@ -29,8 +29,9 @@ export async function DELETE(
 
     const rechargeData = recharge[0];
 
-    // 3. Only allow deleting 'pending' or 'failed' attempts
-    if (rechargeData.status !== 'pending' && rechargeData.status !== 'failed') {
+    // 3. Allow deleting pending, failed, and Fast Recharge (paid, no cashfree_order_id)
+    const isFastRecharge = rechargeData.plan_name === 'Fast Recharge' && !rechargeData.cashfree_order_id;
+    if (rechargeData.status !== 'pending' && rechargeData.status !== 'failed' && !isFastRecharge) {
       return NextResponse.json(
         { error: 'Only pending or failed recharge attempts can be deleted' },
         { status: 400 }

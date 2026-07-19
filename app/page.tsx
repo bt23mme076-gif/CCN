@@ -139,12 +139,7 @@ export default function HomePage() {
       }
       const data = await res.json();
       const isAndroid = /android/i.test(navigator.userAgent);
-      const link = isAndroid ? data.intentLink : data.upiLink;
-      const a = document.createElement('a');
-      a.href = link;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      window.location.href = isAndroid ? data.intentLink : data.upiLink;
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to initiate payment.');
     } finally {
