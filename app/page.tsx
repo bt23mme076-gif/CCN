@@ -133,12 +133,11 @@ export default function HomePage() {
   const handleFastRecharge = () => {
     if (!customer) { router.push('/login'); return; }
     const amountInRupees = (customer.fast_recharge_amount / 100).toFixed(2);
-    const upiParams = `pa=itsjatinrai@ybl&pn=CCN%20Networks&am=${amountInRupees}&cu=INR&tn=CCN%20Fast%20Recharge`;
+    const upiParams = `pa=itsjatinrai%40ybl&pn=CCN+Networks&am=${amountInRupees}&cu=INR&tn=CCN+Fast+Recharge`;
     const upiLink = `upi://pay?${upiParams}`;
     const intentLink = `intent://pay?${upiParams}#Intent;scheme=upi;end`;
     setUpiModalLinks({ upiLink, intentLink, amount: customer.fast_recharge_amount });
     setShowUpiModal(true);
-    // Create order record in background
     fetch('/api/recharge/create-upi-order', { method: 'POST' }).catch(() => {});
   };
 
@@ -967,32 +966,33 @@ export default function HomePage() {
 
       {showUpiModal && upiModalLinks && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center relative">
-            <button
-              onClick={() => setShowUpiModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold leading-none"
-            >
-              ×
-            </button>
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center relative">
+            <button onClick={() => setShowUpiModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold leading-none">×</button>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <h3 className="font-display text-xl font-bold text-gray-800 mb-1">Fast Recharge</h3>
             <p className="text-3xl font-black text-purple-700 mb-1">₹{upiModalLinks.amount / 100}</p>
-            <p className="text-gray-500 text-sm mb-6">Tap the button below to open your UPI app and complete payment</p>
-            <a
-              href={upiModalLinks.upiLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-all"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
-              onClick={() => setTimeout(() => setShowUpiModal(false), 1500)}
-            >
-              Open UPI App
-            </a>
+            <p className="text-gray-500 text-sm mb-5">Apni UPI app chuniye aur pay karein</p>
+            <div className="flex flex-col gap-3">
+              {[
+                { name: 'PhonePe', link: `phonepe://pay?${upiModalLinks.upiLink.split('?')[1]}`, color: '#5f259f', bg: '#f0e6ff' },
+                { name: 'Google Pay', link: `tez://upi/pay?${upiModalLinks.upiLink.split('?')[1]}`, color: '#1a73e8', bg: '#e8f0fe' },
+                { name: 'Paytm', link: `paytmmp://pay?${upiModalLinks.upiLink.split('?')[1]}`, color: '#00b9f5', bg: '#e0f7ff' },
+                { name: 'BHIM / Any UPI App', link: upiModalLinks.upiLink, color: '#e63946', bg: '#fdecea' },
+              ].map(({ name, link, color, bg }) => (
+                <a key={name} href={link}
+                  className="block w-full py-3.5 rounded-2xl font-bold text-base active:scale-95 transition-all"
+                  style={{ background: bg, color }}
+                  onClick={() => setTimeout(() => setShowUpiModal(false), 1500)}>
+                  {name}
+                </a>
+              ))}
+            </div>
             <p className="text-xs text-gray-400 mt-4">Pay to: <span className="font-semibold text-gray-600">itsjatinrai@ybl</span></p>
           </div>
         </div>
