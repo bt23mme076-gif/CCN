@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
-    const upiParams = `pa=Q055481811@ybl&pn=CCN%20Networks&am=${amountInRupees}&cu=INR&tn=CCN%20Fast%20Recharge`;
+    const upiParams = `pa=9399974696-4@ibl&pn=CCN%20Networks&am=${amountInRupees}&cu=INR&tn=CCN%20Fast%20Recharge`;
     const upiLink = `upi://pay?${upiParams}`;
     const intentLink = `intent://pay?${upiParams}#Intent;scheme=upi;end`;
 
