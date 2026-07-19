@@ -51,9 +51,6 @@ export default function HomePage() {
 
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [fastRechargeLoading, setFastRechargeLoading] = useState(false);
-  const [showUpiModal, setShowUpiModal] = useState(false);
-  const [upiModalLinks, setUpiModalLinks] = useState<{ upiLink: string; intentLink: string; amount: number } | null>(null);
 
   const [selectedAccessory, setSelectedAccessory] = useState<Accessory | null>(null);
   const [showAccessoryModal, setShowAccessoryModal] = useState(false);
@@ -962,64 +959,6 @@ export default function HomePage() {
         />
       )}
 
-      {showUpiModal && upiModalLinks && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center relative">
-            <button onClick={() => setShowUpiModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold leading-none">×</button>
-
-            {/* Success icon */}
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="font-display text-xl font-bold text-gray-800 mb-1">Request hua!</h3>
-            <p className="text-gray-500 text-sm mb-5">Ab apni UPI app se neeche diye UPI ID par payment karein</p>
-
-            {/* Amount */}
-            <div className="rounded-2xl p-4 mb-4" style={{ background: '#f0fdf4', border: '2px solid #86efac' }}>
-              <p className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">Kitna pay karein</p>
-              <p className="text-4xl font-black text-green-700">₹{upiModalLinks.amount / 100}</p>
-            </div>
-
-            {/* UPI ID */}
-            <div className="rounded-2xl p-4 mb-5" style={{ background: '#eff6ff', border: '2px solid #93c5fd' }}>
-              <p className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">UPI ID (isko copy karein)</p>
-              <p className="text-xl font-black text-blue-700 tracking-wide">itsjatinrai@ybl</p>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText('itsjatinrai@ybl');
-                  alert('UPI ID copy hua!');
-                }}
-                className="mt-2 px-4 py-1.5 rounded-lg text-sm font-bold text-white"
-                style={{ background: '#2563eb' }}>
-                Copy UPI ID
-              </button>
-            </div>
-
-            {/* Steps */}
-            <div className="text-left space-y-2 mb-5 bg-gray-50 rounded-2xl p-4">
-              <p className="text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Kaise pay karein:</p>
-              {['Apni UPI app kholein (PhonePe / GPay / Paytm)', 'UPI ID search karein ya paste karein', `₹${upiModalLinks.amount / 100} enter karein aur pay karein`].map((step, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0 mt-0.5"
-                    style={{ background: '#6366f1' }}>{i + 1}</span>
-                  <p className="text-sm text-gray-700">{step}</p>
-                </div>
-              ))}
-            </div>
-
-            <a href={`https://wa.me/919399974696?text=Fast%20Recharge%20request%20hua%20hai%20-%20%E2%82%B9${upiModalLinks.amount / 100}`}
-              target="_blank" rel="noopener noreferrer"
-              className="block w-full py-3 rounded-2xl font-bold text-white text-sm"
-              style={{ background: '#25d366' }}>
-              Help chahiye? WhatsApp karein
-            </a>
-          </div>
-        </div>
-      )}
 
       {showPrerequisiteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
