@@ -42,9 +42,7 @@ export async function POST(request: NextRequest) {
       )
       .limit(1);
 
-    console.log('[create-order] planId:', planId, '| plan.price:', plan[0].price, '| override:', override.length > 0 ? override[0].custom_price : 'none', '| customerId:', user.customerId);
     const finalPrice = override.length > 0 ? override[0].custom_price : plan[0].price;
-    console.log('[create-order] finalPrice:', finalPrice, '| order_amount:', (finalPrice / 100).toFixed(2));
 
     // Get customer details
     const customer = await db
