@@ -80,6 +80,12 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!showPaymentDoneModal) return;
+    const t = setTimeout(() => setShowPaymentDoneModal(false), 10000);
+    return () => clearTimeout(t);
+  }, [showPaymentDoneModal]);
+
   const fetchData = async () => {
     try {
       const [plansRes, customerRes, accessoriesRes, channelsRes, adsRes] = await Promise.all([
@@ -1008,7 +1014,7 @@ export default function HomePage() {
               onClick={() => setShowPaymentDoneModal(false)}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold transition-all active:scale-95 shadow-md"
             >
-              ठीक है, शुक्रिया!
+              धन्यवाद!
             </button>
           </div>
         </div>
