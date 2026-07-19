@@ -984,7 +984,7 @@ export default function HomePage() {
             <p className="text-3xl font-black text-purple-700 mb-1">₹{upiModalLinks.amount / 100}</p>
             <p className="text-gray-500 text-sm mb-6">Tap the button below to open your UPI app and complete payment</p>
             <a
-              href={/android/i.test(navigator.userAgent) ? upiModalLinks.intentLink : upiModalLinks.upiLink}
+              href={upiModalLinks.upiLink}
               className="block w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-all"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
               onClick={() => setTimeout(() => setShowUpiModal(false), 1500)}
