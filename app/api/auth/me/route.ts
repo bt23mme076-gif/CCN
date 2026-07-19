@@ -21,6 +21,7 @@ export async function GET() {
         area: customers.area,
         outstanding_balance: customers.outstanding_balance,
         fast_recharge_enabled: customers.fast_recharge_enabled,
+        fast_recharge_amount: customers.fast_recharge_amount,
         created_at: customers.created_at,
       })
       .from(customers)

@@ -10,11 +10,14 @@ export async function PATCH(
 ) {
   try {
     await requireAdminAuth();
-    const { enabled } = await request.json();
+    const { enabled, amount } = await request.json();
 
     await db
       .update(customers)
-      .set({ fast_recharge_enabled: Boolean(enabled) })
+      .set({
+        fast_recharge_enabled: Boolean(enabled),
+        fast_recharge_amount: enabled ? Math.round(Number(amount) * 100) : 0, // store in paise
+      })
       .where(eq(customers.id, params.id));
 
     return NextResponse.json({ success: true });

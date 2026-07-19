@@ -11,6 +11,7 @@ export const customers = pgTable('customers', {
   outstanding_balance: integer('outstanding_balance').default(0).notNull(), // in rupees, cash dues
   notes: text('notes'),
   fast_recharge_enabled: boolean('fast_recharge_enabled').default(false).notNull(),
+  fast_recharge_amount: integer('fast_recharge_amount').default(0).notNull(), // in paise
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -28,7 +29,7 @@ export const plans = pgTable('plans', {
 export const recharges = pgTable('recharges', {
   id: text('id').primaryKey(),
   customer_id: text('customer_id').notNull().references(() => customers.id),
-  plan_id: text('plan_id').notNull().references(() => plans.id),
+  plan_id: text('plan_id').references(() => plans.id),
   plan_name: text('plan_name').notNull(),
   amount: integer('amount').notNull(), // in paise
   status: text('status').notNull(), // 'pending' | 'paid' | 'activated' | 'failed'

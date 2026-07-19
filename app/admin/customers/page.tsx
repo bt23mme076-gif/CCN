@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { formatDateTime } from '@/lib/utils';
 
 interface CustomerItem {
-  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; outstanding_balance: number; notes: string | null; fast_recharge_enabled: boolean; };
+  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; outstanding_balance: number; notes: string | null; fast_recharge_enabled: boolean; fast_recharge_amount: number; };
   rechargeCount: number;
   lastRecharge: string | null;
 }
@@ -90,22 +90,44 @@ export default function CustomersPage() {
   const [duesAmount, setDuesAmount] = useState('');
   const [savingDues, setSavingDues] = useState(false);
   const [togglingFastRecharge, setTogglingFastRecharge] = useState<string | null>(null);
+  const [fastRechargeModal, setFastRechargeModal] = useState<{ id: string; name: string; currentAmount: number } | null>(null);
+  const [fastRechargeAmountInput, setFastRechargeAmountInput] = useState('');
 
   // Dropdown
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
 
-  const handleToggleFastRecharge = async (customerId: string, currentValue: boolean) => {
-    setTogglingFastRecharge(customerId);
-    try {
-      await fetch(`/api/admin/customers/${customerId}/fast-recharge`, {
+  const handleToggleFastRecharge = (c: { id: string; name: string; fast_recharge_enabled: boolean; fast_recharge_amount: number }) => {
+    if (c.fast_recharge_enabled) {
+      // Disable directly
+      setTogglingFastRecharge(c.id);
+      fetch(`/api/admin/customers/${c.id}/fast-recharge`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: !currentValue }),
+        body: JSON.stringify({ enabled: false, amount: 0 }),
+      }).then(() => fetchCustomers()).catch(() => alert('Failed')).finally(() => setTogglingFastRecharge(null));
+    } else {
+      // Show modal to set amount
+      setFastRechargeAmountInput(c.fast_recharge_amount > 0 ? String(c.fast_recharge_amount / 100) : '');
+      setFastRechargeModal({ id: c.id, name: c.name, currentAmount: c.fast_recharge_amount });
+    }
+  };
+
+  const handleSaveFastRecharge = async () => {
+    if (!fastRechargeModal) return;
+    const amt = parseFloat(fastRechargeAmountInput);
+    if (!amt || amt <= 0) { alert('Valid amount daalo'); return; }
+    setTogglingFastRecharge(fastRechargeModal.id);
+    try {
+      await fetch(`/api/admin/customers/${fastRechargeModal.id}/fast-recharge`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: true, amount: amt }),
       });
+      setFastRechargeModal(null);
       fetchCustomers();
     } catch {
-      alert('Failed to toggle Fast Recharge');
+      alert('Failed to enable Fast Recharge');
     } finally {
       setTogglingFastRecharge(null);
     }
@@ -677,7 +699,7 @@ export default function CustomersPage() {
                 { label: '⛔ Deactivate', action: () => handleDeactivateCustomer(c.id, c.name), color: '#f59e0b' },
                 { label: '💲 Set Prices', action: () => handleManagePrices(c), color: '#a78bfa' },
                 { label: '🔑 Reset PIN', action: () => setSelectedCustForReset(c), color: '#ec4899' },
-                { label: togglingFastRecharge === c.id ? 'Updating…' : c.fast_recharge_enabled ? '⚡ Fast Recharge: ON' : '⚡ Fast Recharge: OFF', action: () => handleToggleFastRecharge(c.id, c.fast_recharge_enabled), color: c.fast_recharge_enabled ? '#facc15' : '#6b7280' },
+                { label: togglingFastRecharge === c.id ? 'Updating…' : c.fast_recharge_enabled ? `⚡ Fast Recharge: ON (₹${c.fast_recharge_amount / 100})` : '⚡ Fast Recharge: OFF', action: () => handleToggleFastRecharge(c), color: c.fast_recharge_enabled ? '#facc15' : '#6b7280' },
                 { label: deleting === c.id ? 'Deleting…' : '🗑 Delete', action: () => handleDelete(c.id, c.name), color: '#f87171' },
               ].map(({ label, action, color }) => (
                 <button key={label} onClick={() => { action(); setOpenDropdown(null); setDropdownPos(null); }}
@@ -1145,6 +1167,39 @@ export default function CustomersPage() {
                   {savingNotes ? 'Saving...' : 'Save Note'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fast Recharge Enable Modal */}
+      {fastRechargeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl text-white" style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <h3 className="font-bold text-lg mb-1">⚡ Fast Recharge Enable</h3>
+            <p className="text-sm text-gray-400 mb-5">{fastRechargeModal.name} ke liye amount set karo</p>
+            <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">Amount (₹)</label>
+            <input
+              type="number"
+              min="1"
+              value={fastRechargeAmountInput}
+              onChange={(e) => setFastRechargeAmountInput(e.target.value)}
+              placeholder="e.g. 299"
+              className="w-full px-4 py-3 rounded-xl text-white text-lg font-bold outline-none mb-5"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setFastRechargeModal(null)}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-gray-400 border border-white/10 hover:bg-white/5 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleSaveFastRecharge}
+                disabled={togglingFastRecharge === fastRechargeModal.id}
+                className="flex-1 py-2.5 rounded-xl font-bold text-white disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+                {togglingFastRecharge === fastRechargeModal.id ? 'Saving…' : 'Enable'}
+              </button>
             </div>
           </div>
         </div>

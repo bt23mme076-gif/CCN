@@ -31,6 +31,7 @@ interface Customer {
   mobile: string;
   stb_number: string;
   fast_recharge_enabled: boolean;
+  fast_recharge_amount: number;
 }
 
 interface Accessory {
@@ -50,7 +51,7 @@ export default function HomePage() {
 
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [fastRechargeLoading, setFastRechargeLoading] = useState<string | null>(null);
+  const [fastRechargeLoading, setFastRechargeLoading] = useState(false);
 
   const [selectedAccessory, setSelectedAccessory] = useState<Accessory | null>(null);
   const [showAccessoryModal, setShowAccessoryModal] = useState(false);
@@ -127,25 +128,27 @@ export default function HomePage() {
 
 
 
-  const handleFastRecharge = async (planId: string) => {
+  const handleFastRecharge = async () => {
     if (!customer) { router.push('/login'); return; }
-    setFastRechargeLoading(planId);
+    setFastRechargeLoading(true);
     try {
-      const res = await fetch('/api/recharge/create-upi-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
-      });
+      const res = await fetch('/api/recharge/create-upi-order', { method: 'POST' });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Failed');
       }
       const data = await res.json();
-      window.location.href = data.upiLink;
+      const isAndroid = /android/i.test(navigator.userAgent);
+      const link = isAndroid ? data.intentLink : data.upiLink;
+      const a = document.createElement('a');
+      a.href = link;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to initiate payment.');
     } finally {
-      setFastRechargeLoading(null);
+      setFastRechargeLoading(false);
     }
   };
 
@@ -285,6 +288,17 @@ export default function HomePage() {
                   Login to Recharge
                 </button>
               </>
+            ) : customer.fast_recharge_enabled ? (
+              <button
+                onClick={handleFastRecharge}
+                disabled={fastRechargeLoading}
+                className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {fastRechargeLoading ? 'Opening UPI...' : `Fast Recharge — ₹${customer.fast_recharge_amount / 100}`}
+              </button>
             ) : (
               <button
                 onClick={() => {
@@ -342,52 +356,11 @@ export default function HomePage() {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
             </div>
           ) : displayPlans.length > 0 ? (
-            customer?.fast_recharge_enabled ? (
-              /* Fast Recharge mode — one-tap UPI for enabled customers */
-              <div className="max-w-4xl mx-auto py-10 px-4">
-                <div className="flex items-center justify-center gap-2 mb-6">
-                  <span className="inline-flex items-center gap-1.5 bg-yellow-400/15 border border-yellow-400/30 text-yellow-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Fast Recharge — UPI se seedha pay karein
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-5 justify-center">
-                  {displayPlans.map((plan) => (
-                    <button
-                      key={plan.id}
-                      onClick={() => handleFastRecharge(plan.id)}
-                      disabled={fastRechargeLoading === plan.id}
-                      className="flex-1 max-w-sm mx-auto sm:mx-0 rounded-3xl px-8 py-7 font-bold text-white transition-all active:scale-95 disabled:opacity-60 flex flex-col items-center gap-2 shadow-2xl"
-                      style={{ background: 'linear-gradient(135deg, #e94560 0%, #c0392b 100%)', boxShadow: '0 12px 32px rgba(233,69,96,0.4)' }}
-                    >
-                      {fastRechargeLoading === plan.id ? (
-                        <span className="text-lg">UPI app khul rahi hai...</span>
-                      ) : (
-                        <>
-                          <span className="text-4xl font-black">₹{(plan.price / 100).toFixed(0)}</span>
-                          <span className="text-base font-semibold opacity-90">{plan.name}</span>
-                          <span className="text-sm opacity-70">{plan.duration_days} din</span>
-                          <div className="mt-3 flex items-center gap-2 bg-white/25 rounded-full px-4 py-1.5">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                            <span className="text-sm font-bold">Fast Recharge</span>
-                          </div>
-                        </>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-12 md:gap-6 max-w-6xl mx-auto py-12 px-4">
-                {displayPlans.map((plan, index) => (
-                  <PlanCard key={plan.id} plan={plan} index={index} onSelect={handleSelectPlan} />
-                ))}
-              </div>
-            )
+            <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-12 md:gap-6 max-w-6xl mx-auto py-12 px-4">
+              {displayPlans.map((plan, index) => (
+                <PlanCard key={plan.id} plan={plan} index={index} onSelect={handleSelectPlan} />
+              ))}
+            </div>
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-600">No plans available at the moment.</p>
