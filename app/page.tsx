@@ -1004,10 +1004,10 @@ export default function HomePage() {
             <h3 className="font-display text-xl font-bold text-gray-800 mb-2">
               भुगतान हो गया?
             </h3>
-            <p className="text-gray-600 text-sm mb-2 leading-relaxed">
+            <p className="text-gray-800 text-base mb-2 leading-relaxed font-medium">
               आपका रिचार्ज अनुरोध हमें मिल गया है।
             </p>
-            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+            <p className="text-gray-700 text-base mb-6 leading-relaxed">
               एडमिन जल्द ही वेरीफाई करके आपका कनेक्शन चालू कर देंगे। थोड़ी देर में सेवा शुरू हो जाएगी।
             </p>
             <button
