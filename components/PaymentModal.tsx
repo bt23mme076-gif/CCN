@@ -72,6 +72,9 @@ export default function PaymentModal({
         redirectTarget: '_self',
       };
 
+      // Store orderId for WebView return flow
+      localStorage.setItem('pendingOrderId', orderData.orderId);
+
       // Open Cashfree checkout
       cashfree.checkout(checkoutOptions).then(async (result: any) => {
         if (result.error) {
