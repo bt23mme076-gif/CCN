@@ -41,8 +41,7 @@ export async function POST(request: NextRequest) {
       plan_id: null,
       plan_name: 'Fast Recharge',
       amount: c.fast_recharge_amount,
-      status: 'paid',
-      paid_at: new Date(),
+      status: 'pending',
     });
 
     const upiParams = `pa=Q055481811@ybl&pn=CCN%20Networks&am=${amountInRupees}&cu=INR&tn=CCN%20Fast%20Recharge`;

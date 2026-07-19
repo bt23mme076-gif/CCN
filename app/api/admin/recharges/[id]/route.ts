@@ -29,13 +29,7 @@ export async function DELETE(
 
     const rechargeData = recharge[0];
 
-    // 3. Allow deleting pending, failed, and paid (not yet activated) recharges
-    if (rechargeData.status === 'activated') {
-      return NextResponse.json(
-        { error: 'Activated recharges cannot be deleted' },
-        { status: 400 }
-      );
-    }
+    // All statuses can be deleted by admin
 
     const planId = rechargeData.plan_id;
 
