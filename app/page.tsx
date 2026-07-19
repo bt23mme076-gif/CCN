@@ -130,7 +130,7 @@ export default function HomePage() {
   const handleFastRecharge = () => {
     if (!customer) { router.push('/login'); return; }
     const amountInRupees = (customer.fast_recharge_amount / 100).toFixed(2);
-    const upiLink = `upi://pay?pa=itsjatinrai@ybl&am=${amountInRupees}&cu=INR`;
+    const upiLink = `upi://pay?pa=Q055481811@ybl&am=${amountInRupees}&cu=INR`;
     fetch('/api/recharge/create-upi-order', { method: 'POST' }).catch(() => {});
     window.location.href = upiLink;
   };
