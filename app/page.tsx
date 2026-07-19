@@ -52,6 +52,8 @@ export default function HomePage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [fastRechargeLoading, setFastRechargeLoading] = useState(false);
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [upiModalLinks, setUpiModalLinks] = useState<{ upiLink: string; intentLink: string; amount: number } | null>(null);
 
   const [selectedAccessory, setSelectedAccessory] = useState<Accessory | null>(null);
   const [showAccessoryModal, setShowAccessoryModal] = useState(false);
@@ -128,23 +130,16 @@ export default function HomePage() {
 
 
 
-  const handleFastRecharge = async () => {
+  const handleFastRecharge = () => {
     if (!customer) { router.push('/login'); return; }
-    setFastRechargeLoading(true);
-    try {
-      const res = await fetch('/api/recharge/create-upi-order', { method: 'POST' });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Failed');
-      }
-      const data = await res.json();
-      const isAndroid = /android/i.test(navigator.userAgent);
-      window.location.href = isAndroid ? data.intentLink : data.upiLink;
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to initiate payment.');
-    } finally {
-      setFastRechargeLoading(false);
-    }
+    const amountInRupees = (customer.fast_recharge_amount / 100).toFixed(2);
+    const upiParams = `pa=itsjatinrai@ybl&pn=CCN%20Networks&am=${amountInRupees}&cu=INR&tn=CCN%20Fast%20Recharge`;
+    const upiLink = `upi://pay?${upiParams}`;
+    const intentLink = `intent://pay?${upiParams}#Intent;scheme=upi;end`;
+    setUpiModalLinks({ upiLink, intentLink, amount: customer.fast_recharge_amount });
+    setShowUpiModal(true);
+    // Create order record in background
+    fetch('/api/recharge/create-upi-order', { method: 'POST' }).catch(() => {});
   };
 
   const handleSelectPlan = async (planId: string) => {
@@ -286,13 +281,12 @@ export default function HomePage() {
             ) : customer.fast_recharge_enabled ? (
               <button
                 onClick={handleFastRecharge}
-                disabled={fastRechargeLoading}
-                className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-60"
+                className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                {fastRechargeLoading ? 'Opening UPI...' : `Fast Recharge — ₹${customer.fast_recharge_amount / 100}`}
+                {`Fast Recharge — ₹${customer.fast_recharge_amount / 100}`}
               </button>
             ) : (
               <button
@@ -969,6 +963,37 @@ export default function HomePage() {
           customerMobile={customer.mobile}
           onSuccess={() => setSelectedChannels([])}
         />
+      )}
+
+      {showUpiModal && upiModalLinks && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center relative">
+            <button
+              onClick={() => setShowUpiModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold leading-none"
+            >
+              ×
+            </button>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 className="font-display text-xl font-bold text-gray-800 mb-1">Fast Recharge</h3>
+            <p className="text-3xl font-black text-purple-700 mb-1">₹{upiModalLinks.amount / 100}</p>
+            <p className="text-gray-500 text-sm mb-6">Tap the button below to open your UPI app and complete payment</p>
+            <a
+              href={/android/i.test(navigator.userAgent) ? upiModalLinks.intentLink : upiModalLinks.upiLink}
+              className="block w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-all"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+              onClick={() => setTimeout(() => setShowUpiModal(false), 1500)}
+            >
+              Open UPI App
+            </a>
+            <p className="text-xs text-gray-400 mt-4">Pay to: <span className="font-semibold text-gray-600">itsjatinrai@ybl</span></p>
+          </div>
+        </div>
       )}
 
       {showPrerequisiteModal && (

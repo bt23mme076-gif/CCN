@@ -5,7 +5,7 @@ import { formatCurrency, formatDateTime, getInitials } from '@/lib/utils';
 
 interface Stats { pendingCount: number; todayRevenue: number; totalRevenue: number; totalCustomers: number; }
 interface PendingRecharge {
-  recharge: { id: string; plan_name: string; amount: number; paid_at: string; };
+  recharge: { id: string; plan_name: string; amount: number; paid_at: string; cashfree_order_id: string | null; };
   customer: { name: string; mobile: string; stb_number: string; area: string; };
 }
 
@@ -20,6 +20,7 @@ export default function PendingActivationsPage() {
   const [recharges, setRecharges] = useState<PendingRecharge[]>([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -34,6 +35,20 @@ export default function PendingActivationsPage() {
       setRecharges(d.recharges || []);
     } catch { setRecharges([]); }
     finally { setLoading(false); }
+  };
+
+  const handleDelete = async (rechargeId: string) => {
+    if (!confirm('Cancel this Fast Recharge order?')) return;
+    setDeleting(rechargeId);
+    try {
+      const res = await fetch(`/api/admin/recharges/${rechargeId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setRecharges(recharges.filter((r) => r.recharge.id !== rechargeId));
+        const statsRes = await fetch('/api/admin/stats');
+        setStats(await statsRes.json());
+      } else alert('Failed to delete');
+    } catch { alert('Failed to delete'); }
+    finally { setDeleting(null); }
   };
 
   const handleActivate = async (rechargeId: string) => {
@@ -125,13 +140,24 @@ export default function PendingActivationsPage() {
                     <p className="text-xs text-gray-400">{formatCurrency(recharge.amount)}</p>
                     <p className="text-xs text-gray-500">Paid: {formatDateTime(new Date(recharge.paid_at))}</p>
                   </div>
-                  <button
-                    onClick={() => handleActivate(recharge.id)}
-                    disabled={activating === recharge.id}
-                    className="px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
-                    style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)', boxShadow: '0 4px 15px rgba(52,183,136,0.3)' }}>
-                    {activating === recharge.id ? 'Activating...' : '✓ Activate'}
-                  </button>
+                  <div className="flex gap-2">
+                    {recharge.plan_name === 'Fast Recharge' && !recharge.cashfree_order_id && (
+                      <button
+                        onClick={() => handleDelete(recharge.id)}
+                        disabled={deleting === recharge.id}
+                        className="px-4 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
+                        {deleting === recharge.id ? 'Deleting...' : '✕ Cancel'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleActivate(recharge.id)}
+                      disabled={activating === recharge.id}
+                      className="px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
+                      style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)', boxShadow: '0 4px 15px rgba(52,183,136,0.3)' }}>
+                      {activating === recharge.id ? 'Activating...' : '✓ Activate'}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
