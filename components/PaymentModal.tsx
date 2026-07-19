@@ -19,6 +19,14 @@ interface PaymentModalProps {
   customerMobile?: string;
 }
 
+function isInAppBrowser() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /wv\b/.test(ua) ||
+    /FB_IAB|FBAN|Instagram|Snapchat|Twitter|Line|MicroMessenger/.test(ua) ||
+    (ua.includes('Android') && !ua.includes('Chrome/'));
+}
+
 export default function PaymentModal({
   isOpen,
   onClose,
@@ -30,6 +38,7 @@ export default function PaymentModal({
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
+  const inAppBrowser = isInAppBrowser();
 
   if (!isOpen || !plan) return null;
 
@@ -60,7 +69,7 @@ export default function PaymentModal({
       const checkoutOptions = {
         paymentSessionId: orderData.paymentSessionId,
         returnUrl: `${window.location.origin}/dashboard?order_id=${orderData.orderId}`,
-        redirectTarget: '_modal',
+        redirectTarget: '_self',
       };
 
       // Open Cashfree checkout
@@ -201,6 +210,24 @@ export default function PaymentModal({
             </svg>
           </button>
         </div>
+
+        {inAppBrowser && (
+          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4 text-sm text-yellow-800">
+            <strong>PhonePe/GPay buttons kaam nahi karenge</strong> is browser mein.<br />
+            <button
+              className="underline font-medium mt-1 inline-block"
+              onClick={() => {
+                window.open(
+                  'intent://' + window.location.href.replace(/^https?:\/\//, '') +
+                  '#Intent;scheme=https;package=com.android.chrome;end',
+                  '_blank'
+                );
+              }}
+            >
+              Chrome mein kholein →
+            </button>
+          </div>
+        )}
 
         <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
           <div className="flex justify-between text-sm sm:text-base">
