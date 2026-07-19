@@ -96,7 +96,7 @@ export default function Navbar() {
         <div className="h-0.5 w-full"
           style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
 
-        <div className="w-full px-4 sm:px-6">
+        <div className={`w-full ${pathname === '/' ? 'px-4 sm:px-6' : 'px-2 sm:px-3'}`}>
           <div className="flex justify-between items-center h-16">
 
             {/* Logo */}
