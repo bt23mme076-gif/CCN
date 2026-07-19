@@ -986,6 +986,8 @@ export default function HomePage() {
                 { name: 'BHIM / Any UPI App', link: upiModalLinks.upiLink, color: '#e63946', bg: '#fdecea' },
               ].map(({ name, link, color, bg }) => (
                 <a key={name} href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block w-full py-3.5 rounded-2xl font-bold text-base active:scale-95 transition-all"
                   style={{ background: bg, color }}
                   onClick={() => setTimeout(() => setShowUpiModal(false), 1500)}>
