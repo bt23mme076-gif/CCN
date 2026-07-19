@@ -135,13 +135,8 @@ export default function HomePage() {
     const amountInRupees = (customer.fast_recharge_amount / 100).toFixed(2);
     const upiParams = `pa=itsjatinrai%40ybl&pn=CCN+Networks&am=${amountInRupees}&cu=INR&tn=CCN+Fast+Recharge`;
     const upiLink = `upi://pay?${upiParams}`;
-    const intentLink = `intent://pay?${upiParams}#Intent;scheme=upi;package=com.phonepe.app;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.phonepe.app;end`;
+    fetch('/api/recharge/create-upi-order', { method: 'POST' }).catch(() => {});
     window.location.href = upiLink;
-    setTimeout(() => {
-      fetch('/api/recharge/create-upi-order', { method: 'POST' }).catch(() => {});
-      setUpiModalLinks({ upiLink, intentLink, amount: customer.fast_recharge_amount });
-      setShowUpiModal(true);
-    }, 1500);
   };
 
   const handleSelectPlan = async (planId: string) => {
