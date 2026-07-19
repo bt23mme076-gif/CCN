@@ -141,15 +141,13 @@ export default function PendingActivationsPage() {
                     <p className="text-xs text-gray-500">Paid: {formatDateTime(new Date(recharge.paid_at))}</p>
                   </div>
                   <div className="flex gap-2">
-                    {recharge.plan_name === 'Fast Recharge' && !recharge.cashfree_order_id && (
-                      <button
-                        onClick={() => handleDelete(recharge.id)}
-                        disabled={deleting === recharge.id}
-                        className="px-4 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                        style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
-                        {deleting === recharge.id ? 'Deleting...' : '✕ Cancel'}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleDelete(recharge.id)}
+                      disabled={deleting === recharge.id}
+                      className="px-4 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
+                      {deleting === recharge.id ? 'Deleting...' : '✕ Cancel'}
+                    </button>
                     <button
                       onClick={() => handleActivate(recharge.id)}
                       disabled={activating === recharge.id}

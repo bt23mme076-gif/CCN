@@ -170,7 +170,7 @@ export default function AllRechargesPage() {
                               {activating === recharge.id ? 'Activating...' : recharge.status === 'pending' ? 'Force Activate' : 'Activate'}
                             </button>
                           )}
-                          {(recharge.status === 'pending' || recharge.status === 'failed' || (recharge.plan_name === 'Fast Recharge' && !recharge.cashfree_order_id)) && (
+                          {recharge.status !== 'activated' && (
                             <button onClick={() => handleDelete(recharge.id)} disabled={deleting === recharge.id}
                               className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50"
                               style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
@@ -226,7 +226,7 @@ export default function AllRechargesPage() {
                       {activating === recharge.id ? 'Activating...' : recharge.status === 'pending' ? '⚡ Force Activate' : '✓ Activate'}
                     </button>
                   )}
-                  {(recharge.status === 'pending' || recharge.status === 'failed' || (recharge.plan_name === 'Fast Recharge' && !recharge.cashfree_order_id)) && (
+                  {recharge.status !== 'activated' && (
                     <button onClick={() => handleDelete(recharge.id)} disabled={deleting === recharge.id}
                       className="w-full py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
                       style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
