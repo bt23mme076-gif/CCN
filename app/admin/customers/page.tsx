@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { formatDateTime } from '@/lib/utils';
 
 interface CustomerItem {
-  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; outstanding_balance: number; notes: string | null; };
+  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; outstanding_balance: number; notes: string | null; fast_recharge_enabled: boolean; };
   rechargeCount: number;
   lastRecharge: string | null;
 }
@@ -89,10 +89,27 @@ export default function CustomersPage() {
   const [selectedCustForDues, setSelectedCustForDues] = useState<{ id: string; name: string; outstanding_balance: number } | null>(null);
   const [duesAmount, setDuesAmount] = useState('');
   const [savingDues, setSavingDues] = useState(false);
+  const [togglingFastRecharge, setTogglingFastRecharge] = useState<string | null>(null);
 
   // Dropdown
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
+
+  const handleToggleFastRecharge = async (customerId: string, currentValue: boolean) => {
+    setTogglingFastRecharge(customerId);
+    try {
+      await fetch(`/api/admin/customers/${customerId}/fast-recharge`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !currentValue }),
+      });
+      fetchCustomers();
+    } catch {
+      alert('Failed to toggle Fast Recharge');
+    } finally {
+      setTogglingFastRecharge(null);
+    }
+  };
 
   const toggleDropdown = (id: string, e: React.MouseEvent<HTMLButtonElement>) => {
     if (openDropdown === id) { setOpenDropdown(null); setDropdownPos(null); return; }
@@ -660,6 +677,7 @@ export default function CustomersPage() {
                 { label: '⛔ Deactivate', action: () => handleDeactivateCustomer(c.id, c.name), color: '#f59e0b' },
                 { label: '💲 Set Prices', action: () => handleManagePrices(c), color: '#a78bfa' },
                 { label: '🔑 Reset PIN', action: () => setSelectedCustForReset(c), color: '#ec4899' },
+                { label: togglingFastRecharge === c.id ? 'Updating…' : c.fast_recharge_enabled ? '⚡ Fast Recharge: ON' : '⚡ Fast Recharge: OFF', action: () => handleToggleFastRecharge(c.id, c.fast_recharge_enabled), color: c.fast_recharge_enabled ? '#facc15' : '#6b7280' },
                 { label: deleting === c.id ? 'Deleting…' : '🗑 Delete', action: () => handleDelete(c.id, c.name), color: '#f87171' },
               ].map(({ label, action, color }) => (
                 <button key={label} onClick={() => { action(); setOpenDropdown(null); setDropdownPos(null); }}

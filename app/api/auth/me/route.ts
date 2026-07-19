@@ -20,6 +20,7 @@ export async function GET() {
         stb_number: customers.stb_number,
         area: customers.area,
         outstanding_balance: customers.outstanding_balance,
+        fast_recharge_enabled: customers.fast_recharge_enabled,
         created_at: customers.created_at,
       })
       .from(customers)

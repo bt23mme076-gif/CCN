@@ -10,6 +10,7 @@ export const customers = pgTable('customers', {
   pin_hash: text('pin_hash').notNull(),
   outstanding_balance: integer('outstanding_balance').default(0).notNull(), // in rupees, cash dues
   notes: text('notes'),
+  fast_recharge_enabled: boolean('fast_recharge_enabled').default(false).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
