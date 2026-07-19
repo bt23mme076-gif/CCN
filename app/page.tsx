@@ -985,6 +985,8 @@ export default function HomePage() {
             <p className="text-gray-500 text-sm mb-6">Tap the button below to open your UPI app and complete payment</p>
             <a
               href={upiModalLinks.upiLink}
+              target="_blank"
+              rel="noopener noreferrer"
               className="block w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-all"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
               onClick={() => setTimeout(() => setShowUpiModal(false), 1500)}
