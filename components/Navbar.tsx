@@ -52,6 +52,7 @@ export default function Navbar() {
 
   const openRetrack = async () => {
     setShowDropdown(false);
+    setMobileMenuOpen(false);
     setRetrackDone(false);
     setRetrackEdited(false);
     try {
@@ -236,6 +237,15 @@ export default function Navbar() {
                     <MobileNavLink href="/plans" label="Browse Plans" onClick={() => setMobileMenuOpen(false)}
                       icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />}
                     />
+                    <button
+                      onClick={openRetrack}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-blue-200 hover:text-white hover:bg-white/10 transition-all duration-200 text-left mx-1"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span className="font-medium">Request Retrack</span>
+                    </button>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-300 hover:text-white hover:bg-red-500/20 transition-all duration-200 text-left mx-1"
