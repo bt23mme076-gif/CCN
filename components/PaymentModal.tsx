@@ -59,18 +59,10 @@ export default function PaymentModal({
       const orderData = await orderResponse.json();
       localStorage.setItem('pendingOrderId', orderData.orderId);
 
-      const paymentUrl =
-        orderData.paymentLink ||
-        `https://payments.cashfree.com/order/#${orderData.paymentSessionId}`;
+      const paymentUrl = orderData.paymentLink ||
+        `https://payments.cashfree.com/order/web/#${orderData.paymentSessionId}`;
 
-      if ((window as any).Android) {
-        (window as any).Android.openCashfree(
-          orderData.paymentSessionId,
-          orderData.orderId
-        );
-      } else {
-        window.location.href = paymentUrl;
-      }
+      window.location.href = paymentUrl;
     } catch (error) {
       console.error('Payment error:', error);
       alert(error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.');
