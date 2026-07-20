@@ -177,6 +177,8 @@ export default function DashboardPage() {
         rechargeId={justPaidRecharge.id}
         planName={justPaidRecharge.plan_name}
         amount={justPaidRecharge.amount}
+        hasActivePlan={!!activePlan}
+        activePlanExpiry={activePlan?.expires_at ?? null}
         onActivated={() => {
           setShowActivationScreen(false);
           fetchData();

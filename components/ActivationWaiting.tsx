@@ -6,6 +6,8 @@ interface ActivationWaitingProps {
   rechargeId: string;
   planName: string;
   amount: number;
+  hasActivePlan?: boolean;
+  activePlanExpiry?: string | Date | null;
   onActivated: () => void;
 }
 
@@ -41,7 +43,7 @@ function clearStartTime(rechargeId: string) {
   try { localStorage.removeItem(`${STORAGE_KEY}_${rechargeId}`); } catch { /* ignore */ }
 }
 
-export default function ActivationWaiting({ rechargeId, planName, amount, onActivated }: ActivationWaitingProps) {
+export default function ActivationWaiting({ rechargeId, planName, amount, hasActivePlan, activePlanExpiry, onActivated }: ActivationWaitingProps) {
   const [activated, setActivated] = useState(false);
   const [msgIndex, setMsgIndex] = useState(0);
   const [displayed, setDisplayed] = useState('');
@@ -144,6 +146,80 @@ export default function ActivationWaiting({ rechargeId, planName, amount, onActi
             <span className="font-bold text-white">{planName}</span> is now active 🎉
           </p>
           <p className="text-blue-300 text-sm">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── FUTURE RECHARGE SCREEN (customer already has an active plan) ──
+  if (hasActivePlan) {
+    const expiryLabel = activePlanExpiry
+      ? new Date(activePlanExpiry).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+      : null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 py-8"
+        style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' }}>
+        <div className="absolute top-0 left-0 right-0 h-1"
+          style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
+
+        <div className="w-full max-w-sm flex flex-col items-center gap-6 text-center">
+          {/* Icon */}
+          <div className="relative w-28 h-28 mx-auto">
+            <div className="absolute inset-0 rounded-full animate-ping opacity-20"
+              style={{ background: 'radial-gradient(circle, #60a5fa, transparent)' }} />
+            <div className="relative w-28 h-28 rounded-full flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #1d4ed8, #6366f1)' }}>
+              <svg className="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Message */}
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Recharge Confirmed!</h1>
+            <p className="text-blue-200 text-base leading-relaxed">
+              Aapka <span className="text-white font-bold">{planName}</span> recharge ho gaya hai.
+            </p>
+            <p className="text-blue-300 text-sm mt-2 leading-relaxed">
+              Ye plan aapke existing plan ke{' '}
+              {expiryLabel
+                ? <span className="text-yellow-300 font-semibold">khatam hone ke baad ({expiryLabel})</span>
+                : <span className="text-yellow-300 font-semibold">khatam hone ke baad</span>
+              }{' '}
+              automatically chalu ho jayega. 🎉
+            </p>
+          </div>
+
+          {/* Info card */}
+          <div className="w-full rounded-2xl p-5"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)' }}>
+            <div className="space-y-3 text-sm text-left">
+              <div className="flex items-center gap-3">
+                <span className="text-green-400 text-lg">✓</span>
+                <span className="text-green-300">Payment received & confirmed</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-green-400 text-lg">✓</span>
+                <span className="text-green-300">Recharge queued by operator</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-blue-400 text-lg">⏰</span>
+                <span className="text-blue-200">Will auto-activate after current plan ends</span>
+              </div>
+            </div>
+            <p className="text-gray-500 text-xs mt-4 text-center">
+              ₹{(amount / 100).toFixed(0)} successfully paid
+            </p>
+          </div>
+
+          <button
+            onClick={onActivated}
+            className="w-full py-3 rounded-xl font-bold text-white transition-all active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #1d4ed8, #6366f1)' }}>
+            Go to Dashboard
+          </button>
         </div>
       </div>
     );
