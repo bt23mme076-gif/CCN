@@ -88,16 +88,41 @@ export async function POST(
         expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
       }
     } else {
-      const nowUtc = new Date();
-      // Shift current time by IST offset so we can use UTC methods to manipulate IST dates
-      const expiryIstHelper = new Date(nowUtc.getTime() + IST_OFFSET_MS);
+      // Find the latest active non-expired, non-alacarte plan for this customer.
+      // If one exists, chain the new plan from its expiry so pre-paid renewals don't
+      // lose days (new plan starts the day the current one ends).
+      const existingRecharges = await db
+        .select()
+        .from(recharges)
+        .where(
+          and(
+            eq(recharges.customer_id, rechargeData.customer_id),
+            eq(recharges.status, 'activated')
+          )
+        );
 
-      // Add validity days
+      const now = new Date();
+      const futureActivePlans = existingRecharges.filter((r) => {
+        const notExpired = r.expires_at ? new Date(r.expires_at) > now : false;
+        const notAla = !r.plan_name.toUpperCase().startsWith('ALA CARTE');
+        return notExpired && notAla;
+      });
+
+      // Base date = latest expiry among active plans, or now if none
+      let baseDate: Date = now;
+      if (futureActivePlans.length > 0) {
+        futureActivePlans.sort((a, b) => {
+          const aTime = a.expires_at ? new Date(a.expires_at).getTime() : 0;
+          const bTime = b.expires_at ? new Date(b.expires_at).getTime() : 0;
+          return bTime - aTime;
+        });
+        baseDate = new Date(futureActivePlans[0].expires_at!);
+      }
+
+      // Shift base date into IST, add duration, set to midnight IST, convert back to UTC
+      const expiryIstHelper = new Date(baseDate.getTime() + IST_OFFSET_MS);
       expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan.duration_days);
-      // Set time to 12:00 AM exactly (start of the day)
       expiryIstHelper.setUTCHours(0, 0, 0, 0);
-
-      // Convert back to real UTC by subtracting the offset
       expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
     }
 
