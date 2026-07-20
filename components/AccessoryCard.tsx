@@ -35,7 +35,7 @@ export default function AccessoryCard({ item, onSelect }: AccessoryCardProps) {
         <img
           src={isRemote ? '/remote.png' : isCable ? '/hdmi.png' : '/adapter.png'}
           alt={item.name}
-          className="object-contain w-full h-full p-4"
+          className={`object-contain w-full h-full ${isRemote ? 'p-1' : 'p-4'}`}
         />
       </div>
 
