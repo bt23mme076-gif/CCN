@@ -60,7 +60,7 @@ export default function PaymentModal({
       localStorage.setItem('pendingOrderId', orderData.orderId);
 
       const paymentUrl = orderData.paymentLink ||
-        `https://payments.cashfree.com/order/web/#${orderData.paymentSessionId}`;
+        `https://payments.cashfree.com/order/#${orderData.paymentSessionId}`;
 
       window.location.href = paymentUrl;
     } catch (error) {
