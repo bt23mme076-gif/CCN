@@ -781,7 +781,6 @@ export default function BuyHistoryPage() {
                                 </div>
                               )}
                             </div>
-                            </div>
                           </div>
                         </div>
                       );
