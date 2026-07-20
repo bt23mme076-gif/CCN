@@ -147,6 +147,7 @@ export async function POST(request: NextRequest) {
       orderId: rechargeId,
       cashfreeOrderId: cashfreeOrder.order_id,
       paymentSessionId: cashfreeOrder.payment_session_id,
+      paymentLink: cashfreeOrder.payment_link || null,
       amount: finalPrice,
       currency: 'INR',
     });

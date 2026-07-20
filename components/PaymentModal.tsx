@@ -46,7 +46,6 @@ export default function PaymentModal({
     try {
       setLoading(true);
 
-      // Create order
       const orderResponse = await fetch('/api/recharge/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,66 +58,17 @@ export default function PaymentModal({
       }
 
       const orderData = await orderResponse.json();
+      localStorage.setItem('pendingOrderId', orderData.orderId);
 
-      // Initialize Cashfree SDK
-      const cashfree = await load({
-        mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
-      });
+      const cashfree = await load({ mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox' });
 
-      // Create checkout options
       const checkoutOptions = {
         paymentSessionId: orderData.paymentSessionId,
         returnUrl: `${window.location.origin}/dashboard?order_id=${orderData.orderId}`,
-        redirectTarget: '_self',
+        redirectTarget: '_blank',
       };
 
-      // Store orderId for WebView return flow
-      localStorage.setItem('pendingOrderId', orderData.orderId);
-
-      // Open Cashfree checkout
-      cashfree.checkout(checkoutOptions).then(async (result: any) => {
-        if (result.error) {
-          console.error('Payment error:', result.error);
-          alert('Payment failed. Please try again.');
-          setLoading(false);
-          return;
-        }
-
-        if (result.redirect) {
-          console.log('Payment will be redirected');
-        }
-
-        if (result.paymentDetails) {
-          // Verify payment
-          try {
-            const verifyResponse = await fetch('/api/recharge/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                orderId: orderData.orderId,
-              }),
-            });
-
-            const verifyData = await verifyResponse.json();
-
-            if (verifyData.success) {
-              setOrderDetails({
-                orderId: orderData.orderId,
-                planName: plan.name,
-                amount: plan.price,
-              });
-              setShowSuccess(true);
-            } else {
-              alert('Payment verification failed. Please contact support.');
-            }
-          } catch (error) {
-            console.error('Verification error:', error);
-            alert('Payment verification failed. Please contact support.');
-          } finally {
-            setLoading(false);
-          }
-        }
-      });
+      cashfree.checkout(checkoutOptions);
     } catch (error) {
       console.error('Payment error:', error);
       alert(error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.');
