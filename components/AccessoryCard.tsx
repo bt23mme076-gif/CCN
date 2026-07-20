@@ -22,29 +22,55 @@ export default function AccessoryCard({ item, onSelect }: AccessoryCardProps) {
   const isCable = item.id.includes('cable');
 
   const theme = isRemote
-    ? { iconBg: 'bg-purple-100', iconColor: 'text-purple-600', badge: 'Genuine Remote', badgeBg: 'bg-purple-50 text-purple-700', btnBg: 'bg-purple-600 hover:bg-purple-700', price: 'text-purple-600' }
+    ? {
+        gradient: 'from-purple-500 to-purple-700',
+        badge: 'Genuine Remote',
+        badgeBg: 'bg-white/20 text-white',
+        btnBg: 'bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800',
+        price: 'text-purple-600',
+        accent: 'border-purple-500',
+        glow: 'hover:shadow-purple-100',
+      }
     : isCable
-    ? { iconBg: 'bg-blue-100', iconColor: 'text-blue-600', badge: 'High Speed', badgeBg: 'bg-blue-50 text-blue-700', btnBg: 'bg-blue-600 hover:bg-blue-700', price: 'text-blue-600' }
-    : { iconBg: 'bg-orange-100', iconColor: 'text-orange-600', badge: 'Stable Power', badgeBg: 'bg-orange-50 text-orange-700', btnBg: 'bg-orange-500 hover:bg-orange-600', price: 'text-orange-600' };
+    ? {
+        gradient: 'from-blue-500 to-blue-700',
+        badge: 'High Speed',
+        badgeBg: 'bg-white/20 text-white',
+        btnBg: 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800',
+        price: 'text-blue-600',
+        accent: 'border-blue-500',
+        glow: 'hover:shadow-blue-100',
+      }
+    : {
+        gradient: 'from-orange-400 to-orange-600',
+        badge: 'Stable Power',
+        badgeBg: 'bg-white/20 text-white',
+        btnBg: 'bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700',
+        price: 'text-orange-500',
+        accent: 'border-orange-400',
+        glow: 'hover:shadow-orange-100',
+      };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col">
+    <div className={`bg-white rounded-2xl border-t-4 ${theme.accent} shadow-md hover:shadow-xl ${theme.glow} transition-all duration-300 hover:-translate-y-1 flex flex-col overflow-hidden`}>
       {/* Product Image Area */}
-      <div className={`relative rounded-t-2xl overflow-hidden flex items-center justify-center ${theme.iconBg}`} style={{ height: 160 }}>
-        <span className={`absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full ${theme.badgeBg}`}>{theme.badge}</span>
+      <div className={`relative flex items-center justify-center bg-gradient-to-br ${theme.gradient}`} style={{ height: 170 }}>
+        <span className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm ${theme.badgeBg} border border-white/30`}>
+          {theme.badge}
+        </span>
         <img
           src={isRemote ? '/remote.png' : isCable ? '/hdmi.png' : '/adapter.png'}
           alt={item.name}
-          className={`object-contain w-full h-full ${isRemote ? 'p-1' : 'p-4'}`}
+          className={`object-contain w-full h-full drop-shadow-xl ${isRemote ? 'p-2' : 'p-5'}`}
         />
       </div>
 
       {/* Body */}
-      <div className="px-6 flex-1 flex flex-col">
+      <div className="px-5 pt-4 flex-1 flex flex-col">
         <h3 className="font-display text-lg font-bold text-gray-900 mb-1">{item.name}</h3>
-        <p className="text-sm text-gray-500 leading-relaxed mb-4">{item.description}</p>
+        <p className="text-sm text-gray-500 leading-relaxed mb-3">{item.description}</p>
 
-        <ul className="space-y-1.5 mb-5">
+        <ul className="space-y-1.5 mb-4">
           {['Doorstep delivery by operator', 'Genuine & tested product'].map((f) => (
             <li key={f} className="flex items-center gap-2 text-xs text-gray-500">
               <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -56,19 +82,19 @@ export default function AccessoryCard({ item, onSelect }: AccessoryCardProps) {
         </ul>
 
         <div className="mt-auto pt-4 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">Price</span>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-gray-400 font-medium uppercase tracking-widest">Price</span>
             <span className={`text-2xl font-extrabold ${theme.price}`}>{formatCurrency(item.price)}</span>
           </div>
           <button
             onClick={() => onSelect(item.id)}
-            className={`w-full py-3 rounded-xl font-bold text-white text-sm transition-all duration-200 active:scale-95 ${theme.btnBg}`}
+            className={`w-full py-3 rounded-xl font-bold text-white text-sm shadow-md transition-all duration-200 active:scale-95 ${theme.btnBg}`}
           >
             {t('orderNow')}
           </button>
         </div>
       </div>
-      <div className="h-5" />
+      <div className="h-4" />
     </div>
   );
 }
