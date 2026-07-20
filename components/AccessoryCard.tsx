@@ -29,24 +29,60 @@ export default function AccessoryCard({ item, onSelect }: AccessoryCardProps) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col">
-      {/* Header */}
-      <div className="p-6 pb-4 flex items-start justify-between gap-3">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${theme.iconBg}`}>
-          {isRemote ? (
-            <svg className={`w-6 h-6 ${theme.iconColor}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2zM9 6h6M9 10h6" />
-            </svg>
-          ) : isCable ? (
-            <svg className={`w-6 h-6 ${theme.iconColor}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          ) : (
-            <svg className={`w-6 h-6 ${theme.iconColor}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          )}
-        </div>
-        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${theme.badgeBg}`}>{theme.badge}</span>
+      {/* Product Image Area */}
+      <div className={`relative rounded-t-2xl overflow-hidden flex items-center justify-center ${theme.iconBg}`} style={{ height: 160 }}>
+        <span className={`absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full ${theme.badgeBg}`}>{theme.badge}</span>
+        {isRemote ? (
+          <svg viewBox="0 0 120 160" width="90" height="120" xmlns="http://www.w3.org/2000/svg">
+            <rect x="35" y="10" width="50" height="140" rx="18" fill="#2d2d2d"/>
+            <rect x="40" y="15" width="40" height="130" rx="15" fill="#3a3a3a"/>
+            <rect x="45" y="22" width="30" height="18" rx="5" fill="#1a1a1a"/>
+            <circle cx="60" cy="55" r="10" fill="#e63946"/>
+            <circle cx="45" cy="75" r="7" fill="#555"/>
+            <circle cx="75" cy="75" r="7" fill="#555"/>
+            <circle cx="60" cy="75" r="7" fill="#555"/>
+            <circle cx="45" cy="92" r="7" fill="#555"/>
+            <circle cx="75" cy="92" r="7" fill="#555"/>
+            <circle cx="60" cy="92" r="7" fill="#555"/>
+            <circle cx="45" cy="109" r="7" fill="#555"/>
+            <circle cx="75" cy="109" r="7" fill="#555"/>
+            <circle cx="60" cy="109" r="7" fill="#666"/>
+            <rect x="52" y="125" width="16" height="6" rx="3" fill="#444"/>
+          </svg>
+        ) : isCable ? (
+          <svg viewBox="0 0 200 120" width="180" height="110" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="45" width="28" height="30" rx="4" fill="#1a1a1a"/>
+            <rect x="10" y="50" width="18" height="20" rx="2" fill="#333"/>
+            <rect x="13" y="53" width="3" height="14" rx="1" fill="#gold" stroke="#888" strokeWidth="0.5" fill="#aaa"/>
+            <rect x="18" y="53" width="3" height="14" rx="1" fill="#aaa"/>
+            <rect x="23" y="53" width="3" height="14" rx="1" fill="#aaa"/>
+            <rect x="33" y="56" width="8" height="8" rx="2" fill="#222"/>
+            <path d="M41 60 Q80 40 100 60 Q120 80 160 60" stroke="#111" strokeWidth="10" fill="none" strokeLinecap="round"/>
+            <path d="M41 60 Q80 40 100 60 Q120 80 160 60" stroke="#e63946" strokeWidth="6" fill="none" strokeLinecap="round"/>
+            <rect x="159" y="45" width="28" height="30" rx="4" fill="#1a1a1a"/>
+            <rect x="164" y="50" width="18" height="20" rx="2" fill="#333"/>
+            <rect x="167" y="53" width="3" height="14" rx="1" fill="#aaa"/>
+            <rect x="172" y="53" width="3" height="14" rx="1" fill="#aaa"/>
+            <rect x="177" y="53" width="3" height="14" rx="1" fill="#aaa"/>
+            <rect x="151" y="56" width="8" height="8" rx="2" fill="#222"/>
+            <text x="100" y="115" textAnchor="middle" fontSize="11" fill="#666" fontFamily="Arial">HDMI 1m — 1080p</text>
+          </svg>
+        ) : (
+          <svg viewBox="0 0 140 140" width="110" height="110" xmlns="http://www.w3.org/2000/svg">
+            <rect x="30" y="20" width="80" height="60" rx="10" fill="#2d2d2d"/>
+            <rect x="35" y="25" width="70" height="50" rx="8" fill="#1a1a1a"/>
+            <circle cx="70" cy="50" r="15" fill="#333" stroke="#555" strokeWidth="2"/>
+            <circle cx="70" cy="50" r="8" fill="#f5a623"/>
+            <circle cx="70" cy="50" r="4" fill="#e08800"/>
+            <rect x="55" y="80" width="30" height="8" rx="3" fill="#222"/>
+            <rect x="63" y="88" width="14" height="20" rx="3" fill="#333"/>
+            <rect x="58" y="105" width="8" height="14" rx="3" fill="#1a1a1a" transform="rotate(-20 62 112)"/>
+            <rect x="74" y="105" width="8" height="14" rx="3" fill="#1a1a1a" transform="rotate(20 78 112)"/>
+            <circle cx="57" cy="112" r="4" fill="#555"/>
+            <circle cx="83" cy="112" r="4" fill="#555"/>
+            <text x="70" y="135" textAnchor="middle" fontSize="10" fill="#666" fontFamily="Arial">12V DC Adapter</text>
+          </svg>
+        )}
       </div>
 
       {/* Body */}
