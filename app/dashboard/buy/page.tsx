@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
 import AccessoryPaymentModal from '@/components/AccessoryPaymentModal';
@@ -260,9 +261,12 @@ export default function BuyHistoryPage() {
           <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
           <div className="w-full px-4 sm:px-6">
             <div className="flex justify-between items-center h-16">
-              <Link href="/" className="flex items-center gap-2">
-                <span className="font-display text-xl font-extrabold text-white tracking-wide">CCN</span>
-                <span className="font-display text-xl font-extrabold tracking-wide" style={{ color: '#e94560' }}>Networks</span>
+              <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-lg blur-sm opacity-60 group-hover:opacity-90 transition-opacity" style={{ background: 'linear-gradient(135deg, #e94560, #f5a623)' }} />
+                  <Image src="/logo.jpg" alt="CCN Cable" width={40} height={40} className="relative h-10 w-10 rounded-lg object-cover border border-white/20" />
+                </div>
+                <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">CCN Networks</span>
               </Link>
               <div className="relative">
                 <button onClick={() => setShowNavMenu((p) => !p)}
@@ -317,9 +321,12 @@ export default function BuyHistoryPage() {
         <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
         <div className="w-full px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="font-display text-xl font-extrabold text-white tracking-wide">CCN</span>
-              <span className="font-display text-xl font-extrabold tracking-wide" style={{ color: '#e94560' }}>Networks</span>
+            <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-lg blur-sm opacity-60 group-hover:opacity-90 transition-opacity" style={{ background: 'linear-gradient(135deg, #e94560, #f5a623)' }} />
+                <Image src="/logo.jpg" alt="CCN Cable" width={40} height={40} className="relative h-10 w-10 rounded-lg object-cover border border-white/20" />
+              </div>
+              <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">CCN Networks</span>
             </Link>
             <div className="flex items-center gap-3">
               <span className="text-sm hidden sm:flex items-center gap-1.5" style={{ color: '#93c5fd' }}>
