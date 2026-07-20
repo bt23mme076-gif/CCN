@@ -62,7 +62,6 @@ export default function HomePage() {
   const [showAlacarteModal, setShowAlacarteModal] = useState(false);
   const [rechargesList, setRechargesList] = useState<any[]>([]);
   const [showPrerequisiteModal, setShowPrerequisiteModal] = useState(false);
-  const [showPaymentDoneModal, setShowPaymentDoneModal] = useState(false);
   const [channelPage, setChannelPage] = useState(0);
   const [slideDir, setSlideDir] = useState<'left' | 'right'>('right');
   const [sliding, setSliding] = useState(false);
@@ -80,11 +79,6 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (!showPaymentDoneModal) return;
-    const t = setTimeout(() => setShowPaymentDoneModal(false), 10000);
-    return () => clearTimeout(t);
-  }, [showPaymentDoneModal]);
 
   const fetchData = async () => {
     try {
@@ -140,13 +134,6 @@ export default function HomePage() {
     const upiLink = `upi://pay?pa=9399974696-4@ibl&am=${amountInRupees}&cu=INR`;
     fetch('/api/recharge/create-upi-order', { method: 'POST' }).catch(() => {});
     window.location.href = upiLink;
-    const onReturn = () => {
-      if (!document.hidden) {
-        setShowPaymentDoneModal(true);
-        document.removeEventListener('visibilitychange', onReturn);
-      }
-    };
-    document.addEventListener('visibilitychange', onReturn);
   };
 
   const handleSelectPlan = async (planId: string) => {
@@ -995,30 +982,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {showPaymentDoneModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-green-100 text-center relative animate-scaleIn">
-            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-              ✅
-            </div>
-            <h3 className="font-display text-xl font-bold text-gray-800 mb-2">
-              भुगतान हो गया?
-            </h3>
-            <p className="text-gray-800 text-base mb-2 leading-relaxed font-medium">
-              आपका रिचार्ज अनुरोध हमें मिल गया है।
-            </p>
-            <p className="text-gray-700 text-base mb-6 leading-relaxed">
-              एडमिन जल्द ही वेरीफाई करके आपका कनेक्शन चालू कर देंगे। थोड़ी देर में सेवा शुरू हो जाएगी।
-            </p>
-            <button
-              onClick={() => setShowPaymentDoneModal(false)}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold transition-all active:scale-95 shadow-md"
-            >
-              धन्यवाद!
-            </button>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
