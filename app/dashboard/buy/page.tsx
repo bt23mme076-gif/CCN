@@ -210,51 +210,18 @@ export default function BuyHistoryPage() {
     finally { setRetrackLoading(false); }
   };
 
-  const handleDownloadReceipt = (recharge: Recharge) => {
-    const win = window.open('', '_blank');
-    if (!win) return;
+  const handleDownloadReceipt = (rechargeId: string) => {
+    window.open(`/api/receipt/${rechargeId}`, '_blank');
+  };
+
+  const handleShareReceipt = (recharge: Recharge) => {
     const amountRs = (recharge.amount / 100).toFixed(2);
-    win.document.write(`<!DOCTYPE html><html><head><title>Receipt - ${recharge.id}</title><style>
-      body{font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;color:#111}
-      .logo{font-size:22px;font-weight:900;color:#e63946;margin-bottom:4px}
-      .sub{font-size:12px;color:#666;margin-bottom:24px}
-      h2{font-size:16px;font-weight:700;border-bottom:2px solid #e63946;padding-bottom:8px;margin-bottom:16px}
-      .row{display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px}
-      .label{color:#666}.value{font-weight:600;text-align:right;max-width:60%}
-      .amount{font-size:22px;font-weight:900;color:#e63946;text-align:center;margin:20px 0}
-      .status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:#d1fae5;color:#065f46}
-      .footer{margin-top:32px;font-size:11px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:16px}
-      @media print{button{display:none}}
-    </style></head><body>
-      <div class="logo">CCN Networks</div>
-      <div class="sub">Official Payment Receipt</div>
-      <h2>Payment Receipt</h2>
-      <div class="row"><span class="label">Order ID</span><span class="value" style="font-size:11px;font-family:monospace">${recharge.id}</span></div>
-      <div class="row"><span class="label">Customer</span><span class="value">${customer?.name || '-'}</span></div>
-      <div class="row"><span class="label">STB Number</span><span class="value">${customer?.stb_number || '-'}</span></div>
-      <div class="row"><span class="label">Plan</span><span class="value">${recharge.plan_name}</span></div>
-      <div class="row"><span class="label">Status</span><span class="value"><span class="status">${recharge.status.toUpperCase()}</span></span></div>
-      <div class="amount">₹${amountRs}</div>
-      <div class="row"><span class="label">Order Date</span><span class="value">${new Date(recharge.created_at).toLocaleString('en-IN')}</span></div>
-      ${recharge.paid_at ? `<div class="row"><span class="label">Paid On</span><span class="value">${new Date(recharge.paid_at).toLocaleString('en-IN')}</span></div>` : ''}
-      ${recharge.activated_at ? `<div class="row"><span class="label">Activated On</span><span class="value">${new Date(recharge.activated_at).toLocaleString('en-IN')}</span></div>` : ''}
-      ${recharge.expires_at ? `<div class="row"><span class="label">Valid Till</span><span class="value">${new Date(recharge.expires_at).toLocaleString('en-IN')}</span></div>` : ''}
-      <div class="footer">Thank you for choosing CCN Networks<br/>This is a computer generated receipt</div>
-      <br/>
-      <button onclick="window.print()" style="width:100%;padding:10px;background:#e63946;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px">🖨️ Print / Save as PDF</button>
-      <button onclick="shareReceipt()" style="width:100%;padding:10px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px">📤 Share Receipt</button>
-      <script>
-        function shareReceipt() {
-          const text = \`CCN Networks - Payment Receipt\\nOrder ID: ${recharge.id}\\nCustomer: ${customer?.name || '-'}\\nSTB: ${customer?.stb_number || '-'}\\nPlan: ${recharge.plan_name}\\nAmount: ₹${amountRs}\\nStatus: ${recharge.status.toUpperCase()}${recharge.activated_at ? '\\nActivated: ' + new Date(recharge.activated_at).toLocaleString('en-IN') : ''}${recharge.expires_at ? '\\nValid Till: ' + new Date(recharge.expires_at).toLocaleString('en-IN') : ''}\`;
-          if (navigator.share) {
-            navigator.share({ title: 'CCN Networks Receipt', text: text });
-          } else {
-            window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
-          }
-        }
-      </script>
-    </body></html>`);
-    win.document.close();
+    const text = `CCN Networks - Payment Receipt\nOrder ID: ${recharge.id}\nCustomer: ${customer?.name || '-'}\nSTB: ${customer?.stb_number || '-'}\nPlan: ${recharge.plan_name}\nAmount: ₹${amountRs}\nStatus: ${recharge.status.toUpperCase()}${recharge.activated_at ? '\nActivated: ' + new Date(recharge.activated_at).toLocaleString('en-IN') : ''}${recharge.expires_at ? '\nValid Till: ' + new Date(recharge.expires_at).toLocaleString('en-IN') : ''}`;
+    if (navigator.share) {
+      navigator.share({ title: 'CCN Networks Receipt', text });
+    } else {
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
   };
 
   const filteredRecharges = filterStatus === 'all'
@@ -738,18 +705,29 @@ export default function BuyHistoryPage() {
                           </div>
                         </div>
 
-                        {/* Download Receipt */}
-                        <div className="flex justify-end">
-                          <button
-                            onClick={() => handleDownloadReceipt(recharge)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Download Receipt
-                          </button>
-                        </div>
+                        {/* Receipt Buttons */}
+                        {(recharge.status === 'activated' || recharge.status === 'paid') && (
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => handleShareReceipt(recharge)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-green-700 border border-green-200 hover:bg-green-50 transition-colors"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                              </svg>
+                              Share
+                            </button>
+                            <button
+                              onClick={() => handleDownloadReceipt(recharge.id)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              Download Receipt
+                            </button>
+                          </div>
+                        )}
 
                         {/* Bottom Section: Dates & Expiry */}
                         <div className={`pt-4 border-t ${isExpired ? 'border-gray-200' : 'border-gray-100'}`}>
