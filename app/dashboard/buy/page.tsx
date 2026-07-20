@@ -210,7 +210,54 @@ export default function BuyHistoryPage() {
     finally { setRetrackLoading(false); }
   };
 
-  const filteredRecharges = filterStatus === 'all' 
+  const handleDownloadReceipt = (recharge: Recharge) => {
+    const win = window.open('', '_blank');
+    if (!win) return;
+    const amountRs = (recharge.amount / 100).toFixed(2);
+    win.document.write(`<!DOCTYPE html><html><head><title>Receipt - ${recharge.id}</title><style>
+      body{font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;color:#111}
+      .logo{font-size:22px;font-weight:900;color:#e63946;margin-bottom:4px}
+      .sub{font-size:12px;color:#666;margin-bottom:24px}
+      h2{font-size:16px;font-weight:700;border-bottom:2px solid #e63946;padding-bottom:8px;margin-bottom:16px}
+      .row{display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px}
+      .label{color:#666}.value{font-weight:600;text-align:right;max-width:60%}
+      .amount{font-size:22px;font-weight:900;color:#e63946;text-align:center;margin:20px 0}
+      .status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:#d1fae5;color:#065f46}
+      .footer{margin-top:32px;font-size:11px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:16px}
+      @media print{button{display:none}}
+    </style></head><body>
+      <div class="logo">CCN Networks</div>
+      <div class="sub">Official Payment Receipt</div>
+      <h2>Payment Receipt</h2>
+      <div class="row"><span class="label">Order ID</span><span class="value" style="font-size:11px;font-family:monospace">${recharge.id}</span></div>
+      <div class="row"><span class="label">Customer</span><span class="value">${customer?.name || '-'}</span></div>
+      <div class="row"><span class="label">STB Number</span><span class="value">${customer?.stb_number || '-'}</span></div>
+      <div class="row"><span class="label">Plan</span><span class="value">${recharge.plan_name}</span></div>
+      <div class="row"><span class="label">Status</span><span class="value"><span class="status">${recharge.status.toUpperCase()}</span></span></div>
+      <div class="amount">₹${amountRs}</div>
+      <div class="row"><span class="label">Order Date</span><span class="value">${new Date(recharge.created_at).toLocaleString('en-IN')}</span></div>
+      ${recharge.paid_at ? `<div class="row"><span class="label">Paid On</span><span class="value">${new Date(recharge.paid_at).toLocaleString('en-IN')}</span></div>` : ''}
+      ${recharge.activated_at ? `<div class="row"><span class="label">Activated On</span><span class="value">${new Date(recharge.activated_at).toLocaleString('en-IN')}</span></div>` : ''}
+      ${recharge.expires_at ? `<div class="row"><span class="label">Valid Till</span><span class="value">${new Date(recharge.expires_at).toLocaleString('en-IN')}</span></div>` : ''}
+      <div class="footer">Thank you for choosing CCN Networks<br/>This is a computer generated receipt</div>
+      <br/>
+      <button onclick="window.print()" style="width:100%;padding:10px;background:#e63946;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px">🖨️ Print / Save as PDF</button>
+      <button onclick="shareReceipt()" style="width:100%;padding:10px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px">📤 Share Receipt</button>
+      <script>
+        function shareReceipt() {
+          const text = \`CCN Networks - Payment Receipt\\nOrder ID: ${recharge.id}\\nCustomer: ${customer?.name || '-'}\\nSTB: ${customer?.stb_number || '-'}\\nPlan: ${recharge.plan_name}\\nAmount: ₹${amountRs}\\nStatus: ${recharge.status.toUpperCase()}${recharge.activated_at ? '\\nActivated: ' + new Date(recharge.activated_at).toLocaleString('en-IN') : ''}${recharge.expires_at ? '\\nValid Till: ' + new Date(recharge.expires_at).toLocaleString('en-IN') : ''}\`;
+          if (navigator.share) {
+            navigator.share({ title: 'CCN Networks Receipt', text: text });
+          } else {
+            window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+          }
+        }
+      </script>
+    </body></html>`);
+    win.document.close();
+  };
+
+  const filteredRecharges = filterStatus === 'all'
     ? recharges 
     : recharges.filter(r => r.status === filterStatus);
 
@@ -689,6 +736,19 @@ export default function BuyHistoryPage() {
                             </p>
                             <StatusBadge status={recharge.status} />
                           </div>
+                        </div>
+
+                        {/* Download Receipt */}
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => handleDownloadReceipt(recharge)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Download Receipt
+                          </button>
                         </div>
 
                         {/* Bottom Section: Dates & Expiry */}
