@@ -408,76 +408,49 @@ export default function BuyHistoryPage() {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 sm:mb-8">
-          <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-l-4 border-accent-blue">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Spent</p>
-            <p className="text-lg sm:text-2xl font-bold text-accent-blue">
-              {formatCurrency(totalSpent)}
-            </p>
-          </div>
-          <div className="card bg-gradient-to-br from-green-50 to-green-100 border-l-4 border-success">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Active Plans</p>
-            <p className="text-lg sm:text-2xl font-bold text-success">{activeRecharges}</p>
-          </div>
-          <div className="card bg-gradient-to-br from-yellow-50 to-yellow-100 border-l-4 border-yellow-500">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Pending</p>
-            <p className="text-lg sm:text-2xl font-bold text-yellow-600">{pendingRecharges}</p>
-          </div>
-          <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-l-4 border-purple-500">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Orders</p>
-            <p className="text-lg sm:text-2xl font-bold text-purple-600">{totalRecharges}</p>
-          </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          {[
+            { label: 'Total Spent', value: formatCurrency(totalSpent), gradient: 'from-blue-500 to-blue-700', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+            { label: 'Active Plans', value: activeRecharges, gradient: 'from-green-500 to-emerald-600', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+            { label: 'Pending', value: pendingRecharges, gradient: 'from-amber-400 to-orange-500', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+            { label: 'Total Orders', value: totalRecharges, gradient: 'from-purple-500 to-purple-700', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100 flex items-center gap-3 sm:gap-4 overflow-hidden relative">
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d={s.icon} />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">{s.label}</p>
+                <p className="text-xl sm:text-2xl font-extrabold text-gray-900">{s.value}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Tabs */}
-        <div className="card mb-6 sm:mb-8">
-          <div className="flex border-b">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-1.5 mb-6 sm:mb-8 flex gap-1">
+          {[
+            { key: 'buy', label: 'Buy Plans', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' },
+            { key: 'accessories', label: t('buyAccessories'), icon: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' },
+            { key: 'history', label: 'History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+          ].map((tab) => (
             <button
-              onClick={() => setActiveTab('buy')}
-              className={`flex-1 py-3 px-4 text-center font-medium transition-colors text-sm sm:text-base ${
-                activeTab === 'buy'
-                  ? 'text-accent-red border-b-2 border-accent-red'
-                  : 'text-gray-600 hover:text-brand-navy'
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as 'buy' | 'accessories' | 'history')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                activeTab === tab.key
+                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md shadow-red-200'
+                  : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
-              <span className="flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Buy Plans
-              </span>
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
+              </svg>
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
-            <button
-              onClick={() => setActiveTab('accessories')}
-              className={`flex-1 py-3 px-4 text-center font-medium transition-colors text-sm sm:text-base ${
-                activeTab === 'accessories'
-                  ? 'text-accent-red border-b-2 border-accent-red'
-                  : 'text-gray-600 hover:text-brand-navy'
-              }`}
-            >
-              <span className="flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                {t('buyAccessories')}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`flex-1 py-3 px-4 text-center font-medium transition-colors text-sm sm:text-base ${
-                activeTab === 'history'
-                  ? 'text-accent-red border-b-2 border-accent-red'
-                  : 'text-gray-600 hover:text-brand-navy'
-              }`}
-            >
-              <span className="flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                History
-              </span>
-            </button>
-          </div>
+          ))}
         </div>
 
         {/* Buy Tab Content */}
@@ -639,155 +612,99 @@ export default function BuyHistoryPage() {
             </div>
 
             {filteredRecharges.length === 0 ? (
-              <div className="card text-center py-12">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-14 px-6">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-500 mb-4 font-medium">
                   {filterStatus === 'all' ? 'No recharge history yet' : `No ${filterStatus} recharges found`}
                 </p>
                 {filterStatus === 'all' && (
-                  <button
-                    onClick={() => setActiveTab('buy')}
-                    className="btn-primary inline-block"
-                  >
+                  <button onClick={() => setActiveTab('buy')} className="btn-primary inline-block">
                     Buy Your First Plan
                   </button>
                 )}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {filteredRecharges.map((recharge) => {
                   const isExpired = recharge.expires_at && new Date(recharge.expires_at) < currentTime;
                   const timeRemaining = recharge.expires_at ? getTimeRemaining(new Date(recharge.expires_at)) : null;
-                  
-                  return (
-                    <div 
-                      key={recharge.id} 
-                      className={`card hover:shadow-lg transition-shadow ${
-                        isExpired ? 'bg-gray-50 opacity-75' : ''
-                      }`}
-                    >
-                      <div className="flex flex-col gap-4">
-                        {/* Top Section: Plan Info & Status */}
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                          {/* Left: Plan Info */}
-                          <div className="flex-1">
-                            <div className="flex items-start gap-3">
-                              <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                isExpired 
-                                  ? 'bg-gray-200' 
-                                  : 'bg-accent-blue bg-opacity-10'
-                              }`}>
-                                <svg className={`w-6 h-6 ${isExpired ? 'text-gray-400' : 'text-accent-blue'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                                </svg>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="font-bold text-brand-navy text-base sm:text-lg">
-                                    {recharge.plan_name}
-                                  </h3>
-                                  {isExpired && (
-                                    <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded">
-                                      EXPIRED
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                                  Order ID: <span className="font-mono">{recharge.id.slice(0, 20)}...</span>
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                  const statusColor = isExpired ? 'bg-gray-400' : recharge.status === 'activated' ? 'bg-green-500' : recharge.status === 'paid' ? 'bg-yellow-400' : 'bg-gray-300';
 
-                          {/* Right: Amount & Status */}
-                          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 sm:text-right">
-                            <p className="text-xl sm:text-2xl font-bold text-brand-navy">
-                              {formatCurrency(recharge.amount)}
-                            </p>
+                  return (
+                    <div
+                      key={recharge.id}
+                      className={`bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden ${isExpired ? 'opacity-70' : ''}`}
+                    >
+                      {/* Colored top strip */}
+                      <div className={`h-1 w-full ${statusColor}`} />
+                      <div className="p-4 sm:p-5">
+                        {/* Row 1: Icon + Name + Amount + Status */}
+                        <div className="flex items-start gap-3 sm:gap-4">
+                          <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isExpired ? 'bg-gray-100' : 'bg-blue-50'}`}>
+                            <svg className={`w-5 h-5 ${isExpired ? 'text-gray-400' : 'text-accent-blue'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                              <h3 className="font-bold text-gray-900 text-sm sm:text-base">{recharge.plan_name}</h3>
+                              {isExpired && <span className="px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded-full uppercase">Expired</span>}
+                            </div>
+                            <p className="text-[11px] text-gray-400 font-mono truncate">#{recharge.id.slice(0, 18)}…</p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-lg sm:text-xl font-extrabold text-gray-900">{formatCurrency(recharge.amount)}</p>
                             <StatusBadge status={recharge.status} />
                           </div>
                         </div>
 
-                        {/* Receipt Buttons */}
-                        {(recharge.status === 'activated' || recharge.status === 'paid') && (
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleShareReceipt(recharge)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-green-700 border border-green-200 hover:bg-green-50 transition-colors"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                              </svg>
-                              Share
-                            </button>
-                            <button
-                              onClick={() => handleDownloadReceipt(recharge.id)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              Download Receipt
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Bottom Section: Dates & Expiry */}
-                        <div className={`pt-4 border-t ${isExpired ? 'border-gray-200' : 'border-gray-100'}`}>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm">
-                            {recharge.status === 'activated' ? (
-                              <>
+                        {/* Row 2: Date info */}
+                        <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                          {recharge.status === 'activated' ? (
+                            <>
+                              <div>
+                                <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Start</p>
+                                <p className="font-semibold text-gray-700">{formatDateDMY(recharge.activated_at)}</p>
+                              </div>
+                              {recharge.expires_at && (
                                 <div>
-                                  <p className="text-gray-500 mb-1">Start Date</p>
-                                  <p className="font-medium text-gray-700">
-                                    {formatDateDMY(recharge.activated_at)}
-                                  </p>
+                                  <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">{isExpired ? 'Expired' : 'End Date'}</p>
+                                  <p className={`font-bold ${timeRemaining?.color || 'text-gray-700'}`}>{formatDisplayEndDate(recharge.expires_at)}</p>
+                                  {timeRemaining && !isExpired && <p className={`text-[11px] font-semibold mt-0.5 ${timeRemaining.color}`}>{timeRemaining.text}</p>}
                                 </div>
-                                {recharge.expires_at && (
-                                  <div>
-                                    <p className="text-gray-500 mb-1">
-                                      {isExpired ? 'Expired On' : 'End Date'}
-                                    </p>
-                                    <p className={`font-bold ${timeRemaining?.color || 'text-gray-700'}`}>
-                                      {formatDisplayEndDate(recharge.expires_at)}
-                                    </p>
-                                    {timeRemaining && !isExpired && (
-                                      <p className={`text-xs font-semibold mt-1 ${timeRemaining.color}`}>
-                                        {timeRemaining.text}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <div>
+                                <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Created</p>
+                                <p className="font-semibold text-gray-700">{formatDateTime(new Date(recharge.created_at))}</p>
+                              </div>
+                              {recharge.paid_at && (
                                 <div>
-                                  <p className="text-gray-500 mb-1">Effective Date</p>
-                                  <p className="font-medium text-gray-700">
-                                    {formatDateDMY(recharge.activated_at)}
-                                  </p>
+                                  <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Paid</p>
+                                  <p className="font-semibold text-gray-700">{formatDateTime(new Date(recharge.paid_at))}</p>
                                 </div>
-                              </>
-                            ) : (
-                              <>
-                                <div>
-                                  <p className="text-gray-500 mb-1">Created</p>
-                                  <p className="font-medium text-gray-700">
-                                    {formatDateTime(new Date(recharge.created_at))}
-                                  </p>
-                                </div>
-                                {recharge.paid_at && (
-                                  <div>
-                                    <p className="text-gray-500 mb-1">Paid</p>
-                                    <p className="font-medium text-gray-700">
-                                      {formatDateTime(new Date(recharge.paid_at))}
-                                    </p>
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
+                              )}
+                            </>
+                          )}
+                          {/* Receipt buttons inline */}
+                          {(recharge.status === 'activated' || recharge.status === 'paid') && (
+                            <div className="flex items-end gap-2 col-span-2 sm:col-span-1 justify-end sm:justify-end">
+                              <button onClick={() => handleShareReceipt(recharge)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-green-700 border border-green-200 hover:bg-green-50 transition-colors">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                                Share
+                              </button>
+                              <button onClick={() => handleDownloadReceipt(recharge.id)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                Receipt
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -815,77 +732,55 @@ export default function BuyHistoryPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {accessoryOrdersList.map((order) => {
+                      const accStatusColor = order.status === 'delivered' ? 'bg-green-500' : order.status === 'paid' ? 'bg-yellow-400' : order.status === 'failed' ? 'bg-red-500' : 'bg-gray-300';
+                      const accBadge = order.status === 'delivered'
+                        ? 'bg-green-100 text-green-700 border-green-200'
+                        : order.status === 'paid' ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                        : order.status === 'failed' ? 'bg-red-100 text-red-700 border-red-200'
+                        : 'bg-gray-100 text-gray-700 border-gray-200';
                       return (
-                        <div key={order.id} className="card hover:shadow-lg transition-shadow">
-                          <div className="flex flex-col gap-4">
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-lg bg-accent-blue bg-opacity-10 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                    </svg>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-brand-navy text-base sm:text-lg">
-                                      {order.accessory_name}
-                                    </h3>
-                                    <p className="text-xs sm:text-sm text-gray-600">
-                                      Order ID: <span className="font-mono">{order.id}</span>
-                                    </p>
-                                  </div>
-                                </div>
+                        <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                          <div className={`h-1 w-full ${accStatusColor}`} />
+                          <div className="p-4 sm:p-5">
+                            <div className="flex items-start gap-3 sm:gap-4">
+                              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
                               </div>
-                              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3 sm:text-right">
-                                <p className="text-xl sm:text-2xl font-bold text-brand-navy">
-                                  {formatCurrency(order.amount)}
-                                </p>
-                                <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                                  order.status === 'delivered'
-                                    ? 'bg-green-100 text-green-700 border border-green-200'
-                                    : order.status === 'paid'
-                                    ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                                    : order.status === 'failed'
-                                    ? 'bg-red-100 text-red-700 border border-red-200'
-                                    : 'bg-gray-100 text-gray-700 border border-gray-200'
-                                }`}>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-gray-900 text-sm sm:text-base mb-0.5">{order.accessory_name}</h3>
+                                <p className="text-[11px] text-gray-400 font-mono truncate">#{order.id}</p>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-lg sm:text-xl font-extrabold text-gray-900 mb-1">{formatCurrency(order.amount)}</p>
+                                <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${accBadge}`}>
                                   {order.status === 'delivered' ? t('delivered') : order.status === 'paid' ? t('pendingDelivery') : order.status}
                                 </span>
                               </div>
                             </div>
-                            
-                            <div className="pt-4 border-t border-gray-100">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs sm:text-sm">
-                                <div>
-                                  <p className="text-gray-500 mb-1">Ordered On</p>
-                                  <p className="font-medium text-gray-700">
-                                    {formatDateTime(new Date(order.created_at))}
-                                  </p>
-                                </div>
-                                {order.paid_at && (
-                                  <div>
-                                    <p className="text-gray-500 mb-1">Paid On</p>
-                                    <p className="font-medium text-gray-700">
-                                      {formatDateTime(new Date(order.paid_at))}
-                                    </p>
-                                  </div>
-                                )}
-                                {order.status === 'delivered' && order.delivered_at && (
-                                  <div>
-                                    <p className="text-gray-500 mb-1">Delivered On</p>
-                                    <p className="font-bold text-green-600">
-                                      {formatDateTime(new Date(order.delivered_at))}
-                                    </p>
-                                    {order.delivered_by && (
-                                      <p className="text-[10px] text-gray-500 mt-0.5">
-                                        Operator: {order.delivered_by}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
+
+                            <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                              <div>
+                                <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Ordered</p>
+                                <p className="font-semibold text-gray-700">{formatDateTime(new Date(order.created_at))}</p>
                               </div>
+                              {order.paid_at && (
+                                <div>
+                                  <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Paid</p>
+                                  <p className="font-semibold text-gray-700">{formatDateTime(new Date(order.paid_at))}</p>
+                                </div>
+                              )}
+                              {order.status === 'delivered' && order.delivered_at && (
+                                <div>
+                                  <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Delivered</p>
+                                  <p className="font-bold text-green-600">{formatDateTime(new Date(order.delivered_at))}</p>
+                                  {order.delivered_by && <p className="text-[10px] text-gray-400 mt-0.5">by {order.delivered_by}</p>}
+                                </div>
+                              )}
+                            </div>
                             </div>
                           </div>
                         </div>
