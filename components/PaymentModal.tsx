@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
+import { load } from '@cashfreepayments/cashfree-js';
 
 
 interface PaymentModalProps {
@@ -57,12 +58,28 @@ export default function PaymentModal({
       }
 
       const orderData = await orderResponse.json();
-      localStorage.setItem('pendingOrderId', orderData.orderId);
 
-      const paymentUrl = orderData.paymentLink ||
-        `https://payments.cashfree.com/order/#${orderData.paymentSessionId}`;
+      const cashfree = await load({
+        mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
+      });
 
-      window.location.href = paymentUrl;
+      const checkoutOptions = {
+        paymentSessionId: orderData.paymentSessionId,
+        returnUrl: `${window.location.origin}/dashboard?order_id=${orderData.orderId}`,
+      };
+
+      cashfree.checkout(checkoutOptions).then((result: any) => {
+        if (result?.error) {
+          console.error('Cashfree checkout error:', result.error);
+          alert('Payment failed. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+        if (result?.redirect) {
+          console.log('Payment will be redirected');
+        }
+      });
     } catch (error) {
       console.error('Payment error:', error);
       alert(error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.');
