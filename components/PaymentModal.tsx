@@ -27,6 +27,14 @@ function isInAppBrowser() {
     (ua.includes('Android') && !ua.includes('Chrome/'));
 }
 
+function openInExternalBrowser() {
+  if (typeof window === 'undefined') return;
+
+  const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+  const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+  window.open(intentUrl, '_blank');
+}
+
 export default function PaymentModal({
   isOpen,
   onClose,
@@ -181,11 +189,7 @@ export default function PaymentModal({
             <button
               className="underline font-medium mt-1 inline-block"
               onClick={() => {
-                window.open(
-                  'intent://' + window.location.href.replace(/^https?:\/\//, '') +
-                  '#Intent;scheme=https;package=com.android.chrome;end',
-                  '_blank'
-                );
+                openInExternalBrowser();
               }}
             >
               Chrome mein kholein →
@@ -213,11 +217,11 @@ export default function PaymentModal({
         </div>
 
         <button
-          onClick={handlePayment}
+          onClick={inAppBrowser ? openInExternalBrowser : handlePayment}
           disabled={loading}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
-          {loading ? 'Processing...' : 'Pay with Cashfree'}
+          {inAppBrowser ? 'Open in Chrome to Pay' : loading ? 'Processing...' : 'Pay with Cashfree'}
         </button>
       </div>
     </div>
