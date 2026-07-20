@@ -53,7 +53,7 @@ export default function AccessoryCard({ item, onSelect }: AccessoryCardProps) {
           <svg viewBox="0 0 200 120" width="180" height="110" xmlns="http://www.w3.org/2000/svg">
             <rect x="5" y="45" width="28" height="30" rx="4" fill="#1a1a1a"/>
             <rect x="10" y="50" width="18" height="20" rx="2" fill="#333"/>
-            <rect x="13" y="53" width="3" height="14" rx="1" fill="#gold" stroke="#888" strokeWidth="0.5" fill="#aaa"/>
+            <rect x="13" y="53" width="3" height="14" rx="1" fill="#aaa" stroke="#888" strokeWidth="0.5"/>
             <rect x="18" y="53" width="3" height="14" rx="1" fill="#aaa"/>
             <rect x="23" y="53" width="3" height="14" rx="1" fill="#aaa"/>
             <rect x="33" y="56" width="8" height="8" rx="2" fill="#222"/>
