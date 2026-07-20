@@ -736,18 +736,30 @@ export default function HomePage() {
 
       {/* Accessories Section */}
 
-      <section id="accessories" className="py-14 sm:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 sm:mb-12">
-            <span className="inline-block text-xs font-bold px-4 py-1.5 rounded-full mb-3 uppercase tracking-widest bg-brand-navy/10 text-brand-navy">
+      <section id="accessories" className="py-14 sm:py-20 relative overflow-hidden">
+        {/* subtle colour wash so grid stays visible but section has some identity */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-50/40 to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-purple-300/10 blur-3xl rounded-full pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center mb-10 sm:mb-14">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-1.5 rounded-full mb-4 uppercase tracking-widest bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
               Accessories
             </span>
             <h2 className="font-display text-3xl sm:text-4xl font-black text-brand-navy mb-3">
-              Need a Remote or Spare Parts?
+              Need a Remote or{' '}
+              <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Spare Parts?</span>
             </h2>
-            <p className="text-gray-500 text-base max-w-md mx-auto">
+            <p className="text-gray-500 text-base max-w-md mx-auto leading-relaxed">
               Genuine CCN accessories delivered to your doorstep by our operator
             </p>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-purple-400" />
+              <div className="w-2 h-2 rounded-full bg-purple-500" />
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-purple-400" />
+            </div>
           </div>
 
           {loading ? (
