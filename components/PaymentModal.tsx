@@ -61,7 +61,7 @@ export default function PaymentModal({
 
       const paymentUrl =
         orderData.paymentLink ||
-        `https://payments.cashfree.com/order/web/#${orderData.paymentSessionId}`;
+        `https://payments.cashfree.com/order/#${orderData.paymentSessionId}`;
 
       if ((window as any).Android) {
         (window as any).Android.openCashfree(
