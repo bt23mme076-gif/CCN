@@ -77,7 +77,7 @@ export default function PaymentModal({
 
       const checkoutOptions = {
         paymentSessionId: orderData.paymentSessionId,
-        redirectTarget: '_self',
+        redirectTarget: '_self' as const,
       };
 
       cashfree.checkout(checkoutOptions).then((result: any) => {
