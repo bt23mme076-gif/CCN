@@ -72,7 +72,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, o
       Object.values(componentRefs.current).forEach((c: any) => { try { c.unmount?.(); } catch { } });
       componentRefs.current = {};
     };
-  }, [isOpen, paymentSessionId]);
+  }, [isOpen, paymentSessionId, orderId]);
 
   if (!isOpen) return null;
 
