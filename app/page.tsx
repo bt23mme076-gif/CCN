@@ -146,11 +146,24 @@ export default function HomePage() {
       setFastAmount(data.amount);
       setFastUpiLink(data.upiLink);
 
-      if (data.paymentSessionId) {
+      const ua = navigator.userAgent;
+      const isAndroidWebView = /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
+
+      if (isAndroidWebView && data.paymentSessionId && (window as any).Android?.initiateFastRecharge) {
+        // Native Android SDK flow
+        (window as any).__cfNativeResult = (status: string, orderId: string) => {
+          delete (window as any).__cfNativeResult;
+          if (status === 'success') {
+            router.push(`/dashboard?order_id=${orderId}`);
+          } else if (status === 'failure') {
+            alert('Payment failed or cancelled.');
+          }
+        };
+        (window as any).Android.initiateFastRecharge(data.paymentSessionId, data.orderId);
+      } else if (data.paymentSessionId) {
         setFastSessionId(data.paymentSessionId);
         setShowFastModal(true);
       } else {
-        // No Cashfree session — direct UPI fallback
         window.location.href = data.upiLink;
       }
     } catch {
