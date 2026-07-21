@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { recharges, plans } from '@/lib/db/schema';
+import { recharges, plans, customers } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { sendPushToCustomer } from '@/lib/push';
 
@@ -40,7 +40,9 @@ export async function POST(
       );
     }
 
-    if (!plan) {
+    const isFastRecharge = rechargeData.plan_name === 'Fast Recharge' && !rechargeData.plan_id;
+
+    if (!plan && !isFastRecharge) {
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
 
@@ -48,7 +50,45 @@ export async function POST(
     // Expiry should be exactly at 12:00 AM (00:00:00) IST on the day of expiry
     const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // 5h 30m in ms
 
-    const isAlacarte = rechargeData.plan_name.toUpperCase().startsWith('ALA CARTE') || 
+    // Fast Recharge: chain from existing plan expiry, default 30 days duration
+    if (isFastRecharge) {
+      const existingRecharges = await db.select().from(recharges).where(
+        and(eq(recharges.customer_id, rechargeData.customer_id), eq(recharges.status, 'activated'))
+      );
+      const now = new Date();
+      const futurePlans = existingRecharges.filter(r =>
+        r.expires_at && new Date(r.expires_at) > now && !r.plan_name.toUpperCase().startsWith('ALA CARTE')
+      );
+      futurePlans.sort((a, b) =>
+        (b.expires_at ? new Date(b.expires_at).getTime() : 0) - (a.expires_at ? new Date(a.expires_at).getTime() : 0)
+      );
+      const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+      const baseDate = futurePlans.length > 0 ? new Date(futurePlans[0].expires_at!) : now;
+      const expiryIstHelper = new Date(baseDate.getTime() + IST_OFFSET_MS);
+      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + 30);
+      expiryIstHelper.setUTCHours(0, 0, 0, 0);
+      const expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
+
+      await db.update(recharges).set({
+        status: 'activated',
+        paid_at: rechargeData.paid_at ?? new Date(),
+        activated_at: new Date(),
+        activated_by: admin.username,
+        expires_at: expiresAt,
+      }).where(eq(recharges.id, rechargeId));
+
+      const expiryStr = expiresAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      sendPushToCustomer(rechargeData.customer_id, {
+        title: '✅ Fast Recharge Activated!',
+        body: `Aapka Fast Recharge activate ho gaya. Valid till ${expiryStr}. Enjoy your channels!`,
+        url: '/dashboard',
+      });
+
+      const updatedRecharge = await db.select().from(recharges).where(eq(recharges.id, rechargeId)).limit(1);
+      return NextResponse.json({ recharge: updatedRecharge[0] });
+    }
+
+    const isAlacarte = rechargeData.plan_name.toUpperCase().startsWith('ALA CARTE') ||
                        (plan && plan.name.toUpperCase().startsWith('ALA CARTE'));
 
     let expiresAt: Date;

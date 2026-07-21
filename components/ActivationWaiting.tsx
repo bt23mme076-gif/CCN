@@ -225,6 +225,55 @@ export default function ActivationWaiting({ rechargeId, planName, amount, hasAct
     );
   }
 
+  // ── PAYMENT PENDING SCREEN (10 min elapsed, still not activated) ──
+  if (timerState.cycle >= 3) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 py-8"
+        style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' }}>
+        <div className="absolute top-0 left-0 right-0 h-1"
+          style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
+        <div className="w-full max-w-sm flex flex-col items-center gap-6 text-center">
+          <div className="w-24 h-24 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(245,166,35,0.15)', border: '2px solid rgba(245,166,35,0.4)' }}>
+            <svg className="w-12 h-12" fill="none" stroke="#f5a623" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-3">Payment Pending</h2>
+            <p className="text-yellow-200 text-sm leading-relaxed">
+              Aapki payment bank ke end se confirm nahi ho pa rhi hai. Kripya wait karein payment confirm hone ka.
+            </p>
+            <p className="text-gray-400 text-sm mt-3">
+              <span className="text-white font-semibold">15 minute baad</span> apna dashboard check karein. Agar payment deduct hua hai to automatically process ho jayega.
+            </p>
+          </div>
+          <div className="w-full rounded-2xl p-4 text-left space-y-3"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">✓</span>
+              <span className="text-green-300 text-sm">Payment deducted from your account</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-yellow-400">⏳</span>
+              <span className="text-yellow-200 text-sm">Bank confirmation pending</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-gray-500">○</span>
+              <span className="text-gray-400 text-sm">Recharge will activate once confirmed</span>
+            </div>
+          </div>
+          <button onClick={onActivated}
+            className="w-full py-3.5 rounded-2xl font-bold text-white"
+            style={{ background: 'linear-gradient(135deg, #1a1a40, #2d2b69)' }}>
+            Dashboard par jayein
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ── WAITING SCREEN ────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 py-8 overflow-y-auto"
@@ -259,7 +308,7 @@ export default function ActivationWaiting({ rechargeId, planName, amount, hasAct
               {formatTime(timerState.timeLeft)}
             </span>
             <span className="text-[10px] text-blue-400 uppercase tracking-widest mt-0.5">
-              {timerState.cycle > 1 ? `Round ${timerState.cycle}` : 'Processing'}
+              {timerState.cycle === 1 ? 'Processing' : 'Still trying...'}
             </span>
           </div>
         </div>
