@@ -123,7 +123,7 @@ export async function POST(
         // Fallback: If no active base plan is found, standard duration
         const nowUtc = new Date();
         const expiryIstHelper = new Date(nowUtc.getTime() + IST_OFFSET_MS);
-        expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan.duration_days);
+        expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan!.duration_days);
         expiryIstHelper.setUTCHours(0, 0, 0, 0);
         expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
       }
@@ -161,7 +161,7 @@ export async function POST(
 
       // Shift base date into IST, add duration, set to midnight IST, convert back to UTC
       const expiryIstHelper = new Date(baseDate.getTime() + IST_OFFSET_MS);
-      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan.duration_days);
+      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan!.duration_days);
       expiryIstHelper.setUTCHours(0, 0, 0, 0);
       expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
     }
