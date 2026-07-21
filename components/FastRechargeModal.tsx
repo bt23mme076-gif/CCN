@@ -12,21 +12,70 @@ interface FastRechargeModalProps {
 }
 
 const UPI_APPS = [
-  { key: 'gpay',    label: 'Google Pay', bg: 'linear-gradient(135deg,#e8f0fe,#fff)', border: '#4285F4' },
-  { key: 'phonepe', label: 'PhonePe',    bg: 'linear-gradient(135deg,#f0e8ff,#fff)', border: '#5f259f' },
-  { key: 'paytm',   label: 'Paytm',      bg: 'linear-gradient(135deg,#e0f7ff,#fff)', border: '#00BAF2' },
-  { key: 'default', label: 'Other UPI',  bg: 'linear-gradient(135deg,#fff8e8,#fff)', border: '#f5a623' },
+  {
+    key: 'gpay',
+    label: 'Google Pay',
+    color: '#4285F4',
+    bg: '#E8F0FE',
+    svg: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10">
+        <path fill="#4285F4" d="M43.6 20.1H24v7.8h11.2c-1 5.2-5.5 8.1-11.2 8.1C17.3 36 12 30.7 12 24s5.3-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.8 6.5 29.2 4.5 24 4.5 12.7 4.5 3.5 13.7 3.5 25S12.7 45.5 24 45.5c11 0 20-8 20-20.5 0-1.3-.1-2.6-.4-3.9z"/>
+        <path fill="#34A853" d="M6.3 14.7l6.6 4.8C14.5 15.5 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C33.8 6.5 29.2 4.5 24 4.5c-7.7 0-14.3 4.4-17.7 10.2z"/>
+        <path fill="#FBBC05" d="M24 45.5c5.1 0 9.7-1.9 13.2-5l-6.1-5.1C29.2 36.7 26.7 37.5 24 37.5c-5.7 0-10.1-3.8-11.1-8.8l-6.6 5.1C9.7 40.8 16.4 45.5 24 45.5z"/>
+        <path fill="#EA4335" d="M43.6 20.1H24v7.8h11.2c-.5 2.5-1.8 4.6-3.8 6l6.1 5.1C40.9 35.6 44 30.5 44 24.5c0-1.3-.1-2.6-.4-3.9v-.5z"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'phonepe',
+    label: 'PhonePe',
+    color: '#5f259f',
+    bg: '#EDE7F6',
+    svg: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10">
+        <rect width="48" height="48" rx="12" fill="#5f259f"/>
+        <text x="24" y="32" textAnchor="middle" fill="white" fontSize="20" fontWeight="bold" fontFamily="Arial">Pe</text>
+      </svg>
+    ),
+  },
+  {
+    key: 'paytm',
+    label: 'Paytm',
+    color: '#00BAF2',
+    bg: '#E0F7FF',
+    svg: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10">
+        <rect width="48" height="48" rx="12" fill="#00BAF2"/>
+        <text x="24" y="32" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold" fontFamily="Arial">PAYTM</text>
+      </svg>
+    ),
+  },
+  {
+    key: 'default',
+    label: 'Any UPI',
+    color: '#1a7a4a',
+    bg: '#E8F5E9',
+    svg: (
+      <svg viewBox="0 0 48 48" className="w-10 h-10">
+        <rect width="48" height="48" rx="12" fill="#1a7a4a"/>
+        <text x="24" y="33" textAnchor="middle" fill="white" fontSize="22" fontWeight="bold" fontFamily="Arial">₹</text>
+      </svg>
+    ),
+  },
 ] as const;
 
 export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, amount, fallbackUpiLink }: FastRechargeModalProps) {
-  const [mounted, setMounted] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [paying, setPaying] = useState<string | null>(null);
   const [error, setError] = useState('');
   const componentRefs = useRef<Record<string, any>>({});
+  const cfRef = useRef<any>(null);
 
   useEffect(() => {
     if (!isOpen || !paymentSessionId) return;
     setError('');
-    setMounted(false);
+    setReady(false);
+    cfRef.current = null;
 
     (async () => {
       try {
@@ -35,35 +84,28 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
         });
         if (!cashfree) { setError('fallback'); return; }
         const cf = cashfree as any;
+        cfRef.current = cf;
 
-        // Called by Android's onActivityResult after user returns from UPI app
         (window as any).__cashfreeUpiResult = (resultCode: number) => {
-          const RESULT_OK = -1;
-          if (resultCode === RESULT_OK) {
-            // Payment may have succeeded — go to dashboard to verify
+          setPaying(null);
+          if (resultCode === -1) {
             window.location.href = `${window.location.origin}/dashboard`;
           }
-          // Cancel or failure: stay on page, modal stays open
         };
 
         for (const app of UPI_APPS) {
           try {
             const component = cf.create('upiApp', {
-              values: { upiApp: app.key, buttonText: `Pay with ${app.label}`, buttonIcon: true },
+              values: { upiApp: app.key },
             });
-            component.on('loaderror', () => setError('fallback'));
-            component.on('click', () => {
-              cf.pay({
-                paymentMethod: component,
-                paymentSessionId,
-                returnUrl: `${window.location.origin}/dashboard`,
-              }).catch(() => setError('fallback'));
-            });
-            component.mount(`#upi-btn-${app.key}`);
+            component.on('loaderror', () => {});
+            // Mount hidden — we use our own buttons for UI
+            const el = document.getElementById(`upi-hidden-${app.key}`);
+            if (el) component.mount(`#upi-hidden-${app.key}`);
             componentRefs.current[app.key] = component;
           } catch { /* skip */ }
         }
-        setMounted(true);
+        setReady(true);
       } catch {
         setError('fallback');
       }
@@ -73,39 +115,53 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
       delete (window as any).__cashfreeUpiResult;
       Object.values(componentRefs.current).forEach((c: any) => { try { c.unmount?.(); } catch { } });
       componentRefs.current = {};
+      cfRef.current = null;
     };
   }, [isOpen, paymentSessionId]);
+
+  const handlePay = (appKey: string) => {
+    if (paying || !cfRef.current || !componentRefs.current[appKey]) return;
+    setPaying(appKey);
+    cfRef.current.pay({
+      paymentMethod: componentRefs.current[appKey],
+      paymentSessionId,
+      returnUrl: `${window.location.origin}/dashboard`,
+    }).catch(() => {
+      setPaying(null);
+      setError('fallback');
+    });
+  };
 
   if (!isOpen) return null;
 
   const amountRs = (amount / 100).toFixed(0);
 
+  // Hidden mount targets for Cashfree components
+  const hiddenMounts = (
+    <div className="hidden" aria-hidden="true">
+      {UPI_APPS.map(app => (
+        <div key={app.key} id={`upi-hidden-${app.key}`} />
+      ))}
+    </div>
+  );
+
   if (error === 'fallback') {
     return (
-      <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4"
-        style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}>
-        <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl">
-          <div className="px-6 pt-8 pb-6 text-center" style={{ background: 'linear-gradient(135deg,#1a0533,#0f0c29)' }}>
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'linear-gradient(135deg,#e94560,#f5a623)' }}>
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <h2 className="text-white font-bold text-xl mb-1">Fast Recharge</h2>
-            <p className="text-3xl font-extrabold text-white mb-1">₹{amountRs}</p>
-            <p className="text-blue-300 text-sm">Tap below to pay via UPI</p>
+      <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+        {hiddenMounts}
+        <div className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl">
+          <div className="px-6 pt-6 pb-4 border-b">
+            <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Fast Recharge</p>
+            <p className="text-3xl font-extrabold text-gray-900 mt-1">₹{amountRs}</p>
           </div>
-          <div className="bg-white px-6 py-6 space-y-3">
+          <div className="p-4 space-y-3">
             <a href={fallbackUpiLink}
               className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-white text-base"
-              style={{ background: 'linear-gradient(135deg,#e94560,#f5a623)' }}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Pay ₹{amountRs} via UPI
+              style={{ background: '#1a7a4a' }}>
+              ₹ Pay ₹{amountRs} via UPI
             </a>
-            <button onClick={onClose} className="w-full py-3 rounded-2xl text-gray-400 text-sm font-medium border border-gray-100">
+            <button onClick={onClose} className="w-full py-3 rounded-2xl text-gray-400 text-sm font-medium">
               Cancel
             </button>
           </div>
@@ -115,60 +171,70 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4"
-      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}>
-      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+      {hiddenMounts}
+      <div className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl">
 
         {/* Header */}
-        <div className="relative px-6 pt-8 pb-6" style={{ background: 'linear-gradient(135deg,#1a0533,#0f0c29)' }}>
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Fast Recharge</p>
+            <p className="text-3xl font-extrabold text-gray-900 mt-0.5">₹{amountRs}</p>
+          </div>
           <button onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all">
+            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors text-lg font-medium">
             ✕
           </button>
-
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg,#e94560,#f5a623)' }}>
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-blue-300 text-xs uppercase tracking-widest font-semibold mb-0.5">Fast Recharge</p>
-              <p className="text-white text-3xl font-extrabold">₹{amountRs}</p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center gap-2">
-            <div className="flex-1 h-px bg-white/10" />
-            <p className="text-blue-300 text-xs">Choose your UPI app</p>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
         </div>
 
-        {/* UPI Options */}
-        <div className="bg-white px-4 pt-4 pb-6 space-y-2.5">
-          {!mounted ? (
-            <div className="flex items-center justify-center py-8 gap-3">
-              <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
-                style={{ borderColor: '#e94560', borderTopColor: 'transparent' }} />
-              <span className="text-gray-400 text-sm">Loading payment options...</span>
-            </div>
-          ) : null}
+        {/* Title */}
+        <p className="px-5 pt-4 pb-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">
+          Pay Via UPI
+        </p>
 
-          {UPI_APPS.map(app => (
-            <div key={app.key}
-              className="rounded-2xl overflow-hidden transition-all active:scale-95"
-              style={{ background: app.bg, border: `1.5px solid ${app.border}22` }}>
-              <div id={`upi-btn-${app.key}`} className="w-full [&>*]:w-full [&>button]:w-full [&>button]:py-4 [&>button]:font-semibold [&>button]:text-base" />
+        {/* UPI App Grid */}
+        <div className="px-4 pb-2">
+          {!ready ? (
+            <div className="flex items-center justify-center py-10 gap-3">
+              <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin border-blue-500" />
+              <span className="text-gray-400 text-sm">Loading...</span>
             </div>
-          ))}
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {UPI_APPS.map(app => (
+                <button
+                  key={app.key}
+                  onClick={() => handlePay(app.key)}
+                  disabled={!!paying}
+                  className="flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all active:scale-95 disabled:opacity-60"
+                  style={{ background: app.bg, borderColor: paying === app.key ? app.color : `${app.color}33` }}
+                >
+                  {paying === app.key ? (
+                    <div className="w-10 h-10 flex items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+                        style={{ borderColor: app.color, borderTopColor: 'transparent' }} />
+                    </div>
+                  ) : (
+                    app.svg
+                  )}
+                  <span className="font-bold text-sm" style={{ color: app.color }}>
+                    {app.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
+        {/* Cancel */}
+        <div className="px-4 pt-2 pb-5">
           <button onClick={onClose}
-            className="w-full mt-1 py-3 rounded-2xl text-gray-400 text-sm font-medium border border-gray-100 hover:bg-gray-50 transition-colors">
+            className="w-full py-3 rounded-2xl text-gray-400 text-sm font-medium hover:bg-gray-50 transition-colors">
             Cancel
           </button>
         </div>
+
       </div>
     </div>
   );
