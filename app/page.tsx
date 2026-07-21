@@ -146,16 +146,7 @@ export default function HomePage() {
       setFastAmount(data.amount);
       setFastUpiLink(data.upiLink);
 
-      if (data.paymentSessionId && (window as any).Android?.initiateFastRecharge) {
-        // Native Android SDK flow
-        (window as any).__cfNativeResult = (status: string, orderId: string) => {
-          delete (window as any).__cfNativeResult;
-          if (status === 'success') {
-            router.push(`/dashboard?order_id=${orderId}`);
-          }
-        };
-        (window as any).Android.initiateFastRecharge(data.paymentSessionId, data.orderId);
-      } else if (data.paymentSessionId) {
+      if (data.paymentSessionId) {
         setFastSessionId(data.paymentSessionId);
         setShowFastModal(true);
       } else {
