@@ -148,6 +148,7 @@ export default function AllRechargesPage() {
       `_CCN Networks — Your Trusted Cable Provider_ 🙏`;
 
     const ua = navigator.userAgent;
+    alert(ua); // TEMP: remove after checking
     const isAndroidWebView = /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
 
     if (isAndroidWebView) {
