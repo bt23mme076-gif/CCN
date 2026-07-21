@@ -46,6 +46,7 @@ export default function AllRechargesPage() {
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [sharing, setSharing] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<CustomerDetailResponse | null>(null);
   const [loadingCustomerDetail, setLoadingCustomerDetail] = useState(false);
@@ -121,8 +122,14 @@ export default function AllRechargesPage() {
     activatedAt?: string | null,
     expiresAt?: string | null,
   ) => {
+    if (sharing) return;
+    setSharing(rechargeId);
+
     const amountRs = (amount / 100).toFixed(2);
     const receiptUrl = `/api/admin/receipt/${rechargeId}`;
+
+    const phone = mobile.replace(/\D/g, '').replace(/^0/, '');
+    const waPhone = phone.startsWith('91') ? phone : `91${phone}`;
 
     const msg =
       `Hello ${customerName} 😊\n\n` +
@@ -140,27 +147,33 @@ export default function AllRechargesPage() {
       `━━━━━━━━━━━━━━━━━━━\n\n` +
       `_CCN Networks — Your Trusted Cable Provider_ 🙏`;
 
-    try {
-      const res = await fetch(receiptUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `CCN-Receipt-${customerName.replace(/\s+/g, '-')}-${rechargeId.slice(0, 8)}.html`, { type: 'text/html' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        // Native share sheet — admin picks WhatsApp, file + message both go together
-        await navigator.share({ title: `CCN Receipt — ${customerName}`, text: msg, files: [file] });
-        return;
+    // Try file sharing (mobile native share sheet)
+    if (navigator.share) {
+      try {
+        const res = await fetch(receiptUrl, { credentials: 'include' });
+        if (res.ok) {
+          const blob = await res.blob();
+          const file = new File(
+            [blob],
+            `CCN-Receipt-${customerName.replace(/\s+/g, '-')}-${rechargeId.slice(0, 8)}.html`,
+            { type: 'text/html' },
+          );
+          const shareData = navigator.canShare && navigator.canShare({ files: [file] })
+            ? { title: `CCN Receipt — ${customerName}`, text: msg, files: [file] }
+            : { title: `CCN Receipt — ${customerName}`, text: msg };
+          await navigator.share(shareData);
+          setSharing(null);
+          return;
+        }
+      } catch (err) {
+        if ((err as Error)?.name === 'AbortError') { setSharing(null); return; }
+        // fetch failed or share unsupported — fall through
       }
-    } catch (err) {
-      // User cancelled or share failed — fall through to WhatsApp fallback
-      if ((err as Error)?.name === 'AbortError') return;
     }
 
-    // Fallback for desktop: open WhatsApp to customer's number with message
-    const phone = mobile.replace(/\D/g, '').replace(/^0/, '');
-    const waPhone = phone.startsWith('91') ? phone : `91${phone}`;
-    window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank');
-    // Also open receipt for manual attachment
-    window.open(receiptUrl, '_blank');
+    // Fallback: navigate to WhatsApp (works on mobile without popup blocker)
+    setSharing(null);
+    window.location.href = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
   };
 
   return (
@@ -244,10 +257,11 @@ export default function AllRechargesPage() {
                             </a>
                             <button
                               onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '', customer.mobile || '')}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-80 transition-opacity"
+                              disabled={sharing === recharge.id}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-80 transition-opacity disabled:opacity-60"
                               style={{ background: 'linear-gradient(135deg, #166534, #16a34a)' }}
                             >
-                              Share
+                              {sharing === recharge.id ? '...' : 'Share'}
                             </button>
                           </div>
                         )}
@@ -304,10 +318,11 @@ export default function AllRechargesPage() {
                       </a>
                       <button
                         onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '', customer.mobile || '')}
-                        className="flex-1 py-2 rounded-xl text-sm font-bold text-white"
+                        disabled={sharing === recharge.id}
+                        className="flex-1 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-60"
                         style={{ background: 'linear-gradient(135deg, #166534, #16a34a)' }}
                       >
-                        Share
+                        {sharing === recharge.id ? 'Sharing...' : 'Share'}
                       </button>
                     </div>
                   )}
@@ -398,10 +413,11 @@ export default function AllRechargesPage() {
                                   </a>
                                   <button
                                     onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, selectedCustomerDetail.customer?.name || '', selectedCustomerDetail.customer?.stb_number || '', selectedCustomerDetail.customer?.mobile || '', recharge.activated_at, recharge.expires_at)}
-                                    className="px-3 py-1 rounded-lg text-xs font-bold text-white"
+                                    disabled={sharing === recharge.id}
+                                    className="px-3 py-1 rounded-lg text-xs font-bold text-white disabled:opacity-60"
                                     style={{ background: 'linear-gradient(135deg, #166534, #16a34a)' }}
                                   >
-                                    Share
+                                    {sharing === recharge.id ? '...' : 'Share'}
                                   </button>
                                 </>
                               )}
