@@ -123,10 +123,10 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
       style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-      <div className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl">
+      <div className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
           <div>
             <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Fast Recharge</p>
             <p className="text-3xl font-extrabold text-gray-900 mt-0.5">₹{amountRs}</p>
@@ -138,10 +138,10 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
         </div>
 
         {/* Pay Via UPI label */}
-        <p className="px-5 pt-4 pb-3 text-base font-bold text-gray-800">Pay Via UPI</p>
+        <p className="px-5 pt-4 pb-3 text-base font-bold text-gray-800 flex-shrink-0">Pay Via UPI</p>
 
         {/* Cashfree UPI buttons — real icons rendered by Cashfree */}
-        <div className="px-4 pb-2 space-y-2">
+        <div className="px-4 pb-2 space-y-2 overflow-y-auto flex-1">
           {!ready ? (
             <div className="flex items-center justify-center py-10 gap-3">
               <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin border-blue-500" />
@@ -159,7 +159,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
         </div>
 
         {/* Cancel */}
-        <div className="px-4 pt-1 pb-5">
+        <div className="px-4 pt-1 pb-5 flex-shrink-0">
           <button onClick={onClose}
             className="w-full py-3 rounded-2xl text-gray-400 text-sm font-medium hover:bg-gray-50 transition-colors">
             Cancel
