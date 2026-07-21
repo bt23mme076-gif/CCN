@@ -76,6 +76,11 @@ export default function HomePage() {
     const check = () => setIsMobile(window.innerWidth < 640);
     check();
     window.addEventListener('resize', check);
+    if (new URLSearchParams(window.location.search).get('payment_failed') === '1') {
+      setFastPaymentFailed(true);
+      window.history.replaceState({}, '', '/');
+      setTimeout(() => setFastPaymentFailed(false), 10000);
+    }
     return () => window.removeEventListener('resize', check);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -135,6 +140,7 @@ export default function HomePage() {
   const [fastUpiLink, setFastUpiLink] = useState('');
   const [fastAmount, setFastAmount] = useState(0);
   const [fastLoading, setFastLoading] = useState(false);
+  const [fastPaymentFailed, setFastPaymentFailed] = useState(false);
 
   const handleFastRecharge = async () => {
     if (!customer) { router.push('/login'); return; }
@@ -956,6 +962,28 @@ export default function HomePage() {
 
       {/* Floating WhatsApp Button */}
       <WhatsAppButton />
+
+      {fastPaymentFailed && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-sm rounded-2xl shadow-2xl overflow-hidden"
+          style={{ background: '#1a1a40', border: '1px solid rgba(233,69,96,0.4)' }}>
+          <div className="flex items-start gap-3 p-4">
+            <div className="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-white text-sm">Payment नहीं हुआ</p>
+              <p className="text-xs text-gray-300 mt-0.5">दोबारा try करें। अगर amount deduct हो गया है तो अपने operator से contact करें।</p>
+            </div>
+            <button onClick={() => setFastPaymentFailed(false)} className="text-gray-500 hover:text-gray-300 flex-shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       <FastRechargeModal
         isOpen={showFastModal}
