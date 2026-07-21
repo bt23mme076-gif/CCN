@@ -171,9 +171,15 @@ export default function AllRechargesPage() {
       }
     }
 
-    // Fallback: navigate to WhatsApp (works on mobile without popup blocker)
+    // Fallback: open in system browser via anchor click (handles wa.me → WhatsApp redirect in PWA/WebView)
     setSharing(null);
-    window.location.href = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
+    const a = document.createElement('a');
+    a.href = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   return (
