@@ -147,7 +147,20 @@ export default function AllRechargesPage() {
       `━━━━━━━━━━━━━━━━━━━\n\n` +
       `_CCN Networks — Your Trusted Cable Provider_ 🙏`;
 
-    // Try file sharing (mobile native share sheet)
+    const ua = navigator.userAgent;
+    alert(ua); // TEMP: remove after checking
+    const isAndroidWebView = /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
+
+    if (isAndroidWebView) {
+      // WebView: navigator.share and wa.me both fail — use Android Intent URL to launch WhatsApp directly
+      setSharing(null);
+      window.location.href =
+        `intent://send?phone=${waPhone}&text=${encodeURIComponent(msg)}` +
+        `#Intent;package=com.whatsapp;scheme=whatsapp;end`;
+      return;
+    }
+
+    // Try file sharing (mobile native share sheet — works in real browsers)
     if (navigator.share) {
       try {
         const res = await fetch(receiptUrl, { credentials: 'include' });
@@ -167,11 +180,10 @@ export default function AllRechargesPage() {
         }
       } catch (err) {
         if ((err as Error)?.name === 'AbortError') { setSharing(null); return; }
-        // fetch failed or share unsupported — fall through
       }
     }
 
-    // Fallback: open in system browser via anchor click (handles wa.me → WhatsApp redirect in PWA/WebView)
+    // Desktop fallback: open in new tab
     setSharing(null);
     const a = document.createElement('a');
     a.href = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
