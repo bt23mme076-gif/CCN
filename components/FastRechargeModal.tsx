@@ -46,6 +46,13 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
           try {
             const component = cf.create('upiApp', {
               values: { upiApp: app.key, buttonText: app.label, buttonIcon: true },
+              style: {
+                base: {
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  padding: '14px 16px',
+                },
+              },
             });
             component.on('loaderror', () => {});
             component.on('click', () => {
