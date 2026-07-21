@@ -110,6 +110,23 @@ export default function AllRechargesPage() {
     setLoadingCustomerDetail(false);
   };
 
+  const handleShareReceipt = (
+    rechargeId: string,
+    planName: string,
+    amount: number,
+    status: string,
+    customerName: string,
+    stb: string,
+  ) => {
+    const amountRs = (amount / 100).toFixed(2);
+    const text = `CCN Networks - Payment Receipt\nOrder ID: ${rechargeId}\nCustomer: ${customerName}\nSTB: ${stb}\nPlan: ${planName}\nAmount: ₹${amountRs}\nStatus: ${status.toUpperCase()}`;
+    if (navigator.share) {
+      navigator.share({ title: 'CCN Networks Receipt', text });
+    } else {
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
+  };
+
   return (
     <div>
       <h1 className="font-display text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">All Recharges</h1>
@@ -179,15 +196,24 @@ export default function AllRechargesPage() {
                       </td>
                       <td>
                         {(recharge.status === 'paid' || recharge.status === 'activated') && (
-                          <a
-                            href={`/api/admin/receipt/${recharge.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-white inline-block hover:opacity-80 transition-opacity"
-                            style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
-                          >
-                            Receipt
-                          </a>
+                          <div className="flex items-center gap-1.5">
+                            <a
+                              href={`/api/admin/receipt/${recharge.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white inline-block hover:opacity-80 transition-opacity"
+                              style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
+                            >
+                              Receipt
+                            </a>
+                            <button
+                              onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '')}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-80 transition-opacity"
+                              style={{ background: 'linear-gradient(135deg, #166534, #16a34a)' }}
+                            >
+                              Share
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -230,15 +256,24 @@ export default function AllRechargesPage() {
                     {deleting === recharge.id ? 'Deleting...' : 'Delete'}
                   </button>
                   {(recharge.status === 'paid' || recharge.status === 'activated') && (
-                    <a
-                      href={`/api/admin/receipt/${recharge.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-2 rounded-xl text-sm font-bold text-white text-center block"
-                      style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
-                    >
-                      Download Receipt
-                    </a>
+                    <div className="flex gap-2">
+                      <a
+                        href={`/api/admin/receipt/${recharge.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-2 rounded-xl text-sm font-bold text-white text-center block"
+                        style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
+                      >
+                        Receipt
+                      </a>
+                      <button
+                        onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '')}
+                        className="flex-1 py-2 rounded-xl text-sm font-bold text-white"
+                        style={{ background: 'linear-gradient(135deg, #166534, #16a34a)' }}
+                      >
+                        Share
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -315,15 +350,24 @@ export default function AllRechargesPage() {
                               <span className="text-green-400 font-semibold">{formatCurrency(recharge.amount)}</span>
                               <StatusBadge status={recharge.status} />
                               {(recharge.status === 'paid' || recharge.status === 'activated') && (
-                                <a
-                                  href={`/api/admin/receipt/${recharge.id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="px-3 py-1 rounded-lg text-xs font-bold text-white"
-                                  style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
-                                >
-                                  Receipt
-                                </a>
+                                <>
+                                  <a
+                                    href={`/api/admin/receipt/${recharge.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-1 rounded-lg text-xs font-bold text-white"
+                                    style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
+                                  >
+                                    Receipt
+                                  </a>
+                                  <button
+                                    onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, selectedCustomerDetail.customer?.name || '', selectedCustomerDetail.customer?.stb_number || '')}
+                                    className="px-3 py-1 rounded-lg text-xs font-bold text-white"
+                                    style={{ background: 'linear-gradient(135deg, #166534, #16a34a)' }}
+                                  >
+                                    Share
+                                  </button>
+                                </>
                               )}
                             </div>
                           </div>
