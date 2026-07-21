@@ -39,6 +39,8 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
         (window as any).__cashfreeUpiResult = (resultCode: number) => {
           if (resultCode === -1) {
             window.location.href = `${window.location.origin}/dashboard`;
+          } else {
+            window.location.reload();
           }
         };
 
