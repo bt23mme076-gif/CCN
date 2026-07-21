@@ -131,6 +131,7 @@ export default function HomePage() {
 
   const [showFastModal, setShowFastModal] = useState(false);
   const [fastSessionId, setFastSessionId] = useState('');
+  const [fastOrderId, setFastOrderId] = useState('');
   const [fastUpiLink, setFastUpiLink] = useState('');
   const [fastAmount, setFastAmount] = useState(0);
   const [fastLoading, setFastLoading] = useState(false);
@@ -148,6 +149,7 @@ export default function HomePage() {
 
       if (data.paymentSessionId) {
         setFastSessionId(data.paymentSessionId);
+        setFastOrderId(data.orderId);
         setShowFastModal(true);
       } else {
         window.location.href = data.upiLink;
@@ -959,6 +961,7 @@ export default function HomePage() {
         isOpen={showFastModal}
         onClose={() => setShowFastModal(false)}
         paymentSessionId={fastSessionId}
+        orderId={fastOrderId}
         amount={fastAmount}
         fallbackUpiLink={fastUpiLink}
       />

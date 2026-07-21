@@ -7,6 +7,7 @@ interface FastRechargeModalProps {
   isOpen: boolean;
   onClose: () => void;
   paymentSessionId: string;
+  orderId: string;
   amount: number;
   fallbackUpiLink: string;
 }
@@ -17,9 +18,10 @@ const UPI_APPS = [
   { key: 'default', label: 'Any UPI' },
 ] as const;
 
-export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, amount, fallbackUpiLink }: FastRechargeModalProps) {
+export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, orderId, amount, fallbackUpiLink }: FastRechargeModalProps) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
+  const [paymentFailed, setPaymentFailed] = useState(false);
   const componentRefs = useRef<Record<string, any>>({});
 
   useEffect(() => {
@@ -37,9 +39,9 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
 
         (window as any).__cashfreeUpiResult = (resultCode: number) => {
           if (resultCode === -1) {
-            window.location.href = `${window.location.origin}/dashboard`;
+            window.location.href = `${window.location.origin}/dashboard?order_id=${orderId}`;
           } else {
-            window.location.reload();
+            setPaymentFailed(true);
           }
         };
 
@@ -76,6 +78,42 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
   if (!isOpen) return null;
 
   const amountRs = (amount / 100).toFixed(0);
+
+  if (paymentFailed) {
+    setTimeout(() => { window.location.href = window.location.origin; }, 10000);
+    return (
+      <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+        <div className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl">
+          <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
+            <div>
+              <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Fast Recharge</p>
+              <p className="text-3xl font-extrabold text-gray-900 mt-0.5">₹{amountRs}</p>
+            </div>
+            <button onClick={onClose} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
+          </div>
+          <div className="p-5 space-y-4">
+            <div className="flex flex-col items-center text-center py-2">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-3">
+                <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <p className="font-bold text-gray-900 text-base mb-1">Payment नहीं हुआ</p>
+              <p className="text-sm text-gray-500">दोबारा try करें। अगर amount deduct हो गया है तो अपने operator से contact करें।</p>
+            </div>
+            <button
+              onClick={() => setPaymentFailed(false)}
+              className="flex items-center justify-center w-full py-3.5 rounded-2xl font-bold text-white text-base"
+              style={{ background: '#1a1a40' }}>
+              दोबारा Try करें
+            </button>
+            <button onClick={onClose} className="w-full py-3 rounded-2xl text-gray-400 text-sm font-medium">Cancel</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (error === 'fallback') {
     return (
