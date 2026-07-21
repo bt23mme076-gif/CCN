@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
+import Navbar from '@/components/Navbar';
 
 interface Plan {
   id: string;
@@ -69,49 +69,34 @@ export default function PlansPage() {
     }
   };
 
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/');
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
+      <div className="min-h-screen flex items-center justify-center"
+        style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' }}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red" />
       </div>
     );
   }
 
   if (customer && customer.outstanding_balance > 0) {
     return (
-      <div className="min-h-screen bg-gray-1 flex flex-col">
-        <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/" className="font-display text-2xl font-bold">
-                <span className="text-gradient-cool">CCN</span>{' '}
-                <span className="text-brand-navy">Networks</span>
-              </Link>
-              <button onClick={handleLogout} className="text-accent-red hover:underline font-medium text-sm">
-                Logout
-              </button>
-            </div>
-          </div>
-        </nav>
+      <div className="min-h-screen flex flex-col relative"
+        style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' }}>
+        <Navbar />
         <div className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md text-center">
             <div className="text-6xl mb-4">🔒</div>
-            <h2 className="font-display text-2xl font-bold text-brand-navy mb-2">Recharge Blocked</h2>
-            <p className="text-gray-600 mb-6 text-sm">
+            <h2 className="font-display text-2xl font-bold text-white mb-2">Recharge Blocked</h2>
+            <p className="text-gray-300 mb-6 text-sm">
               You have an outstanding due on your account. Please clear your dues to continue recharging.
             </p>
-            <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-6 mb-6">
-              <p className="text-sm text-red-600 font-medium mb-1">Outstanding Due</p>
-              <p className="text-4xl font-black text-red-600">₹{customer.outstanding_balance}</p>
-              <p className="text-xs text-red-400 mt-1">Pay this amount to your cable operator to unlock recharge</p>
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 mb-6">
+              <p className="text-sm text-red-300 font-medium mb-1">Outstanding Due</p>
+              <p className="text-4xl font-black text-red-400">₹{customer.outstanding_balance}</p>
+              <p className="text-xs text-red-300/70 mt-1">Pay this amount to your cable operator to unlock recharge</p>
             </div>
-            <p className="text-sm text-gray-500">
-              Contact <span className="font-semibold text-brand-navy">CCN Networks</span> to pay your dues and unlock your account.
+            <p className="text-sm text-gray-400">
+              Contact <span className="font-semibold text-white">CCN Networks</span> to pay your dues and unlock your account.
             </p>
           </div>
         </div>
@@ -119,61 +104,66 @@ export default function PlansPage() {
     );
   }
 
+  const displayPlans = plans.filter(p => p.price !== 100);
+  const testPlans = plans.filter(p => p.price === 100);
+
   return (
-    <div className="min-h-screen bg-gray-1">
-      {/* Header */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="font-display text-2xl font-bold">
-              <span className="text-gradient-cool">CCN</span>{' '}
-              <span className="text-brand-navy">Networks</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/dashboard"
-                className="text-gray-600 hover:text-brand-navy font-medium"
-              >
-                Dashboard
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="text-accent-red hover:underline font-medium"
-              >
-                Logout
-              </button>
-            </div>
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden"
+      style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' }}>
+
+      {/* Grid background */}
+      <div className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+        }} />
+
+      {/* Animated orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute w-96 h-96 rounded-full opacity-20 animate-float"
+          style={{ background: 'radial-gradient(circle, #6366f1, transparent)', top: '10%', left: '5%', filter: 'blur(60px)' }} />
+        <div className="absolute w-80 h-80 rounded-full opacity-15 animate-float-delay"
+          style={{ background: 'radial-gradient(circle, #e63946, transparent)', top: '20%', right: '8%', filter: 'blur(50px)' }} />
+        <div className="absolute w-72 h-72 rounded-full opacity-10 animate-float"
+          style={{ background: 'radial-gradient(circle, #48cae4, transparent)', bottom: '15%', left: '15%', filter: 'blur(55px)', animationDelay: '2s' }} />
+      </div>
+
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <Navbar />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 w-full">
+
+          {/* Header */}
+          <div className="text-center mb-12">
+            <span className="inline-block bg-white/10 backdrop-blur-sm text-xs font-medium px-4 py-1.5 rounded-full mb-4 border border-white/10 text-blue-200">
+              CCN Special Plans
+            </span>
+            <h1 className="font-display text-3xl sm:text-5xl font-bold text-white mb-4">
+              Choose Your{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-red via-accent-orange to-accent-red">
+                Perfect Plan
+              </span>
+            </h1>
+            <p className="text-gray-300 text-base sm:text-lg max-w-xl mx-auto">
+              Select the plan that fits your entertainment needs
+            </p>
           </div>
-        </div>
-      </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center mb-12">
-          <h1 className="font-display text-4xl font-bold text-brand-navy mb-4">
-            Our CCN Special Plans
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Select the perfect plan for your entertainment needs
-          </p>
-        </div>
-
-        <div className="max-w-6xl mx-auto">
           {plans && plans.length > 0 ? (
             <>
-              {/* Test Plan - If Available */}
-              {plans.filter(p => p.price === 100).length > 0 && (
-                <div className="max-w-md mx-auto w-full mb-8">
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-500 rounded-xl p-4 sm:p-6">
+              {/* Test Plan */}
+              {testPlans.length > 0 && (
+                <div className="max-w-md mx-auto w-full mb-10">
+                  <div className="rounded-2xl p-5"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(99,102,241,0.3)' }}>
                     <div className="flex items-center justify-center gap-2 mb-3">
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="text-green-700 font-bold text-sm sm:text-base">Test Payment Gateway</span>
+                      <span className="text-green-400 text-sm font-bold">✓ Test Payment Gateway</span>
                     </div>
-                    {plans.filter(p => p.price === 100).map((plan) => (
+                    {testPlans.map((plan) => (
                       <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
                     ))}
-                    <p className="text-center text-xs sm:text-sm text-gray-600 mt-3">
+                    <p className="text-center text-xs text-gray-400 mt-3">
                       Try our payment system with just ₹1 • Perfect for testing
                     </p>
                   </div>
@@ -181,15 +171,15 @@ export default function PlansPage() {
               )}
 
               {/* Regular Plans */}
-              <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-12 md:gap-6 w-full">
-                {plans.filter(p => p.price !== 100).map((plan, index) => (
+              <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-8 md:gap-6 w-full">
+                {displayPlans.map((plan, index) => (
                   <PlanCard key={plan.id} plan={plan} index={index} onSelect={handleSelectPlan} />
                 ))}
               </div>
             </>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-600">No plans available at the moment.</p>
+              <p className="text-gray-400">No plans available at the moment.</p>
             </div>
           )}
         </div>
