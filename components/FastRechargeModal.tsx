@@ -50,9 +50,9 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
               values: { upiApp: app.key, buttonText: app.label, buttonIcon: true },
               style: {
                 base: {
-                  fontSize: '16px',
+                  fontSize: '15px',
                   fontWeight: '600',
-                  padding: '14px 16px',
+                  padding: '10px 16px',
                 },
               },
             });
@@ -75,7 +75,8 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
         style.id = 'cf-icon-size';
         style.textContent = `
           [id^="upi-btn-"] button img,
-          [id^="upi-btn-"] button svg { width: 40px !important; height: 40px !important; }
+          [id^="upi-btn-"] button svg { width: 36px !important; height: 36px !important; }
+          [id^="upi-btn-"] button { padding: 10px 14px !important; min-height: unset !important; }
         `;
         document.head.appendChild(style);
       } catch {
