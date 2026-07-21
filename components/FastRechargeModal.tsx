@@ -36,6 +36,16 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
         if (!cashfree) { setError('fallback'); return; }
         const cf = cashfree as any;
 
+        // Called by Android's onActivityResult after user returns from UPI app
+        (window as any).__cashfreeUpiResult = (resultCode: number) => {
+          const RESULT_OK = -1;
+          if (resultCode === RESULT_OK) {
+            // Payment may have succeeded — go to dashboard to verify
+            window.location.href = `${window.location.origin}/dashboard`;
+          }
+          // Cancel or failure: stay on page, modal stays open
+        };
+
         for (const app of UPI_APPS) {
           try {
             const component = cf.create('upiApp', {
@@ -60,6 +70,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
     })();
 
     return () => {
+      delete (window as any).__cashfreeUpiResult;
       Object.values(componentRefs.current).forEach((c: any) => { try { c.unmount?.(); } catch { } });
       componentRefs.current = {};
     };
