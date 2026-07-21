@@ -76,7 +76,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
         style.textContent = `
           [id^="upi-btn-"] button img,
           [id^="upi-btn-"] button svg { width: 36px !important; height: 36px !important; }
-          [id^="upi-btn-"] button { padding: 10px 14px !important; min-height: unset !important; }
+          [id^="upi-btn-"] button { min-height: unset !important; }
         `;
         document.head.appendChild(style);
       } catch {
