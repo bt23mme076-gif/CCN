@@ -317,21 +317,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* STB Retrack */}
-        <div className="card mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h3 className="font-display text-base sm:text-lg font-bold text-brand-navy">STB Retrack</h3>
-              <p className="text-sm text-gray-500 mt-0.5">Channels not showing? Request a retrack for your STB.</p>
-            </div>
-            <button
-              onClick={() => { setShowRetrackPopup(true); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); setRetrackEdited(false); }}
-              className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap"
-            >
-              📺 Request Retrack
-            </button>
-          </div>
-        </div>
 
         {/* Retrack Popup */}
         {showRetrackPopup && (
