@@ -39,7 +39,8 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
         for (const app of UPI_APPS) {
           try {
             const component = cf.create('upiApp', {
-              values: { upiApp: app.key, paymentSessionId, buttonText: `Pay with ${app.label}`, buttonIcon: true },
+              values: { upiApp: app.key, buttonText: `Pay with ${app.label}`, buttonIcon: true },
+              paymentSessionId,
             });
             component.on('loaderror', () => {
               // upiApp not supported (desktop) — use fallback
