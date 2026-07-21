@@ -110,21 +110,57 @@ export default function AllRechargesPage() {
     setLoadingCustomerDetail(false);
   };
 
-  const handleShareReceipt = (
+  const handleShareReceipt = async (
     rechargeId: string,
     planName: string,
     amount: number,
     status: string,
     customerName: string,
     stb: string,
+    mobile: string,
+    activatedAt?: string | null,
+    expiresAt?: string | null,
   ) => {
     const amountRs = (amount / 100).toFixed(2);
-    const text = `CCN Networks - Payment Receipt\nOrder ID: ${rechargeId}\nCustomer: ${customerName}\nSTB: ${stb}\nPlan: ${planName}\nAmount: ₹${amountRs}\nStatus: ${status.toUpperCase()}`;
-    if (navigator.share) {
-      navigator.share({ title: 'CCN Networks Receipt', text });
-    } else {
-      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    const receiptUrl = `/api/admin/receipt/${rechargeId}`;
+
+    const msg =
+      `Hello ${customerName} 😊\n\n` +
+      `✅ *Thank you for doing business with us!*\n\n` +
+      `📋 *CCN Networks - Payment Receipt*\n` +
+      `━━━━━━━━━━━━━━━━━━━\n` +
+      `👤 Customer: ${customerName}\n` +
+      `📱 Mobile: ${mobile}\n` +
+      `📺 STB No: ${stb}\n` +
+      `📡 Plan: ${planName}\n` +
+      `💰 Amount: ₹${amountRs}\n` +
+      `📊 Status: ${status.toUpperCase()}\n` +
+      (activatedAt ? `🗓️ Activated: ${new Date(activatedAt).toLocaleDateString('en-IN')}\n` : '') +
+      (expiresAt ? `⏳ Valid Till: ${new Date(expiresAt).toLocaleDateString('en-IN')}\n` : '') +
+      `━━━━━━━━━━━━━━━━━━━\n\n` +
+      `_CCN Networks — Your Trusted Cable Provider_ 🙏`;
+
+    try {
+      const res = await fetch(receiptUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `CCN-Receipt-${customerName.replace(/\s+/g, '-')}-${rechargeId.slice(0, 8)}.html`, { type: 'text/html' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        // Native share sheet — admin picks WhatsApp, file + message both go together
+        await navigator.share({ title: `CCN Receipt — ${customerName}`, text: msg, files: [file] });
+        return;
+      }
+    } catch (err) {
+      // User cancelled or share failed — fall through to WhatsApp fallback
+      if ((err as Error)?.name === 'AbortError') return;
     }
+
+    // Fallback for desktop: open WhatsApp to customer's number with message
+    const phone = mobile.replace(/\D/g, '').replace(/^0/, '');
+    const waPhone = phone.startsWith('91') ? phone : `91${phone}`;
+    window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+    // Also open receipt for manual attachment
+    window.open(receiptUrl, '_blank');
   };
 
   return (
@@ -207,7 +243,7 @@ export default function AllRechargesPage() {
                               Receipt
                             </a>
                             <button
-                              onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '')}
+                              onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '', customer.mobile || '')}
                               className="px-3 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-80 transition-opacity"
                               style={{ background: 'linear-gradient(135deg, #166534, #16a34a)' }}
                             >
@@ -267,7 +303,7 @@ export default function AllRechargesPage() {
                         Receipt
                       </a>
                       <button
-                        onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '')}
+                        onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '', customer.mobile || '')}
                         className="flex-1 py-2 rounded-xl text-sm font-bold text-white"
                         style={{ background: 'linear-gradient(135deg, #166534, #16a34a)' }}
                       >
@@ -361,7 +397,7 @@ export default function AllRechargesPage() {
                                     Receipt
                                   </a>
                                   <button
-                                    onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, selectedCustomerDetail.customer?.name || '', selectedCustomerDetail.customer?.stb_number || '')}
+                                    onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, selectedCustomerDetail.customer?.name || '', selectedCustomerDetail.customer?.stb_number || '', selectedCustomerDetail.customer?.mobile || '', recharge.activated_at, recharge.expires_at)}
                                     className="px-3 py-1 rounded-lg text-xs font-bold text-white"
                                     style={{ background: 'linear-gradient(135deg, #166534, #16a34a)' }}
                                   >

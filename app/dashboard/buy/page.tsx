@@ -215,14 +215,19 @@ export default function BuyHistoryPage() {
     window.open(`/api/receipt/${rechargeId}`, '_blank');
   };
 
-  const handleShareReceipt = (recharge: Recharge) => {
-    const amountRs = (recharge.amount / 100).toFixed(2);
-    const text = `CCN Networks - Payment Receipt\nOrder ID: ${recharge.id}\nCustomer: ${customer?.name || '-'}\nSTB: ${customer?.stb_number || '-'}\nPlan: ${recharge.plan_name}\nAmount: ₹${amountRs}\nStatus: ${recharge.status.toUpperCase()}${recharge.activated_at ? '\nActivated: ' + new Date(recharge.activated_at).toLocaleString('en-IN') : ''}${recharge.expires_at ? '\nValid Till: ' + new Date(recharge.expires_at).toLocaleString('en-IN') : ''}`;
-    if (navigator.share) {
-      navigator.share({ title: 'CCN Networks Receipt', text });
-    } else {
-      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
-    }
+  const handleShareReceipt = async (recharge: Recharge) => {
+    const receiptUrl = `/api/receipt/${recharge.id}`;
+    try {
+      const res = await fetch(receiptUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `CCN-Receipt-${recharge.id.slice(0, 8)}.html`, { type: 'text/html' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: 'CCN Networks Receipt', files: [file] });
+        return;
+      }
+    } catch { /* fall through */ }
+    // Fallback: open receipt in new tab for manual save/print
+    window.open(receiptUrl, '_blank');
   };
 
   const filteredRecharges = filterStatus === 'all'
