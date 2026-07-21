@@ -47,13 +47,6 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
           try {
             const component = cf.create('upiApp', {
               values: { upiApp: app.key, buttonText: app.label, buttonIcon: true },
-              style: {
-                base: {
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  padding: '10px 16px',
-                },
-              },
             });
             component.on('loaderror', () => {});
             component.on('click', () => {
@@ -68,16 +61,6 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
           } catch { /* skip */ }
         }
         setReady(true);
-
-        // Make Cashfree button icons bigger
-        const style = document.createElement('style');
-        style.id = 'cf-icon-size';
-        style.textContent = `
-          [id^="upi-btn-"] button img,
-          [id^="upi-btn-"] button svg { width: 36px !important; height: 36px !important; }
-          [id^="upi-btn-"] button { min-height: unset !important; }
-        `;
-        document.head.appendChild(style);
       } catch {
         setError('fallback');
       }
@@ -85,7 +68,6 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
 
     return () => {
       delete (window as any).__cashfreeUpiResult;
-      document.getElementById('cf-icon-size')?.remove();
       Object.values(componentRefs.current).forEach((c: any) => { try { c.unmount?.(); } catch { } });
       componentRefs.current = {};
     };
@@ -153,7 +135,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
             <div key={app.key}
               className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm"
               style={{ display: ready ? 'block' : 'none' }}>
-              <div id={`upi-btn-${app.key}`} className="w-full [&>*]:w-full [&>button]:w-full [&>button]:py-4 [&>button]:text-base [&>button]:font-semibold" />
+              <div id={`upi-btn-${app.key}`} />
             </div>
           ))}
         </div>
