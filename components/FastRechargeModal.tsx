@@ -13,7 +13,9 @@ interface FastRechargeModalProps {
 }
 
 const UPI_APPS = [
-  { key: 'default', label: 'Pay via UPI' },
+  { key: 'phonepe', label: 'PhonePe' },
+  { key: 'gpay',    label: 'Google Pay' },
+  { key: 'default', label: 'Any UPI' },
 ] as const;
 
 export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, orderId, amount, fallbackUpiLink }: FastRechargeModalProps) {
