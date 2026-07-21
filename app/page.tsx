@@ -152,8 +152,6 @@ export default function HomePage() {
           delete (window as any).__cfNativeResult;
           if (status === 'success') {
             router.push(`/dashboard?order_id=${orderId}`);
-          } else if (status === 'failure') {
-            alert('Payment failed or cancelled.');
           }
         };
         (window as any).Android.initiateFastRecharge(data.paymentSessionId, data.orderId);
