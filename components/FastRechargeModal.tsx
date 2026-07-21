@@ -34,10 +34,11 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
           mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
         });
         if (!cashfree) { setError('fallback'); return; }
+        const cf = cashfree as any;
 
         for (const app of UPI_APPS) {
           try {
-            const component = cashfree.create('upiApp', {
+            const component = cf.create('upiApp', {
               values: { upiApp: app.key, paymentSessionId, buttonText: `Pay with ${app.label}`, buttonIcon: true },
             });
             component.on('loaderror', () => {
