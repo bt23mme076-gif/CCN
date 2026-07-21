@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     if (!payments || payments.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Payment not found' },
+        { success: false, cancelled: true, error: 'Payment not found' },
         { status: 404 }
       );
     }
@@ -93,8 +93,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     } else {
+      const cancelled = payment.payment_status === 'USER_DROPPED' || payment.payment_status === 'PENDING';
       return NextResponse.json(
-        { success: false, error: 'Payment pending' },
+        { success: false, cancelled, error: 'Payment pending' },
         { status: 400 }
       );
     }

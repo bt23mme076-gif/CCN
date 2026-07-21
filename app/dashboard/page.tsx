@@ -99,6 +99,8 @@ export default function DashboardPage() {
             setJustPaidRecharge(paid);
             setShowActivationScreen(true);
           }
+        } else if (verifyData.cancelled) {
+          setPaymentError('Payment cancelled. Your recharge was not processed.');
         } else {
           setPaymentError('Payment verification failed. Please contact support if amount was deducted.');
         }

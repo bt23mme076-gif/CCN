@@ -60,6 +60,15 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
           } catch { /* skip */ }
         }
         setReady(true);
+
+        // Make Cashfree button icons bigger
+        const style = document.createElement('style');
+        style.id = 'cf-icon-size';
+        style.textContent = `
+          [id^="upi-btn-"] button img,
+          [id^="upi-btn-"] button svg { width: 40px !important; height: 40px !important; }
+        `;
+        document.head.appendChild(style);
       } catch {
         setError('fallback');
       }
@@ -67,6 +76,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, a
 
     return () => {
       delete (window as any).__cashfreeUpiResult;
+      document.getElementById('cf-icon-size')?.remove();
       Object.values(componentRefs.current).forEach((c: any) => { try { c.unmount?.(); } catch { } });
       componentRefs.current = {};
     };
