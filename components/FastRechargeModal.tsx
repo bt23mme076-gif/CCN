@@ -12,8 +12,8 @@ interface FastRechargeModalProps {
 }
 
 const UPI_APPS = [
-  { key: 'gpay',    label: 'Google Pay' },
   { key: 'phonepe', label: 'PhonePe' },
+  { key: 'gpay',    label: 'Google Pay' },
   { key: 'default', label: 'Any UPI' },
 ] as const;
 
