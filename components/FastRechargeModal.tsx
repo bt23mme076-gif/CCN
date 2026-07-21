@@ -15,7 +15,6 @@ const UPI_APPS = [
   { key: 'gpay',    label: 'Google Pay' },
   { key: 'phonepe', label: 'PhonePe' },
   { key: 'paytm',   label: 'Paytm' },
-  { key: 'default', label: 'Any UPI' },
 ] as const;
 
 export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, amount, fallbackUpiLink }: FastRechargeModalProps) {
