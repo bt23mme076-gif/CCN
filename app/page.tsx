@@ -12,6 +12,7 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import ContactSection from '@/components/ContactSection';
 import AlacartePaymentModal from '@/components/AlacartePaymentModal';
 import SponsorSlideshow from '@/components/SponsorSlideshow';
+import FastRechargeModal from '@/components/FastRechargeModal';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
 import { getChannelLogo, getChannelColor } from '@/lib/channelLogos';
@@ -128,12 +129,35 @@ export default function HomePage() {
 
 
 
-  const handleFastRecharge = () => {
+  const [showFastModal, setShowFastModal] = useState(false);
+  const [fastSessionId, setFastSessionId] = useState('');
+  const [fastUpiLink, setFastUpiLink] = useState('');
+  const [fastAmount, setFastAmount] = useState(0);
+  const [fastLoading, setFastLoading] = useState(false);
+
+  const handleFastRecharge = async () => {
     if (!customer) { router.push('/login'); return; }
-    const amountInRupees = (customer.fast_recharge_amount / 100).toFixed(2);
-    const upiLink = `upi://pay?pa=9399974696-4@ibl&am=${amountInRupees}&cu=INR`;
-    fetch('/api/recharge/create-upi-order', { method: 'POST' }).catch(() => {});
-    window.location.href = upiLink;
+    setFastLoading(true);
+    try {
+      const res = await fetch('/api/recharge/create-upi-order', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
+
+      setFastAmount(data.amount);
+      setFastUpiLink(data.upiLink);
+
+      if (data.paymentSessionId) {
+        setFastSessionId(data.paymentSessionId);
+        setShowFastModal(true);
+      } else {
+        // No Cashfree session — direct UPI fallback
+        window.location.href = data.upiLink;
+      }
+    } catch {
+      alert('Failed to initiate payment. Please try again.');
+    } finally {
+      setFastLoading(false);
+    }
   };
 
   const handleSelectPlan = async (planId: string) => {
@@ -275,12 +299,17 @@ export default function HomePage() {
             ) : customer.fast_recharge_enabled ? (
               <button
                 onClick={handleFastRecharge}
-                className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto flex items-center justify-center gap-2"
+                disabled={fastLoading}
+                className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-70"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                {`Fast Recharge — ₹${customer.fast_recharge_amount / 100}`}
+                {fastLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                )}
+                {fastLoading ? 'Please wait...' : `Fast Recharge — ₹${customer.fast_recharge_amount / 100}`}
               </button>
             ) : (
               <button
@@ -926,6 +955,14 @@ export default function HomePage() {
 
       {/* Floating WhatsApp Button */}
       <WhatsAppButton />
+
+      <FastRechargeModal
+        isOpen={showFastModal}
+        onClose={() => setShowFastModal(false)}
+        paymentSessionId={fastSessionId}
+        amount={fastAmount}
+        fallbackUpiLink={fastUpiLink}
+      />
 
       {customer && (
         <PaymentModal

@@ -48,7 +48,44 @@ export async function POST(request: NextRequest) {
     const upiLink = `upi://pay?${upiParams}`;
     const intentLink = `intent://pay?${upiParams}#Intent;scheme=upi;end`;
 
-    return NextResponse.json({ orderId: rechargeId, upiLink, intentLink, amount: c.fast_recharge_amount });
+    // Create Cashfree order for upiApp component
+    let paymentSessionId: string | null = null;
+    if (process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY) {
+      try {
+        const cashfreeApiUrl = process.env.CASHFREE_ENV === 'production'
+          ? 'https://api.cashfree.com/pg/orders'
+          : 'https://sandbox.cashfree.com/pg/orders';
+
+        const cfRes = await fetch(cashfreeApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-client-id': process.env.CASHFREE_APP_ID,
+            'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+            'x-api-version': '2023-08-01',
+          },
+          body: JSON.stringify({
+            order_id: rechargeId,
+            order_amount: amountInRupees,
+            order_currency: 'INR',
+            customer_details: {
+              customer_id: user.customerId,
+              customer_phone: c.mobile,
+              customer_name: c.name,
+            },
+            order_meta: {
+              return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?order_id=${rechargeId}`,
+            },
+          }),
+        });
+        if (cfRes.ok) {
+          const cfData = await cfRes.json();
+          paymentSessionId = cfData.payment_session_id || null;
+        }
+      } catch { /* fallback to direct UPI */ }
+    }
+
+    return NextResponse.json({ orderId: rechargeId, upiLink, intentLink, amount: c.fast_recharge_amount, paymentSessionId });
   } catch (error) {
     console.error('UPI order error:', error);
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
