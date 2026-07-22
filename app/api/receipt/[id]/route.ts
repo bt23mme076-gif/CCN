@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { recharges, customers } from '@/lib/db/schema';
+import { recharges, customers, customerConnections } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateReceiptHTML } from '@/lib/receipt';
 
@@ -30,13 +30,23 @@ export async function GET(
       .from(customers)
       .where(eq(customers.id, user.customerId));
 
+    let stb_number = customer.stb_number;
+    let area = customer.area;
+    if (recharge.connection_id) {
+      const [conn] = await db
+        .select()
+        .from(customerConnections)
+        .where(eq(customerConnections.id, recharge.connection_id));
+      if (conn) { stb_number = conn.stb_number; area = conn.area || area; }
+    }
+
     const html = generateReceiptHTML({
       recharge,
       customer: {
         name: customer.name,
         mobile: customer.mobile,
-        stb_number: customer.stb_number,
-        area: customer.area,
+        stb_number,
+        area,
       },
     });
 

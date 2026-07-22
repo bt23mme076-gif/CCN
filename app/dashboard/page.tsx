@@ -98,7 +98,9 @@ export default function DashboardPage() {
       const verifyData = await verifyResponse.json();
 
       if (verifyData.success) {
-        const rechargesRes = await fetch('/api/recharge/history', { cache: 'no-store' });
+        const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+        const cidParam = cid && cid !== 'primary' ? `?cid=${cid}` : '';
+        const rechargesRes = await fetch(`/api/recharge/history${cidParam}`, { cache: 'no-store' });
         const rechargesData = await rechargesRes.json();
         const all: Recharge[] = rechargesData.recharges || [];
         const paid = all.find((r) => r.status === 'paid');

@@ -59,10 +59,9 @@ function numberToWords(paise: number): string {
   return parts.join(' ') + ' Rupees Only';
 }
 
-function getMonths(activated_at?: string | Date | null, expires_at?: string | Date | null): number {
-  if (!activated_at || !expires_at) return 1;
-  const days = Math.round((new Date(expires_at).getTime() - new Date(activated_at).getTime()) / (1000 * 60 * 60 * 24));
-  return Math.max(1, Math.round(days / 30));
+function getDays(activated_at?: string | Date | null, expires_at?: string | Date | null): number {
+  if (!activated_at || !expires_at) return 30;
+  return Math.max(1, Math.round((new Date(expires_at).getTime() - new Date(activated_at).getTime()) / (1000 * 60 * 60 * 24)));
 }
 
 export function generateReceiptHTML(data: ReceiptData): string {
@@ -71,8 +70,8 @@ export function generateReceiptHTML(data: ReceiptData): string {
   const invoiceNo = recharge.id.slice(-5).toUpperCase();
   const invoiceDate = fmtDate(recharge.paid_at || recharge.created_at);
   const dueDate = recharge.expires_at ? fmtDate(recharge.expires_at) : '—';
-  const months = getMonths(recharge.activated_at, recharge.expires_at);
-  const ratePerMonth = Math.round(recharge.amount / months);
+  const days = getDays(recharge.activated_at, recharge.expires_at);
+  const ratePerMonth = Math.round(recharge.amount / Math.max(1, Math.round(days / 30)));
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -201,7 +200,7 @@ export function generateReceiptHTML(data: ReceiptData): string {
     <thead>
       <tr>
         <th style="width:50%">ITEMS/SERVICES</th>
-        <th>MONTH</th>
+        <th>DAYS</th>
         <th>RATE</th>
         <th>AMOUNT</th>
       </tr>
@@ -214,7 +213,7 @@ export function generateReceiptHTML(data: ReceiptData): string {
             ? `<div style="font-size:10px;color:#555;margin-top:3px;">Valid: ${fmtDate(recharge.activated_at)} &mdash; ${fmtDate(new Date(new Date(recharge.expires_at).getTime() - 24 * 60 * 60 * 1000))}</div>`
             : ''}
         </td>
-        <td>${months}</td>
+        <td>${days}</td>
         <td>${fmtCurrency(ratePerMonth)}</td>
         <td>${fmtCurrency(recharge.amount)}</td>
       </tr>
