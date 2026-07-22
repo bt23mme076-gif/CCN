@@ -16,6 +16,8 @@ export default function Navbar() {
   const [customerName, setCustomerName] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [connections, setConnections] = useState<{ id: string; stb_number: string; name: string }[]>([]);
+  const [activeConnectionId, setActiveConnectionId] = useState('');
   const [showRetrackPopup, setShowRetrackPopup] = useState(false);
   const [retrackStb, setRetrackStb] = useState('');
   const [retrackEdited, setRetrackEdited] = useState(false);
@@ -37,18 +39,37 @@ export default function Navbar() {
           const data = await response.json();
           setIsAuthenticated(true);
           setCustomerName(data.customer?.name || '');
+          // Load connections group
+          const connRes = await fetch('/api/connections');
+          if (connRes.ok) {
+            const connData = await connRes.json();
+            setConnections(connData.connections || []);
+          }
+          // Sync active connection from localStorage
+          const stored = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+          setActiveConnectionId(stored || data.customer?.id || '');
         } else {
           setIsAuthenticated(false);
           setCustomerName('');
+          setConnections([]);
         }
       } catch {
         setIsAuthenticated(false);
         setCustomerName('');
+        setConnections([]);
       }
     };
     checkAuth();
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  const switchConnection = (id: string) => {
+    if (typeof window !== 'undefined') localStorage.setItem('ccn_active_cid', id);
+    setActiveConnectionId(id);
+    setShowDropdown(false);
+    setMobileMenuOpen(false);
+    window.dispatchEvent(new CustomEvent('ccn-connection-changed', { detail: { connectionId: id } }));
+  };
 
   const openRetrack = async () => {
     setShowDropdown(false);
@@ -146,8 +167,27 @@ export default function Navbar() {
                         {showDropdown && (
                           <>
                             <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
-                            <div className="absolute right-0 top-11 z-50 w-48 rounded-xl shadow-2xl py-1 overflow-hidden"
+                            <div className="absolute right-0 top-11 z-50 w-56 rounded-xl shadow-2xl py-1 overflow-hidden"
                               style={{ background: '#1a1740', border: '1px solid rgba(255,255,255,0.12)' }}>
+                              {connections.length > 1 && (
+                                <>
+                                  <p className="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>My Connections</p>
+                                  {connections.map((conn) => (
+                                    <button
+                                      key={conn.id}
+                                      onClick={() => switchConnection(conn.id)}
+                                      className="flex items-center justify-between gap-2 px-4 py-2 text-sm w-full text-left transition-colors"
+                                      style={{ color: activeConnectionId === conn.id ? '#4ade80' : 'rgba(147,197,253,0.85)' }}
+                                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
+                                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                    >
+                                      <span>📺 {conn.stb_number}</span>
+                                      {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓ Active</span>}
+                                    </button>
+                                  ))}
+                                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
+                                </>
+                              )}
                               <Link href="/dashboard"
                                 onClick={() => setShowDropdown(false)}
                                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors">
@@ -228,6 +268,25 @@ export default function Navbar() {
                 )}
                 {isAuthenticated ? (
                   <>
+                    {connections.length > 1 && (
+                      <div className="mx-1 mb-1 rounded-lg overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <p className="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>My Connections</p>
+                        {connections.map((conn) => (
+                          <button
+                            key={conn.id}
+                            onClick={() => switchConnection(conn.id)}
+                            className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm w-full text-left"
+                            style={{ color: activeConnectionId === conn.id ? '#4ade80' : '#93c5fd' }}
+                          >
+                            <span className="flex items-center gap-2">
+                              <span>📺</span>
+                              <span className="font-mono">{conn.stb_number}</span>
+                            </span>
+                            {activeConnectionId === conn.id && <span className="text-green-400 text-xs font-semibold">✓ Active</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <MobileNavLink href="/dashboard" label={t('dashboard')} onClick={() => setMobileMenuOpen(false)}
                       icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />}
                     />

@@ -17,6 +17,7 @@ interface Plan {
 }
 
 interface Customer {
+  id: string;
   name: string;
   mobile: string;
   stb_number: string;
@@ -33,14 +34,19 @@ export default function PlansPage() {
 
   useEffect(() => {
     fetchData();
+    const onConnectionChanged = () => fetchData();
+    window.addEventListener('ccn-connection-changed', onConnectionChanged);
+    return () => window.removeEventListener('ccn-connection-changed', onConnectionChanged);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
+    const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+    const cidParam = cid ? `?cid=${cid}` : '';
     try {
       const [plansRes, customerRes] = await Promise.all([
         fetch('/api/plans', { cache: 'no-store' }),
-        fetch('/api/auth/me', { cache: 'no-store' }),
+        fetch(`/api/auth/me${cidParam}`, { cache: 'no-store' }),
       ]);
 
       if (!customerRes.ok) {
@@ -192,6 +198,7 @@ export default function PlansPage() {
         stbNumber={customer?.stb_number || ''}
         customerName={customer?.name || ''}
         customerMobile={customer?.mobile || ''}
+        connectionId={customer?.id}
       />
     </div>
   );

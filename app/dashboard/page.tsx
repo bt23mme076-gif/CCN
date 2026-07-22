@@ -47,6 +47,9 @@ export default function DashboardPage() {
     fetchData();
     checkPaymentStatus();
     registerPush();
+    const onConnectionChanged = () => fetchData();
+    window.addEventListener('ccn-connection-changed', onConnectionChanged);
+    return () => window.removeEventListener('ccn-connection-changed', onConnectionChanged);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -114,10 +117,12 @@ export default function DashboardPage() {
   };
 
   const fetchData = async () => {
+    const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+    const cidParam = cid ? `?cid=${cid}` : '';
     try {
       const [customerRes, rechargesRes] = await Promise.all([
-        fetch('/api/auth/me'),
-        fetch('/api/recharge/history'),
+        fetch(`/api/auth/me${cidParam}`),
+        fetch(`/api/recharge/history${cidParam}`),
       ]);
 
       if (!customerRes.ok) {

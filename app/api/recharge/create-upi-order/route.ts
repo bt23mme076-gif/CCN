@@ -4,15 +4,26 @@ import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
+import { validateConnectionAccess } from '@/lib/connections';
 
 export async function POST(request: NextRequest) {
   try {
     const user = await requireCustomerAuth();
 
+    let targetCustomerId = user.customerId;
+    try {
+      const body = await request.json();
+      if (body?.connectionId && body.connectionId !== user.customerId) {
+        const valid = await validateConnectionAccess(user.customerId, body.connectionId);
+        if (!valid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        targetCustomerId = valid;
+      }
+    } catch { /* no body — use default */ }
+
     const customer = await db
       .select()
       .from(customers)
-      .where(eq(customers.id, user.customerId))
+      .where(eq(customers.id, targetCustomerId))
       .limit(1);
 
     if (customer.length === 0) {
@@ -37,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     await db.insert(recharges).values({
       id: rechargeId,
-      customer_id: user.customerId,
+      customer_id: targetCustomerId,
       plan_id: null,
       plan_name: 'Fast Recharge',
       amount: c.fast_recharge_amount,

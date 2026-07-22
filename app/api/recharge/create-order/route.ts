@@ -5,16 +5,25 @@ import { plans, recharges, customers, customerPriceOverrides } from '@/lib/db/sc
 import { eq, and } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
+import { validateConnectionAccess } from '@/lib/connections';
 
 const createOrderSchema = z.object({
   planId: z.string(),
+  connectionId: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const user = await requireCustomerAuth();
     const body = await request.json();
-    const { planId } = createOrderSchema.parse(body);
+    const { planId, connectionId } = createOrderSchema.parse(body);
+
+    let targetCustomerId = user.customerId;
+    if (connectionId && connectionId !== user.customerId) {
+      const valid = await validateConnectionAccess(user.customerId, connectionId);
+      if (!valid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      targetCustomerId = valid;
+    }
 
     // Get plan details
     const plan = await db
@@ -36,7 +45,7 @@ export async function POST(request: NextRequest) {
       .from(customerPriceOverrides)
       .where(
         and(
-          eq(customerPriceOverrides.customer_id, user.customerId),
+          eq(customerPriceOverrides.customer_id, targetCustomerId),
           eq(customerPriceOverrides.plan_id, planId)
         )
       )
@@ -48,7 +57,7 @@ export async function POST(request: NextRequest) {
     const customer = await db
       .select()
       .from(customers)
-      .where(eq(customers.id, user.customerId))
+      .where(eq(customers.id, targetCustomerId))
       .limit(1);
 
     if (customer.length === 0) {
@@ -86,7 +95,7 @@ export async function POST(request: NextRequest) {
       order_amount: (finalPrice / 100).toFixed(2), // Convert paise to rupees
       order_currency: 'INR',
       customer_details: {
-        customer_id: user.customerId,
+        customer_id: targetCustomerId,
         customer_phone: customer[0].mobile,
         customer_name: customer[0].name,
       },
@@ -135,7 +144,7 @@ export async function POST(request: NextRequest) {
     // Save recharge record
     await db.insert(recharges).values({
       id: rechargeId,
-      customer_id: user.customerId,
+      customer_id: targetCustomerId,
       plan_id: plan[0].id,
       plan_name: plan[0].name,
       amount: finalPrice,

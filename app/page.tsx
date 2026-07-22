@@ -28,6 +28,7 @@ interface Plan {
 }
 
 interface Customer {
+  id: string;
   name: string;
   mobile: string;
   stb_number: string;
@@ -81,16 +82,23 @@ export default function HomePage() {
       window.history.replaceState({}, '', '/');
       setTimeout(() => setFastPaymentFailed(false), 10000);
     }
-    return () => window.removeEventListener('resize', check);
+    const onConnectionChanged = () => fetchData();
+    window.addEventListener('ccn-connection-changed', onConnectionChanged);
+    return () => {
+      window.removeEventListener('resize', check);
+      window.removeEventListener('ccn-connection-changed', onConnectionChanged);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
   const fetchData = async () => {
+    const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+    const cidParam = cid ? `?cid=${cid}` : '';
     try {
       const [plansRes, customerRes, accessoriesRes, channelsRes, adsRes] = await Promise.all([
         fetch('/api/plans', { cache: 'no-store' }),
-        fetch('/api/auth/me', { cache: 'no-store' }),
+        fetch(`/api/auth/me${cidParam}`, { cache: 'no-store' }),
         fetch('/api/accessories', { cache: 'no-store' }),
         fetch('/api/channels'),
         fetch('/api/advertisements', { cache: 'no-store' }),
@@ -104,7 +112,7 @@ export default function HomePage() {
         setCustomer(customerData.customer);
 
         // Fetch recharge history to check for active base plan prerequisite
-        const rechargesRes = await fetch('/api/recharge/history', { cache: 'no-store' });
+        const rechargesRes = await fetch(`/api/recharge/history${cidParam}`, { cache: 'no-store' });
         if (rechargesRes.ok) {
           const rechargesData = await rechargesRes.ok ? await rechargesRes.json() : { recharges: [] };
           setRechargesList(rechargesData.recharges || []);
@@ -146,7 +154,12 @@ export default function HomePage() {
     if (!customer) { router.push('/login'); return; }
     setFastLoading(true);
     try {
-      const res = await fetch('/api/recharge/create-upi-order', { method: 'POST' });
+      const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+      const res = await fetch('/api/recharge/create-upi-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cid ? { connectionId: cid } : {}),
+      });
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
 
@@ -1002,6 +1015,7 @@ export default function HomePage() {
           stbNumber={customer.stb_number}
           customerName={customer.name}
           customerMobile={customer.mobile}
+          connectionId={customer.id}
         />
       )}
 

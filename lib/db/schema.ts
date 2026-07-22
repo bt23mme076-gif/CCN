@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, index, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const customers = pgTable('customers', {
@@ -12,6 +12,8 @@ export const customers = pgTable('customers', {
   notes: text('notes'),
   fast_recharge_enabled: boolean('fast_recharge_enabled').default(false).notNull(),
   fast_recharge_amount: integer('fast_recharge_amount').default(0).notNull(), // in paise
+  // null = this is a primary account; set to another customer's id = sub-connection
+  primary_customer_id: text('primary_customer_id').references((): AnyPgColumn => customers.id),
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 

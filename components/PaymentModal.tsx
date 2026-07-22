@@ -17,6 +17,7 @@ interface PaymentModalProps {
   stbNumber: string;
   customerName?: string;
   customerMobile?: string;
+  connectionId?: string;
 }
 
 function isInAppBrowser() {
@@ -42,6 +43,7 @@ export default function PaymentModal({
   stbNumber,
   customerName = '',
   customerMobile = '',
+  connectionId,
 }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -57,7 +59,7 @@ export default function PaymentModal({
       const orderResponse = await fetch('/api/recharge/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: plan.id }),
+        body: JSON.stringify({ planId: plan.id, ...(connectionId ? { connectionId } : {}) }),
       });
 
       if (!orderResponse.ok) {
