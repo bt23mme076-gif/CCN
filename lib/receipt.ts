@@ -207,16 +207,16 @@ export function generateReceiptHTML(data: ReceiptData): string {
     </thead>
     <tbody>
       <tr>
-        <td>
-          ${recharge.plan_name}
-          ${recharge.activated_at && recharge.expires_at
-            ? `<div style="font-size:10px;color:#555;margin-top:3px;">Valid: ${fmtDate(recharge.activated_at)} &mdash; ${fmtDate(new Date(new Date(recharge.expires_at).getTime() - 24 * 60 * 60 * 1000))}</div>`
-            : ''}
-        </td>
-        <td>${days}</td>
-        <td>${fmtCurrency(ratePerMonth)}</td>
-        <td>${fmtCurrency(recharge.amount)}</td>
-      </tr>
+            <td>
+              ${recharge.plan_name}
+              ${recharge.activated_at && recharge.expires_at
+                ? `<div style="font-size:10px;color:#555;margin-top:3px;">Valid: ${fmtDate(recharge.activated_at)} &mdash; ${fmtDate(new Date(new Date(recharge.expires_at).getTime() - 24 * 60 * 60 * 1000))}</div>`
+                : ''}
+            </td>
+            <td>${days}</td>
+            <td>${fmtCurrency(ratePerMonth)}</td>
+            <td>${fmtCurrency(recharge.amount)}</td>
+          </tr>
       <tr class="spacer"><td colspan="5"></td></tr>
     </tbody>
   </table>

@@ -98,7 +98,6 @@ export default function CustomersPage() {
   const [togglingFastRecharge, setTogglingFastRecharge] = useState<string | null>(null);
   const [fastRechargeModal, setFastRechargeModal] = useState<{ id: string; name: string; currentAmount: number } | null>(null);
   const [fastRechargeAmountInput, setFastRechargeAmountInput] = useState('');
-
   // Dropdown
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
@@ -1279,6 +1278,7 @@ export default function CustomersPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
