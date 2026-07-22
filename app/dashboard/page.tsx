@@ -35,6 +35,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showActivationScreen, setShowActivationScreen] = useState(false);
   const [justPaidRecharge, setJustPaidRecharge] = useState<Recharge | null>(null);
+  const [paymentHasActivePlan, setPaymentHasActivePlan] = useState(false);
+  const [paymentActivePlanExpiry, setPaymentActivePlanExpiry] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [showRetrackPopup, setShowRetrackPopup] = useState(false);
   const [retrackLoading, setRetrackLoading] = useState(false);
@@ -98,11 +100,15 @@ export default function DashboardPage() {
       if (verifyData.success) {
         const rechargesRes = await fetch('/api/recharge/history', { cache: 'no-store' });
         const rechargesData = await rechargesRes.json();
-        const paid = (rechargesData.recharges || []).find(
-          (r: Recharge) => r.status === 'paid'
+        const all: Recharge[] = rechargesData.recharges || [];
+        const paid = all.find((r) => r.status === 'paid');
+        const existingActive = all.find(
+          (r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date() && !r.plan_name.toUpperCase().startsWith('ALA CARTE')
         );
         if (paid) {
           setJustPaidRecharge(paid);
+          setPaymentHasActivePlan(!!existingActive);
+          setPaymentActivePlanExpiry(existingActive?.expires_at ?? null);
           setShowActivationScreen(true);
         }
       } else {
@@ -196,8 +202,8 @@ export default function DashboardPage() {
         rechargeId={justPaidRecharge.id}
         planName={justPaidRecharge.plan_name}
         amount={justPaidRecharge.amount}
-        hasActivePlan={!!activePlan}
-        activePlanExpiry={activePlan?.expires_at ?? null}
+        hasActivePlan={paymentHasActivePlan}
+        activePlanExpiry={paymentActivePlanExpiry}
         onActivated={() => {
           setShowActivationScreen(false);
           fetchData();
