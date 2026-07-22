@@ -36,12 +36,8 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, o
         if (!cashfree) { setError('fallback'); return; }
         const cf = cashfree as any;
 
-        (window as any).__cashfreeUpiResult = (resultCode: number) => {
-          if (resultCode === -1) {
-            window.location.href = `${window.location.origin}/dashboard?order_id=${orderId}`;
-          } else {
-            window.location.href = `${window.location.origin}/?payment_failed=1`;
-          }
+        (window as any).__cashfreeUpiResult = () => {
+          window.location.href = `${window.location.origin}/dashboard?order_id=${orderId}&type=fast`;
         };
 
         for (const app of UPI_APPS) {
@@ -54,7 +50,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, o
               cf.pay({
                 paymentMethod: component,
                 paymentSessionId,
-                returnUrl: `${window.location.origin}/dashboard?order_id=${orderId}`,
+                returnUrl: `${window.location.origin}/dashboard?order_id=${orderId}&type=fast`,
               }).catch(() => setError('fallback'));
             });
             component.mount(`#upi-btn-${app.key}`);

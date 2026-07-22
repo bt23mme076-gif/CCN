@@ -83,38 +83,37 @@ export default function DashboardPage() {
   const checkPaymentStatus = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('order_id');
+    const isFast = urlParams.get('type') === 'fast';
 
-    if (orderId) {
-      try {
-        const verifyResponse = await fetch('/api/recharge/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId }),
-        });
-        const verifyData = await verifyResponse.json();
+    if (!orderId) return;
 
-        if (verifyData.success) {
-          // Fetch recharges to find the just-paid one
-          const rechargesRes = await fetch('/api/recharge/history', { cache: 'no-store' });
-          const rechargesData = await rechargesRes.json();
-          const paid = (rechargesData.recharges || []).find(
-            (r: Recharge) => r.status === 'paid'
-          );
-          if (paid) {
-            setJustPaidRecharge(paid);
-            setShowActivationScreen(true);
-          }
-        } else if (verifyData.cancelled) {
-          setPaymentError('Payment cancelled. Your recharge was not processed.');
-        } else {
-          setPaymentError('Payment verification failed. Please contact support if amount was deducted.');
+    try {
+      const verifyResponse = await fetch('/api/recharge/verify-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+      const verifyData = await verifyResponse.json();
+
+      if (verifyData.success) {
+        const rechargesRes = await fetch('/api/recharge/history', { cache: 'no-store' });
+        const rechargesData = await rechargesRes.json();
+        const paid = (rechargesData.recharges || []).find(
+          (r: Recharge) => r.status === 'paid'
+        );
+        if (paid) {
+          setJustPaidRecharge(paid);
+          setShowActivationScreen(true);
         }
-      } catch {
-        setPaymentError('Unable to verify payment. Please contact support if amount was deducted.');
-      } finally {
-        window.history.replaceState({}, '', '/dashboard');
-        setTimeout(() => fetchData(), 1000);
+      } else {
+        // Fast recharge failure → homepage; normal recharge failure → stay on dashboard
+        if (isFast) router.push('/');
       }
+    } catch {
+      if (isFast) router.push('/');
+    } finally {
+      window.history.replaceState({}, '', '/dashboard');
+      setTimeout(() => fetchData(), 1000);
     }
   };
 
