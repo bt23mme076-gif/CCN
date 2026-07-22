@@ -16,7 +16,7 @@ export default function Navbar() {
   const [customerName, setCustomerName] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [connections, setConnections] = useState<{ id: string; stb_number: string; label: string | null; isPrimary: boolean }[]>([]);
+  const [connections, setConnections] = useState<{ id: string; stb_number: string; label: string | null; isPrimary: boolean; isActive: boolean }[]>([]);
   const [activeConnectionId, setActiveConnectionId] = useState('primary');
   const [showRetrackPopup, setShowRetrackPopup] = useState(false);
   const [retrackStb, setRetrackStb] = useState('');
@@ -181,8 +181,11 @@ export default function Navbar() {
                                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
                                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                                     >
-                                      <span>📺 {conn.stb_number}{conn.label ? ` · ${conn.label}` : ''}</span>
-                                      {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓ Active</span>}
+                                      <span className="flex items-center gap-1.5">
+                                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
+                                        {conn.stb_number}{conn.label ? ` · ${conn.label}` : ''}
+                                      </span>
+                                      {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓</span>}
                                     </button>
                                   ))}
                                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
@@ -279,10 +282,10 @@ export default function Navbar() {
                             style={{ color: activeConnectionId === conn.id ? '#4ade80' : '#93c5fd' }}
                           >
                             <span className="flex items-center gap-2">
-                              <span>📺</span>
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
                               <span className="font-mono">{conn.stb_number}{conn.label ? ` · ${conn.label}` : ''}</span>
                             </span>
-                            {activeConnectionId === conn.id && <span className="text-green-400 text-xs font-semibold">✓ Active</span>}
+                            {activeConnectionId === conn.id && <span className="text-green-400 text-xs font-semibold">✓</span>}
                           </button>
                         ))}
                       </div>
