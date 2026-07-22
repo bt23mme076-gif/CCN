@@ -42,6 +42,8 @@ export default function DashboardPage() {
   const [retrackStb, setRetrackStb] = useState('');
   const [retrackEdited, setRetrackEdited] = useState(false);
   const [showNavMenu, setShowNavMenu] = useState(false);
+  const [connections, setConnections] = useState<{ id: string; stb_number: string; label: string | null; isActive: boolean }[]>([]);
+  const [activeConnectionId, setActiveConnectionId] = useState('primary');
 
   useEffect(() => {
     fetchData();
@@ -116,13 +118,23 @@ export default function DashboardPage() {
     }
   };
 
+  const switchConnection = (id: string) => {
+    if (typeof window !== 'undefined') localStorage.setItem('ccn_active_cid', id);
+    setActiveConnectionId(id);
+    setShowNavMenu(false);
+    window.dispatchEvent(new CustomEvent('ccn-connection-changed', { detail: { connectionId: id } }));
+    fetchData();
+  };
+
   const fetchData = async () => {
     const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
     const cidParam = cid ? `?cid=${cid}` : '';
+    setActiveConnectionId(cid || 'primary');
     try {
-      const [customerRes, rechargesRes] = await Promise.all([
+      const [customerRes, rechargesRes, connsRes] = await Promise.all([
         fetch(`/api/auth/me${cidParam}`),
         fetch(`/api/recharge/history${cidParam}`),
+        fetch('/api/connections'),
       ]);
 
       if (!customerRes.ok) {
@@ -132,6 +144,10 @@ export default function DashboardPage() {
 
       const customerData = await customerRes.json();
       const rechargesData = await rechargesRes.json();
+      if (connsRes.ok) {
+        const connsData = await connsRes.json();
+        setConnections(connsData.connections || []);
+      }
 
       setCustomer(customerData.customer);
       setRecharges(rechargesData.recharges || []);
@@ -235,6 +251,23 @@ export default function DashboardPage() {
                         <p className="text-xs text-blue-300">Logged in as</p>
                         <p className="text-sm font-semibold text-white">{customer?.name}</p>
                       </div>
+                      {connections.length > 1 && (
+                        <>
+                          <p className="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>My Connections</p>
+                          {connections.map((conn) => (
+                            <button key={conn.id} onClick={() => switchConnection(conn.id)}
+                              className="flex items-center justify-between gap-2 px-4 py-2 text-sm w-full text-left transition-colors hover:bg-white/10"
+                              style={{ color: activeConnectionId === conn.id ? '#4ade80' : '#93c5fd' }}>
+                              <span className="flex items-center gap-1.5">
+                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
+                                {conn.stb_number}{conn.label ? ` · ${conn.label}` : ''}
+                              </span>
+                              {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓</span>}
+                            </button>
+                          ))}
+                          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
+                        </>
+                      )}
                       <Link href="/" onClick={() => setShowNavMenu(false)}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors">
                         <span>🏠</span> Home

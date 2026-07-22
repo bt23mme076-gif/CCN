@@ -122,6 +122,8 @@ export default function BuyHistoryPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showNavMenu, setShowNavMenu] = useState(false);
+  const [connections, setConnections] = useState<{ id: string; stb_number: string; label: string | null; isActive: boolean }[]>([]);
+  const [activeConnectionId, setActiveConnectionId] = useState('primary');
   const [showRetrackPopup, setShowRetrackPopup] = useState(false);
   const [retrackLoading, setRetrackLoading] = useState(false);
   const [retrackDone, setRetrackDone] = useState(false);
@@ -139,17 +141,32 @@ export default function BuyHistoryPage() {
 
   useEffect(() => {
     fetchData();
+    const onConnectionChanged = () => fetchData();
+    window.addEventListener('ccn-connection-changed', onConnectionChanged);
+    return () => window.removeEventListener('ccn-connection-changed', onConnectionChanged);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const switchConnection = (id: string) => {
+    if (typeof window !== 'undefined') localStorage.setItem('ccn_active_cid', id);
+    setActiveConnectionId(id);
+    setShowNavMenu(false);
+    window.dispatchEvent(new CustomEvent('ccn-connection-changed', { detail: { connectionId: id } }));
+    fetchData();
+  };
+
   const fetchData = async () => {
+    const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+    const cidParam = cid ? `?cid=${cid}` : '';
+    setActiveConnectionId(cid || 'primary');
     try {
-      const [plansRes, customerRes, rechargesRes, accessoriesRes, accOrdersRes] = await Promise.all([
+      const [plansRes, customerRes, rechargesRes, accessoriesRes, accOrdersRes, connsRes] = await Promise.all([
         fetch('/api/plans', { cache: 'no-store' }),
-        fetch('/api/auth/me', { cache: 'no-store' }),
-        fetch('/api/recharge/history', { cache: 'no-store' }),
+        fetch(`/api/auth/me${cidParam}`, { cache: 'no-store' }),
+        fetch(`/api/recharge/history${cidParam}`, { cache: 'no-store' }),
         fetch('/api/accessories', { cache: 'no-store' }),
         fetch('/api/accessory/history', { cache: 'no-store' }),
+        fetch('/api/connections'),
       ]);
 
       if (!customerRes.ok) {
@@ -162,6 +179,7 @@ export default function BuyHistoryPage() {
       const rechargesData = await rechargesRes.json();
       const accessoriesData = await accessoriesRes.json();
       const accOrdersData = await accOrdersRes.json();
+      if (connsRes.ok) { const d = await connsRes.json(); setConnections(d.connections || []); }
 
       setPlans(plansData.plans || []);
       setCustomer(customerData.customer);
@@ -289,6 +307,23 @@ export default function BuyHistoryPage() {
                       <Link href="/dashboard" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>📊</span> Dashboard</Link>
                       <Link href="/dashboard/buy" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>💳</span> Buy & History</Link>
                       <button onClick={() => { setShowNavMenu(false); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); setRetrackEdited(false); setShowRetrackPopup(true); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors w-full text-left"><span>📺</span> Request Retrack</button>
+                      {connections.length > 1 && (
+                        <>
+                          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
+                          <div className="px-4 py-1.5">
+                            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#7c6fa0' }}>My Connections</p>
+                          </div>
+                          {connections.map((conn) => (
+                            <button key={conn.id} onClick={() => switchConnection(conn.id)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-white/10 transition-colors"
+                              style={{ color: activeConnectionId === conn.id ? '#fff' : '#93c5fd' }}>
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
+                              <span className="flex-1 truncate">{conn.stb_number} · {conn.label || conn.stb_number}</span>
+                              {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓</span>}
+                            </button>
+                          ))}
+                        </>
+                      )}
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
                       <button onClick={() => { setShowNavMenu(false); handleLogout(); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-white hover:bg-red-500/20 transition-colors w-full text-left"><span>🚪</span> Logout</button>
                     </div>
@@ -358,6 +393,23 @@ export default function BuyHistoryPage() {
                       <Link href="/dashboard" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>📊</span> Dashboard</Link>
                       <Link href="/dashboard/buy" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>💳</span> Buy & History</Link>
                       <button onClick={() => { setShowNavMenu(false); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); setRetrackEdited(false); setShowRetrackPopup(true); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors w-full text-left"><span>📺</span> Request Retrack</button>
+                      {connections.length > 1 && (
+                        <>
+                          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
+                          <div className="px-4 py-1.5">
+                            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#7c6fa0' }}>My Connections</p>
+                          </div>
+                          {connections.map((conn) => (
+                            <button key={conn.id} onClick={() => switchConnection(conn.id)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-white/10 transition-colors"
+                              style={{ color: activeConnectionId === conn.id ? '#fff' : '#93c5fd' }}>
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
+                              <span className="flex-1 truncate">{conn.stb_number} · {conn.label || conn.stb_number}</span>
+                              {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓</span>}
+                            </button>
+                          ))}
+                        </>
+                      )}
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
                       <button onClick={() => { setShowNavMenu(false); handleLogout(); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-white hover:bg-red-500/20 transition-colors w-full text-left"><span>🚪</span> Logout</button>
                     </div>

@@ -77,7 +77,9 @@ export default function Navbar() {
     setRetrackDone(false);
     setRetrackEdited(false);
     try {
-      const res = await fetch('/api/auth/me');
+      const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+      const cidParam = cid ? `?cid=${cid}` : '';
+      const res = await fetch(`/api/auth/me${cidParam}`);
       if (res.ok) { const d = await res.json(); setRetrackStb(d.customer?.stb_number || ''); }
     } catch { setRetrackStb(''); }
     setShowRetrackPopup(true);
