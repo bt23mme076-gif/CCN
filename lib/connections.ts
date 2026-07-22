@@ -24,7 +24,7 @@ export async function getCustomerConnections(customerId: string): Promise<Connec
     id: 'primary',
     stb_number: customer[0].stb_number,
     area: customer[0].area,
-    label: null,
+    label: 'Primary',
     isPrimary: true,
   };
 
