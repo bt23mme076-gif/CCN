@@ -87,7 +87,7 @@ export default function PendingActivationsPage() {
     if (selected.size === 0) return;
     if (!confirm(`Activate ${selected.size} recharge(s)?`)) return;
     setBulkActivating(true);
-    const ids = [...selected];
+    const ids = Array.from(selected);
     let failed = 0;
     await Promise.all(ids.map(async (id) => {
       try {
@@ -104,7 +104,7 @@ export default function PendingActivationsPage() {
     if (selected.size === 0) return;
     if (!confirm(`Cancel ${selected.size} order(s)?`)) return;
     setBulkDeleting(true);
-    const ids = [...selected];
+    const ids = Array.from(selected);
     let failed = 0;
     await Promise.all(ids.map(async (id) => {
       try {
