@@ -141,7 +141,10 @@ export default function BuyHistoryPage() {
 
   useEffect(() => {
     fetchData();
-    const onConnectionChanged = () => fetchData();
+    const onConnectionChanged = (e: Event) => {
+      const cid = (e as CustomEvent).detail?.connectionId;
+      fetchData(cid || undefined);
+    };
     window.addEventListener('ccn-connection-changed', onConnectionChanged);
     return () => window.removeEventListener('ccn-connection-changed', onConnectionChanged);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,14 +153,15 @@ export default function BuyHistoryPage() {
   const switchConnection = (id: string) => {
     if (typeof window !== 'undefined') localStorage.setItem('ccn_active_cid', id);
     setActiveConnectionId(id);
+    setRecharges([]);
+    setAccessoryOrdersList([]);
     setShowNavMenu(false);
     window.dispatchEvent(new CustomEvent('ccn-connection-changed', { detail: { connectionId: id } }));
-    fetchData();
   };
 
-  const fetchData = async () => {
-    const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
-    const cidParam = cid ? `?cid=${cid}` : '';
+  const fetchData = async (cidOverride?: string) => {
+    const cid = cidOverride !== undefined ? cidOverride : (typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null);
+    const cidParam = (cid && cid !== 'primary') ? `?cid=${cid}` : '';
     setActiveConnectionId(cid || 'primary');
     try {
       const [plansRes, customerRes, rechargesRes, accessoriesRes, accOrdersRes, connsRes] = await Promise.all([
