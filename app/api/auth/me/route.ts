@@ -3,23 +3,13 @@ import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { validateConnectionAccess } from '@/lib/connections';
+import { resolveConnection } from '@/lib/connections';
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-
     if (!user || user.role !== 'customer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const cid = request.nextUrl.searchParams.get('cid');
-    let targetId = user.customerId;
-
-    if (cid && cid !== user.customerId) {
-      const valid = await validateConnectionAccess(user.customerId, cid);
-      if (!valid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      targetId = valid;
     }
 
     const customer = await db
@@ -32,23 +22,30 @@ export async function GET(request: NextRequest) {
         outstanding_balance: customers.outstanding_balance,
         fast_recharge_enabled: customers.fast_recharge_enabled,
         fast_recharge_amount: customers.fast_recharge_amount,
-        primary_customer_id: customers.primary_customer_id,
         created_at: customers.created_at,
       })
       .from(customers)
-      .where(eq(customers.id, targetId))
+      .where(eq(customers.id, user.customerId))
       .limit(1);
 
     if (customer.length === 0) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ customer: customer[0] });
+    const cid = request.nextUrl.searchParams.get('cid');
+    let result = { ...customer[0] };
+
+    // If a specific connection is requested, override stb_number and area
+    if (cid && cid !== 'primary') {
+      const conn = await resolveConnection(user.customerId, cid);
+      if (conn) {
+        result = { ...result, stb_number: conn.stb_number, area: conn.area };
+      }
+    }
+
+    return NextResponse.json({ customer: result });
   } catch (error) {
     console.error('Get current user error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get user data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to get user data' }, { status: 500 });
   }
 }

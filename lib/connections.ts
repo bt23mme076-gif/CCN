@@ -1,35 +1,61 @@
 import { db } from './db';
-import { customers } from './db/schema';
-import { eq, or } from 'drizzle-orm';
+import { customers, customerConnections } from './db/schema';
+import { eq } from 'drizzle-orm';
 
-// Returns all customer IDs in the same group as `customerId`.
-// Group = the primary account + all sub-connections pointing to it.
-export async function getConnectionGroup(customerId: string): Promise<string[]> {
-  const self = await db
-    .select({ id: customers.id, primary_customer_id: customers.primary_customer_id })
-    .from(customers)
-    .where(eq(customers.id, customerId))
-    .limit(1);
-
-  if (!self.length) return [customerId];
-
-  const primaryId = self[0].primary_customer_id ?? customerId;
-
-  const group = await db
-    .select({ id: customers.id })
-    .from(customers)
-    .where(or(eq(customers.id, primaryId), eq(customers.primary_customer_id, primaryId)));
-
-  return group.map((c) => c.id);
+export interface ConnectionInfo {
+  id: string;         // 'primary' or customerConnections.id
+  stb_number: string;
+  area: string;
+  label: string | null;
+  isPrimary: boolean;
 }
 
-// Validates that `targetId` belongs to the same group as the logged-in customer.
-// Returns targetId if valid, null otherwise.
-export async function validateConnectionAccess(
-  loggedInCustomerId: string,
-  targetId: string,
-): Promise<string | null> {
-  if (targetId === loggedInCustomerId) return targetId;
-  const group = await getConnectionGroup(loggedInCustomerId);
-  return group.includes(targetId) ? targetId : null;
+// Returns primary + all additional connections for a customer
+export async function getCustomerConnections(customerId: string): Promise<ConnectionInfo[]> {
+  const [customer, extras] = await Promise.all([
+    db.select({ stb_number: customers.stb_number, area: customers.area })
+      .from(customers).where(eq(customers.id, customerId)).limit(1),
+    db.select().from(customerConnections).where(eq(customerConnections.customer_id, customerId)),
+  ]);
+
+  if (!customer.length) return [];
+
+  const primary: ConnectionInfo = {
+    id: 'primary',
+    stb_number: customer[0].stb_number,
+    area: customer[0].area,
+    label: null,
+    isPrimary: true,
+  };
+
+  const additional: ConnectionInfo[] = extras.map((c) => ({
+    id: c.id,
+    stb_number: c.stb_number,
+    area: c.area,
+    label: c.label,
+    isPrimary: false,
+  }));
+
+  return [primary, ...additional];
+}
+
+// Returns the STB number for a given connection selection
+// connectionId: 'primary' | customerConnections.id
+export async function resolveConnection(
+  customerId: string,
+  connectionId: string | null | undefined,
+): Promise<{ stb_number: string; area: string; connectionId: string | null } | null> {
+  if (!connectionId || connectionId === 'primary') {
+    const c = await db.select({ stb_number: customers.stb_number, area: customers.area })
+      .from(customers).where(eq(customers.id, customerId)).limit(1);
+    return c.length ? { stb_number: c[0].stb_number, area: c[0].area, connectionId: null } : null;
+  }
+
+  const conn = await db.select()
+    .from(customerConnections)
+    .where(eq(customerConnections.id, connectionId))
+    .limit(1);
+
+  if (!conn.length || conn[0].customer_id !== customerId) return null;
+  return { stb_number: conn[0].stb_number, area: conn[0].area, connectionId };
 }

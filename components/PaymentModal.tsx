@@ -59,7 +59,7 @@ export default function PaymentModal({
       const orderResponse = await fetch('/api/recharge/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: plan.id, ...(connectionId ? { connectionId } : {}) }),
+        body: JSON.stringify({ planId: plan.id, connectionId: connectionId || 'primary' }),
       });
 
       if (!orderResponse.ok) {

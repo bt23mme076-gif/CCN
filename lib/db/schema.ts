@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, index, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const customers = pgTable('customers', {
@@ -12,8 +12,6 @@ export const customers = pgTable('customers', {
   notes: text('notes'),
   fast_recharge_enabled: boolean('fast_recharge_enabled').default(false).notNull(),
   fast_recharge_amount: integer('fast_recharge_amount').default(0).notNull(), // in paise
-  // null = this is a primary account; set to another customer's id = sub-connection
-  primary_customer_id: text('primary_customer_id').references((): AnyPgColumn => customers.id),
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -28,9 +26,23 @@ export const plans = pgTable('plans', {
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Additional STB connections for a customer (beyond their primary stb_number)
+export const customerConnections = pgTable('customer_connections', {
+  id: text('id').primaryKey(),
+  customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  stb_number: text('stb_number').notNull(),
+  area: text('area').notNull().default(''),
+  label: text('label'), // optional nickname e.g. "Home", "Office"
+  created_at: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  customerIdx: index('cust_conns_customer_id_idx').on(table.customer_id),
+}));
+
 export const recharges = pgTable('recharges', {
   id: text('id').primaryKey(),
   customer_id: text('customer_id').notNull().references(() => customers.id),
+  // null = primary STB (customers.stb_number); set = additional connection
+  connection_id: text('connection_id').references(() => customerConnections.id),
   plan_id: text('plan_id').references(() => plans.id),
   plan_name: text('plan_name').notNull(),
   amount: integer('amount').notNull(), // in paise
@@ -44,9 +56,6 @@ export const recharges = pgTable('recharges', {
   expires_at: timestamp('expires_at'),
   created_at: timestamp('created_at').defaultNow().notNull(),
 }, (table) => ({
-  // Foreign keys do NOT get an index automatically. The dashboard history query
-  // filters by customer_id and orders by created_at — index both to avoid
-  // full table scans as recharge volume grows.
   customerIdx: index('recharges_customer_id_idx').on(table.customer_id),
   statusIdx: index('recharges_status_idx').on(table.status),
 }));
@@ -147,6 +156,12 @@ export const customersRelations = relations(customers, ({ many }) => ({
   recharges: many(recharges),
   priceOverrides: many(customerPriceOverrides),
   accessoryOrders: many(accessoryOrders),
+  connections: many(customerConnections),
+}));
+
+export const customerConnectionsRelations = relations(customerConnections, ({ one, many }) => ({
+  customer: one(customers, { fields: [customerConnections.customer_id], references: [customers.id] }),
+  recharges: many(recharges),
 }));
 
 export const plansRelations = relations(plans, ({ many }) => ({
@@ -160,14 +175,9 @@ export const customerPriceOverridesRelations = relations(customerPriceOverrides,
 }));
 
 export const rechargesRelations = relations(recharges, ({ one }) => ({
-  customer: one(customers, {
-    fields: [recharges.customer_id],
-    references: [customers.id],
-  }),
-  plan: one(plans, {
-    fields: [recharges.plan_id],
-    references: [plans.id],
-  }),
+  customer: one(customers, { fields: [recharges.customer_id], references: [customers.id] }),
+  connection: one(customerConnections, { fields: [recharges.connection_id], references: [customerConnections.id] }),
+  plan: one(plans, { fields: [recharges.plan_id], references: [plans.id] }),
 }));
 
 export const accessoriesRelations = relations(accessories, ({ many }) => ({

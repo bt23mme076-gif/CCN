@@ -16,8 +16,8 @@ export default function Navbar() {
   const [customerName, setCustomerName] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [connections, setConnections] = useState<{ id: string; stb_number: string; name: string }[]>([]);
-  const [activeConnectionId, setActiveConnectionId] = useState('');
+  const [connections, setConnections] = useState<{ id: string; stb_number: string; label: string | null; isPrimary: boolean }[]>([]);
+  const [activeConnectionId, setActiveConnectionId] = useState('primary');
   const [showRetrackPopup, setShowRetrackPopup] = useState(false);
   const [retrackStb, setRetrackStb] = useState('');
   const [retrackEdited, setRetrackEdited] = useState(false);
@@ -47,7 +47,7 @@ export default function Navbar() {
           }
           // Sync active connection from localStorage
           const stored = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
-          setActiveConnectionId(stored || data.customer?.id || '');
+          setActiveConnectionId(stored || 'primary');
         } else {
           setIsAuthenticated(false);
           setCustomerName('');
@@ -181,7 +181,7 @@ export default function Navbar() {
                                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
                                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                                     >
-                                      <span>📺 {conn.stb_number}</span>
+                                      <span>📺 {conn.label || conn.stb_number}</span>
                                       {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓ Active</span>}
                                     </button>
                                   ))}
@@ -280,7 +280,7 @@ export default function Navbar() {
                           >
                             <span className="flex items-center gap-2">
                               <span>📺</span>
-                              <span className="font-mono">{conn.stb_number}</span>
+                              <span className="font-mono">{conn.label || conn.stb_number}</span>
                             </span>
                             {activeConnectionId === conn.id && <span className="text-green-400 text-xs font-semibold">✓ Active</span>}
                           </button>

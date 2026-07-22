@@ -5,11 +5,11 @@ import { plans, recharges, customers, customerPriceOverrides } from '@/lib/db/sc
 import { eq, and } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
-import { validateConnectionAccess } from '@/lib/connections';
+import { resolveConnection } from '@/lib/connections';
 
 const createOrderSchema = z.object({
   planId: z.string(),
-  connectionId: z.string().optional(),
+  connectionId: z.string().optional(), // 'primary' or customer_connections.id
 });
 
 export async function POST(request: NextRequest) {
@@ -18,12 +18,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { planId, connectionId } = createOrderSchema.parse(body);
 
-    let targetCustomerId = user.customerId;
-    if (connectionId && connectionId !== user.customerId) {
-      const valid = await validateConnectionAccess(user.customerId, connectionId);
-      if (!valid) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      targetCustomerId = valid;
-    }
+    const targetCustomerId = user.customerId;
+    // Resolve which STB this recharge is for
+    const connInfo = await resolveConnection(user.customerId, connectionId);
+    if (!connInfo) return NextResponse.json({ error: 'Invalid connection' }, { status: 400 });
+    const resolvedConnectionId = connInfo.connectionId; // null for primary
 
     // Get plan details
     const plan = await db
@@ -145,6 +144,7 @@ export async function POST(request: NextRequest) {
     await db.insert(recharges).values({
       id: rechargeId,
       customer_id: targetCustomerId,
+      connection_id: resolvedConnectionId,
       plan_id: plan[0].id,
       plan_name: plan[0].name,
       amount: finalPrice,

@@ -79,6 +79,12 @@ export default function CustomersPage() {
   const [selectedCustForEdit, setSelectedCustForEdit] = useState<{ id: string; name: string; mobile: string; stb_number: string; area: string } | null>(null);
   const [editForm, setEditForm] = useState({ name: '', mobile: '', stb_number: '', area: '' });
   const [savingEdit, setSavingEdit] = useState(false);
+  // States for managing additional connections in edit modal
+  const [editConnections, setEditConnections] = useState<{ id: string; stb_number: string; area: string; label: string | null }[]>([]);
+  const [newConnStb, setNewConnStb] = useState('');
+  const [newConnArea, setNewConnArea] = useState('');
+  const [newConnLabel, setNewConnLabel] = useState('');
+  const [addingConn, setAddingConn] = useState(false);
 
   // States for Notes
   const [selectedCustForNotes, setSelectedCustForNotes] = useState<{ id: string; name: string; notes: string } | null>(null);
@@ -431,6 +437,33 @@ export default function CustomersPage() {
     }
   };
 
+  const handleAddConnection = async () => {
+    if (!selectedCustForEdit || !newConnStb.trim()) return;
+    setAddingConn(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${selectedCustForEdit.id}/connections`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stb_number: newConnStb.trim(), area: newConnArea.trim(), label: newConnLabel.trim() }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      const d = await res.json();
+      setEditConnections((prev) => [...prev, { id: d.id, stb_number: newConnStb.trim(), area: newConnArea.trim(), label: newConnLabel.trim() || null }]);
+      setNewConnStb(''); setNewConnArea(''); setNewConnLabel('');
+    } catch { setMessage({ type: 'error', text: 'Connection add nahi hua' }); }
+    finally { setAddingConn(false); }
+  };
+
+  const handleRemoveConnection = async (connId: string) => {
+    if (!selectedCustForEdit) return;
+    await fetch(`/api/admin/customers/${selectedCustForEdit.id}/connections`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ connectionId: connId }),
+    });
+    setEditConnections((prev) => prev.filter((c) => c.id !== connId));
+  };
+
   const handleSaveNotes = async () => {
     if (!selectedCustForNotes) return;
     setSavingNotes(true);
@@ -692,7 +725,14 @@ export default function CustomersPage() {
               style={{ top: dropdownPos.top, right: dropdownPos.right, background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
               {[
                 { label: '👁 View Details', action: () => openCustomerDetails(c.id), color: '#e2e8f0' },
-                { label: '✏️ Edit', action: () => { setSelectedCustForEdit(c); setEditForm({ name: c.name, mobile: c.mobile, stb_number: c.stb_number, area: c.area }); }, color: '#60a5fa' },
+                { label: '✏️ Edit', action: () => {
+                    setSelectedCustForEdit(c);
+                    setEditForm({ name: c.name, mobile: c.mobile, stb_number: c.stb_number, area: c.area });
+                    setNewConnStb(''); setNewConnArea(''); setNewConnLabel('');
+                    setEditConnections([]);
+                    fetch(`/api/admin/customers/${c.id}/connections`)
+                      .then(r => r.json()).then(d => setEditConnections(d.connections || [])).catch(() => {});
+                  }, color: '#60a5fa' },
                 { label: c.outstanding_balance > 0 ? `💰 Due ₹${c.outstanding_balance}` : '💰 Set Due', action: () => { setSelectedCustForDues({ id: c.id, name: c.name, outstanding_balance: c.outstanding_balance }); setDuesAmount(String(c.outstanding_balance)); }, color: c.outstanding_balance > 0 ? '#f87171' : '#94a3b8' },
                 { label: '📝 Notes', action: () => { setSelectedCustForNotes({ id: c.id, name: c.name, notes: c.notes || '' }); setNotesVal(c.notes || ''); }, color: '#a78bfa' },
                 { label: '✅ Activate Plan', action: () => handleOpenActivatePlan(c), color: '#34d399' },
@@ -1109,6 +1149,41 @@ export default function CustomersPage() {
                   />
                 </div>
               ))}
+              {/* Additional STB Connections */}
+              <div className="pt-1">
+                <label className={labelStyle}>Additional Connections (Extra STBs)</label>
+                {editConnections.length > 0 && (
+                  <div className="space-y-1.5 mb-2">
+                    {editConnections.map((conn) => (
+                      <div key={conn.id} className="flex items-center justify-between px-3 py-2 rounded-xl text-xs"
+                        style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)' }}>
+                        <span className="text-indigo-300">
+                          📺 <span className="font-mono">{conn.stb_number}</span>
+                          {conn.label && <span className="text-gray-400 ml-1">({conn.label})</span>}
+                          {conn.area && <span className="text-gray-500 ml-1">· {conn.area}</span>}
+                        </span>
+                        <button onClick={() => handleRemoveConnection(conn.id)}
+                          className="text-red-400 hover:text-red-300 font-bold ml-2 text-sm">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="space-y-1.5 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <p className="text-xs text-gray-500 mb-2">New STB add karo:</p>
+                  <input type="text" value={newConnStb} onChange={(e) => setNewConnStb(e.target.value)}
+                    placeholder="STB Number *" className="w-full px-3 py-2 rounded-lg text-xs outline-none placeholder-gray-500"
+                    style={inputStyle} />
+                  <input type="text" value={newConnLabel} onChange={(e) => setNewConnLabel(e.target.value)}
+                    placeholder="Label (optional, e.g. Home / Office)" className="w-full px-3 py-2 rounded-lg text-xs outline-none placeholder-gray-500"
+                    style={inputStyle} />
+                  <button onClick={handleAddConnection} disabled={addingConn || !newConnStb.trim()}
+                    className="w-full py-2 rounded-lg text-xs font-bold text-white disabled:opacity-40 transition-all"
+                    style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}>
+                    {addingConn ? 'Adding...' : '+ Add Connection'}
+                  </button>
+                </div>
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setSelectedCustForEdit(null)}
                   className="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-300 hover:text-white transition-all bg-white/5 border border-white/10">

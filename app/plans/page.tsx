@@ -198,7 +198,7 @@ export default function PlansPage() {
         stbNumber={customer?.stb_number || ''}
         customerName={customer?.name || ''}
         customerMobile={customer?.mobile || ''}
-        connectionId={customer?.id}
+        connectionId={typeof window !== 'undefined' ? (localStorage.getItem('ccn_active_cid') || 'primary') : 'primary'}
       />
     </div>
   );
