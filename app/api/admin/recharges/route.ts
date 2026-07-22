@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
-import { eq, desc, or, ilike } from 'drizzle-orm';
+import { eq, desc, or, ilike, inArray } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,9 +22,10 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(recharges.created_at))
       .$dynamic();
 
-    // Filter by status
+    // Filter by status (supports comma-separated: paid,pending)
     if (status) {
-      query = query.where(eq(recharges.status, status));
+      const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
+      query = query.where(statuses.length === 1 ? eq(recharges.status, statuses[0]) : inArray(recharges.status, statuses));
     }
 
     // Search by customer name or mobile

@@ -28,7 +28,7 @@ export default function PendingActivationsPage() {
     try {
       const [statsRes, rechargesRes] = await Promise.all([
         fetch('/api/admin/stats'),
-        fetch('/api/admin/recharges?status=paid'),
+        fetch('/api/admin/recharges?status=paid,pending'),
       ]);
       setStats(await statsRes.json());
       const d = await rechargesRes.json();
