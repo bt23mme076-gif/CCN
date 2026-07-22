@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, plans, customers } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { sendPushToCustomer } from '@/lib/push';
 
 export async function POST(
@@ -52,8 +52,11 @@ export async function POST(
 
     // Fast Recharge: chain from existing plan expiry, default 30 days duration
     if (isFastRecharge) {
+      const connFilter = rechargeData.connection_id
+        ? eq(recharges.connection_id, rechargeData.connection_id)
+        : isNull(recharges.connection_id);
       const existingRecharges = await db.select().from(recharges).where(
-        and(eq(recharges.customer_id, rechargeData.customer_id), eq(recharges.status, 'activated'))
+        and(eq(recharges.customer_id, rechargeData.customer_id), eq(recharges.status, 'activated'), connFilter)
       );
       const now = new Date();
       const futurePlans = existingRecharges.filter(r =>
@@ -95,13 +98,17 @@ export async function POST(
 
     if (isAlacarte) {
       // Find customer's active base plan (not expired, not ala carte)
+      const connFilter = rechargeData.connection_id
+        ? eq(recharges.connection_id, rechargeData.connection_id)
+        : isNull(recharges.connection_id);
       const activeBaseRecharges = await db
         .select()
         .from(recharges)
         .where(
           and(
             eq(recharges.customer_id, rechargeData.customer_id),
-            eq(recharges.status, 'activated')
+            eq(recharges.status, 'activated'),
+            connFilter
           )
         );
 
@@ -131,13 +138,17 @@ export async function POST(
       // Find the latest active non-expired, non-alacarte plan for this customer.
       // If one exists, chain the new plan from its expiry so pre-paid renewals don't
       // lose days (new plan starts the day the current one ends).
+      const connFilter2 = rechargeData.connection_id
+        ? eq(recharges.connection_id, rechargeData.connection_id)
+        : isNull(recharges.connection_id);
       const existingRecharges = await db
         .select()
         .from(recharges)
         .where(
           and(
             eq(recharges.customer_id, rechargeData.customer_id),
-            eq(recharges.status, 'activated')
+            eq(recharges.status, 'activated'),
+            connFilter2
           )
         );
 
