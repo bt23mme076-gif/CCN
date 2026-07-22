@@ -102,6 +102,7 @@ export default function LoginPage() {
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
                   placeholder="Enter 10-digit mobile number"
+                  autoFocus
                   className="input-field"
                   maxLength={10}
                   required
