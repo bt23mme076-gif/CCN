@@ -119,11 +119,8 @@ export default function DashboardPage() {
   };
 
   const switchConnection = (id: string) => {
-    if (typeof window !== 'undefined') localStorage.setItem('ccn_active_cid', id);
-    setActiveConnectionId(id);
-    setShowNavMenu(false);
-    window.dispatchEvent(new CustomEvent('ccn-connection-changed', { detail: { connectionId: id } }));
-    fetchData();
+    localStorage.setItem('ccn_active_cid', id);
+    window.location.reload();
   };
 
   const fetchData = async () => {

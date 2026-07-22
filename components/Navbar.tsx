@@ -64,11 +64,8 @@ export default function Navbar() {
   }, [pathname]);
 
   const switchConnection = (id: string) => {
-    if (typeof window !== 'undefined') localStorage.setItem('ccn_active_cid', id);
-    setActiveConnectionId(id);
-    setShowDropdown(false);
-    setMobileMenuOpen(false);
-    window.dispatchEvent(new CustomEvent('ccn-connection-changed', { detail: { connectionId: id } }));
+    localStorage.setItem('ccn_active_cid', id);
+    window.location.reload();
   };
 
   const openRetrack = async () => {

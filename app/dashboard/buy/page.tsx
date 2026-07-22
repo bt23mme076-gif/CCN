@@ -151,12 +151,8 @@ export default function BuyHistoryPage() {
   }, []);
 
   const switchConnection = (id: string) => {
-    if (typeof window !== 'undefined') localStorage.setItem('ccn_active_cid', id);
-    setActiveConnectionId(id);
-    setRecharges([]);
-    setAccessoryOrdersList([]);
-    setShowNavMenu(false);
-    window.dispatchEvent(new CustomEvent('ccn-connection-changed', { detail: { connectionId: id } }));
+    localStorage.setItem('ccn_active_cid', id);
+    window.location.reload();
   };
 
   const fetchData = async (cidOverride?: string) => {

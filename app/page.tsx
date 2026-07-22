@@ -300,20 +300,20 @@ export default function HomePage() {
             and 100% secure payments.
           </p>
 
-          <div className="animate-fadeInUp-delay-3 flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="animate-fadeInUp-delay-3 flex flex-col gap-3 justify-center items-center">
             {!customer ? (
               <>
                 <button
-                  onClick={() => router.push('/register')}
+                  onClick={() => router.push('/login')}
                   className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
                 >
-                  Get Started
+                  Login to Recharge
                 </button>
                 <button
-                  onClick={() => router.push('/login')}
-                  className="bg-white/10 backdrop-blur-sm text-white px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg hover:bg-white/20 transition-all duration-300 border border-white/20 w-full sm:w-auto"
+                  onClick={() => router.push('/register')}
+                  className="text-white/60 text-sm hover:text-white transition-colors underline underline-offset-2"
                 >
-                  Login to Recharge
+                  New user? Sign up
                 </button>
               </>
             ) : customer.fast_recharge_enabled ? (
