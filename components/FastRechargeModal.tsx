@@ -54,7 +54,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, o
               cf.pay({
                 paymentMethod: component,
                 paymentSessionId,
-                returnUrl: `${window.location.origin}/dashboard`,
+                returnUrl: `${window.location.origin}/dashboard?order_id=${orderId}`,
               }).catch(() => setError('fallback'));
             });
             component.mount(`#upi-btn-${app.key}`);
