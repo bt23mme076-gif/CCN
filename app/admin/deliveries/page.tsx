@@ -41,6 +41,7 @@ export default function DeliveriesPage() {
   const [orders, setOrders] = useState<OrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [delivering, setDelivering] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -71,6 +72,20 @@ export default function DeliveriesPage() {
       setOrders([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancel = async (orderId: string) => {
+    if (!confirm('Cancel this order?')) return;
+    setCancelling(orderId);
+    try {
+      const res = await fetch(`/api/admin/deliveries/${orderId}/cancel`, { method: 'POST' });
+      if (res.ok) setOrders(orders.filter((o) => o.order.id !== orderId));
+      else alert('Failed to cancel order');
+    } catch {
+      alert('Failed to cancel order');
+    } finally {
+      setCancelling(null);
     }
   };
 
@@ -246,18 +261,31 @@ export default function DeliveriesPage() {
                   </div>
 
                   {activeTab === 'pending' ? (
-                    <button
-                      onClick={() => handleMarkDelivered(order.id)}
-                      disabled={delivering === order.id}
-                      className="px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
-                      style={{
-                        background: 'linear-gradient(135deg, #1b4332, #2d6a4f)',
-                        boxShadow: '0 4px 15px rgba(45,106,79,0.3)',
-                        border: '1px solid rgba(82,183,136,0.3)',
-                      }}
-                    >
-                      {delivering === order.id ? 'Updating...' : '✓ Mark Delivered'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleMarkDelivered(order.id)}
+                        disabled={delivering === order.id || cancelling === order.id}
+                        className="px-4 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
+                        style={{
+                          background: 'linear-gradient(135deg, #1b4332, #2d6a4f)',
+                          border: '1px solid rgba(82,183,136,0.3)',
+                        }}
+                      >
+                        {delivering === order.id ? 'Updating...' : '✓ Delivered'}
+                      </button>
+                      <button
+                        onClick={() => handleCancel(order.id)}
+                        disabled={delivering === order.id || cancelling === order.id}
+                        className="px-4 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
+                        style={{
+                          background: 'rgba(230,57,70,0.12)',
+                          color: '#f87171',
+                          border: '1px solid rgba(230,57,70,0.3)',
+                        }}
+                      >
+                        {cancelling === order.id ? '...' : '✕ Cancel'}
+                      </button>
+                    </div>
                   ) : (
                     <div className="text-right">
                       <span

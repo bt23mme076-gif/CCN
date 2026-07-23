@@ -29,22 +29,11 @@ export async function GET(request: NextRequest) {
 
     // Filter by status (e.g. 'paid' for pending delivery, or 'delivered')
     if (status) {
-      if (status === 'paid') {
-        conditions.push(
-          or(
-            eq(accessoryOrders.status, 'paid'),
-            eq(accessoryOrders.status, 'pending')
-          )
-        );
-      } else {
-        conditions.push(eq(accessoryOrders.status, status));
-      }
+      conditions.push(eq(accessoryOrders.status, status));
     } else {
-      // By default show paid, pending, and delivered
       conditions.push(
         or(
           eq(accessoryOrders.status, 'paid'),
-          eq(accessoryOrders.status, 'pending'),
           eq(accessoryOrders.status, 'delivered')
         )
       );
