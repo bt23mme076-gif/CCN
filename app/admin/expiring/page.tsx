@@ -39,10 +39,9 @@ function openWhatsApp(name: string, mobile: string, planName: string, expiresAt:
   const phone = mobile.replace(/\D/g, '').replace(/^0/, '');
   const fullPhone = phone.startsWith('91') ? phone : '91' + phone;
   const encoded = encodeURIComponent(msg);
-  const ua = navigator.userAgent;
-  const isWebView = /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
   const pkg = business ? 'com.whatsapp.w4b' : 'com.whatsapp';
-  if (isWebView) {
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid) {
     window.location.href = `intent://send?phone=${fullPhone}&text=${encoded}#Intent;package=${pkg};scheme=whatsapp;end`;
   } else {
     window.open(`https://wa.me/${fullPhone}?text=${encoded}`, '_blank');
