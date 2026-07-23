@@ -11,7 +11,7 @@ export async function GET() {
     await requireAdminAuth();
 
     const now = new Date();
-    const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const in3Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const results = await db
       .select({

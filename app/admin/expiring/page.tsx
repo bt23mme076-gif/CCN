@@ -65,7 +65,7 @@ export default function ExpiringPage() {
     <div>
       <div className="mb-6 sm:mb-8">
         <h1 className="font-display text-2xl sm:text-3xl font-bold text-white mb-1">Expiring Plans</h1>
-        <p className="text-gray-400 text-sm">Customers whose plans expire within the next 3 days</p>
+        <p className="text-gray-400 text-sm">Customers whose plans expire within the next 7 days</p>
       </div>
 
       {loading ? (
