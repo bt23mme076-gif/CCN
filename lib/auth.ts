@@ -18,7 +18,7 @@ export interface AdminJWTPayload {
 export type JWTPayload = CustomerJWTPayload | AdminJWTPayload;
 
 export function signToken(payload: JWTPayload): string {
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
   return token;
 }
 
@@ -33,11 +33,12 @@ export function verifyToken(token: string): JWTPayload | null {
 
 export async function setAuthCookie(token: string) {
   const cookieStore = await cookies();
+  const isProd = process.env.NODE_ENV === 'production';
   cookieStore.set('auth_token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 60 * 60 * 24 * 30, // 30 days
     path: '/',
   });
 }
