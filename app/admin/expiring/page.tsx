@@ -33,16 +33,20 @@ function WaIcon({ size }: { size: string }) {
   );
 }
 
-function buildWhatsAppLinks(name: string, mobile: string, planName: string, expiresAt: string) {
+function openWhatsApp(name: string, mobile: string, planName: string, expiresAt: string, business = false) {
   const date = new Date(expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
   const msg = `Hello ${name}, your CCN Networks cable TV plan *${planName}* is expiring on *${date}*. Please recharge soon to avoid any interruption in service. Visit our website or call us for quick recharge!`;
   const phone = mobile.replace(/\D/g, '').replace(/^0/, '');
   const fullPhone = phone.startsWith('91') ? phone : '91' + phone;
   const encoded = encodeURIComponent(msg);
-  return {
-    regular: `https://wa.me/${fullPhone}?text=${encoded}`,
-    business: `intent://send?phone=${fullPhone}&text=${encoded}#Intent;package=com.whatsapp.w4b;scheme=whatsapp;end`,
-  };
+  const ua = navigator.userAgent;
+  const isWebView = /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
+  const pkg = business ? 'com.whatsapp.w4b' : 'com.whatsapp';
+  if (isWebView) {
+    window.location.href = `intent://send?phone=${fullPhone}&text=${encoded}#Intent;package=${pkg};scheme=whatsapp;end`;
+  } else {
+    window.open(`https://wa.me/${fullPhone}?text=${encoded}`, '_blank');
+  }
 }
 
 export default function ExpiringPage() {
@@ -120,18 +124,16 @@ export default function ExpiringPage() {
                       </td>
                       <td>
                         <div className="flex items-center gap-2">
-                          <a href={buildWhatsAppLinks(item.customerName, item.customerMobile, item.planName, item.expiresAt).regular}
-                            target="_blank" rel="noopener noreferrer"
+                          <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105"
                             style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)' }}>
                             <WaIcon size="w-3 h-3" /> WA
-                          </a>
-                          <a href={buildWhatsAppLinks(item.customerName, item.customerMobile, item.planName, item.expiresAt).business}
-                            target="_blank" rel="noopener noreferrer"
+                          </button>
+                          <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt, true)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105"
                             style={{ background: 'linear-gradient(135deg, #075e54, #128c7e)' }}>
                             <WaIcon size="w-3 h-3" /> Business
-                          </a>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -165,18 +167,16 @@ export default function ExpiringPage() {
                     </span></p>
                   </div>
                   <div className="flex gap-2">
-                    <a href={buildWhatsAppLinks(item.customerName, item.customerMobile, item.planName, item.expiresAt).regular}
-                      target="_blank" rel="noopener noreferrer"
+                    <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold text-white"
                       style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)' }}>
                       <WaIcon size="w-4 h-4" /> WhatsApp
-                    </a>
-                    <a href={buildWhatsAppLinks(item.customerName, item.customerMobile, item.planName, item.expiresAt).business}
-                      target="_blank" rel="noopener noreferrer"
+                    </button>
+                    <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt, true)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold text-white"
                       style={{ background: 'linear-gradient(135deg, #075e54, #128c7e)' }}>
                       <WaIcon size="w-4 h-4" /> Business
-                    </a>
+                    </button>
                   </div>
                 </div>
               );
