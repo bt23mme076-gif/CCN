@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
             order_currency: 'INR',
             customer_details: {
               customer_id: user.customerId,
-              customer_phone: c.mobile,
+              customer_phone: '+91' + c.mobile,
               customer_name: c.name,
             },
             order_meta: {
