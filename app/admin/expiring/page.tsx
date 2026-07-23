@@ -34,7 +34,8 @@ function WaIcon({ size }: { size: string }) {
 }
 
 function openWhatsApp(name: string, mobile: string, planName: string, expiresAt: string, business = false) {
-  const date = new Date(expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  const expiryMinus1 = new Date(new Date(expiresAt).getTime() - 24 * 60 * 60 * 1000);
+  const date = expiryMinus1.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
   const msg = `Hello ${name}, your CCN Networks cable TV plan *${planName}* is expiring on *${date}*. Please recharge soon to avoid any interruption in service. Visit our website or call us for quick recharge!`;
   const phone = mobile.replace(/\D/g, '').replace(/^0/, '');
   const fullPhone = phone.startsWith('91') ? phone : '91' + phone;
