@@ -26,6 +26,10 @@ export default function PlansPage() {
   const [editingChannel, setEditingChannel] = useState<any | null>(null);
   const [channelPrice, setChannelPrice] = useState('');
   const [channelEpg, setChannelEpg] = useState('');
+  const [channelEditName, setChannelEditName] = useState('');
+  const [channelEditHdSd, setChannelEditHdSd] = useState('SD');
+  const [channelEditGenre, setChannelEditGenre] = useState('');
+  const [channelEditType, setChannelEditType] = useState('');
   const [channelSearch, setChannelSearch] = useState('');
   const [channelGenre, setChannelGenre] = useState('All');
   const [deletingChannel, setDeletingChannel] = useState<number | null>(null);
@@ -98,6 +102,10 @@ export default function PlansPage() {
     setEditingChannel(channel);
     setChannelPrice((channel.price / 100).toFixed(2));
     setChannelEpg(channel.epg.toString());
+    setChannelEditName(channel.name);
+    setChannelEditHdSd(channel.hd_sd);
+    setChannelEditGenre(channel.genre);
+    setChannelEditType(channel.type);
   };
 
   const handleUpdateChannelPrice = async (e: React.FormEvent) => {
@@ -107,7 +115,7 @@ export default function PlansPage() {
     try {
       const priceInPaise = Math.round(parseFloat(channelPrice) * 100);
       const epgVal = parseInt(channelEpg);
-      
+
       if (isNaN(epgVal)) {
         alert('Please enter a valid channel number');
         setSubmitting(false);
@@ -117,15 +125,23 @@ export default function PlansPage() {
       const res = await fetch(`/api/admin/channels/${editingChannel.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           price: priceInPaise,
-          epg: epgVal
+          epg: epgVal,
+          name: channelEditName,
+          hd_sd: channelEditHdSd,
+          genre: channelEditGenre,
+          type: channelEditType,
         }),
       });
       if (res.ok) {
         setEditingChannel(null);
         setChannelPrice('');
         setChannelEpg('');
+        setChannelEditName('');
+        setChannelEditHdSd('SD');
+        setChannelEditGenre('');
+        setChannelEditType('');
         fetchChannels();
       } else {
         alert('Failed to update channel details');
@@ -467,52 +483,53 @@ export default function PlansPage() {
             <div className="rounded-2xl p-5 sm:p-6 mb-6" style={cardStyle}>
               <h2 className="font-display text-lg font-bold text-white mb-5">Edit Channel Details</h2>
               <form onSubmit={handleUpdateChannelPrice} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-400">Channel Name: <span className="text-white font-bold">{editingChannel.name} ({editingChannel.hd_sd})</span></p>
-                    <p className="text-sm text-gray-400">Genre: <span className="text-white font-medium">{editingChannel.genre}</span></p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className={labelStyle}>Channel Name</label>
+                    <input type="text" value={channelEditName} onChange={(e) => setChannelEditName(e.target.value)} required
+                      className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all text-white border"
+                      style={{ ...inputStyle, borderColor: 'rgba(255,255,255,0.1)' }} />
+                  </div>
+                  <div>
+                    <label className={labelStyle}>HD / SD</label>
+                    <select value={channelEditHdSd} onChange={(e) => setChannelEditHdSd(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl text-sm outline-none bg-[#1c1c24] border border-white/10 text-white">
+                      <option value="SD">SD</option>
+                      <option value="HD">HD</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelStyle}>Genre</label>
+                    <input type="text" value={channelEditGenre} onChange={(e) => setChannelEditGenre(e.target.value)} required
+                      className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all text-white border"
+                      style={{ ...inputStyle, borderColor: 'rgba(255,255,255,0.1)' }} />
+                  </div>
+                  <div>
+                    <label className={labelStyle}>Type</label>
+                    <input type="text" value={channelEditType} onChange={(e) => setChannelEditType(e.target.value)} required
+                      className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all text-white border"
+                      style={{ ...inputStyle, borderColor: 'rgba(255,255,255,0.1)' }} />
                   </div>
                   <div>
                     <label className={labelStyle}>Price (₹, Inclusive of Tax)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={channelPrice}
-                      onChange={(e) => setChannelPrice(e.target.value)}
-                      placeholder="e.g. 29.50"
-                      required
+                    <input type="number" step="0.01" min="0" value={channelPrice} onChange={(e) => setChannelPrice(e.target.value)} placeholder="e.g. 29.50" required
                       className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all text-white border"
-                      style={{
-                        ...inputStyle,
-                        borderColor: 'rgba(255, 255, 255, 0.1)'
-                      }}
-                    />
+                      style={{ ...inputStyle, borderColor: 'rgba(255,255,255,0.1)' }} />
                   </div>
                   <div>
                     <label className={labelStyle}>Channel Number</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={channelEpg}
-                      onChange={(e) => setChannelEpg(e.target.value)}
-                      placeholder="e.g. 115"
-                      required
+                    <input type="number" min="1" value={channelEpg} onChange={(e) => setChannelEpg(e.target.value)} placeholder="e.g. 115" required
                       className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all text-white border"
-                      style={{
-                        ...inputStyle,
-                        borderColor: 'rgba(255, 255, 255, 0.1)'
-                      }}
-                    />
+                      style={{ ...inputStyle, borderColor: 'rgba(255,255,255,0.1)' }} />
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button type="submit" disabled={submitting}
                     className="px-6 py-3 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 disabled:opacity-50 flex-1"
                     style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)' }}>
-                    {submitting ? 'Updating Price...' : 'Update Price'}
+                    {submitting ? 'Updating...' : 'Update Channel'}
                   </button>
-                  <button type="button" onClick={() => { setEditingChannel(null); setChannelPrice(''); }}
+                  <button type="button" onClick={() => { setEditingChannel(null); setChannelPrice(''); setChannelEpg(''); }}
                     className="px-6 py-3 rounded-xl font-bold text-sm transition-all flex-1"
                     style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)' }}>
                     Cancel
@@ -593,7 +610,7 @@ export default function PlansPage() {
                               <button onClick={() => handleEditChannel(c)}
                                 className="text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
                               >
-                                Edit Price
+                                Edit
                               </button>
                               <span className="text-gray-600">|</span>
                               <button onClick={() => handleDeleteChannel(c.id, c.name)}

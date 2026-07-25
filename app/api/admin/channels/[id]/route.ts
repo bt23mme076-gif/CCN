@@ -6,8 +6,12 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 const updateChannelSchema = z.object({
-  price: z.number().int().nonnegative('Price must be non-negative').optional(), // in paise, inclusive of tax
+  price: z.number().int().nonnegative('Price must be non-negative').optional(),
   epg: z.number().int().positive('EPG must be positive').optional(),
+  name: z.string().min(1).optional(),
+  hd_sd: z.enum(['HD', 'SD']).optional(),
+  genre: z.string().min(1).optional(),
+  type: z.string().min(1).optional(),
 });
 
 export async function PATCH(
@@ -18,7 +22,7 @@ export async function PATCH(
     await requireAdminAuth();
 
     const body = await request.json();
-    const { price, epg } = updateChannelSchema.parse(body);
+    const { price, epg, name, hd_sd, genre, type } = updateChannelSchema.parse(body);
     const channelId = parseInt(params.id);
 
     if (isNaN(channelId)) {
@@ -30,9 +34,11 @@ export async function PATCH(
       updateData.price = price;
       updateData.mrp = Math.round(price / 1.18);
     }
-    if (epg !== undefined) {
-      updateData.epg = epg;
-    }
+    if (epg !== undefined) updateData.epg = epg;
+    if (name !== undefined) updateData.name = name;
+    if (hd_sd !== undefined) updateData.hd_sd = hd_sd;
+    if (genre !== undefined) updateData.genre = genre;
+    if (type !== undefined) updateData.type = type;
 
     await db
       .update(channels)
