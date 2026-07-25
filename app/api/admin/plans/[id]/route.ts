@@ -5,6 +5,8 @@ import { plans, recharges } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const updatePlanSchema = z.object({
   name: z.string().min(1).optional(),
   price: z.number().int().positive().optional(),

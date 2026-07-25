@@ -5,6 +5,8 @@ import { recharges, customers, customerConnections } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateReceiptHTML } from '@/lib/receipt';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   _request: Request,
   { params }: { params: { id: string } }

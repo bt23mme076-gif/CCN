@@ -7,6 +7,8 @@ import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 const createAlacarteOrderSchema = z.object({
   channelIds: z.array(z.number()).min(1, 'Select at least one channel'),
 });

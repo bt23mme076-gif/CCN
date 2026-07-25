@@ -6,6 +6,8 @@ import bcrypt from 'bcryptjs';
 import { signToken, setAuthCookie } from '@/lib/auth';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const loginSchema = z.object({
   mobile: z.string().regex(/^\d{10}$/, 'Mobile must be 10 digits'),
   pin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),

@@ -5,6 +5,8 @@ import { customerPriceOverrides, plans } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
+export const dynamic = 'force-dynamic';
+
 // GET — list all overrides for a customer
 export async function GET(
   _request: NextRequest,

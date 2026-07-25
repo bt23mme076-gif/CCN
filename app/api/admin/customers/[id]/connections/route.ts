@@ -5,6 +5,8 @@ import { customerConnections } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   await requireAdminAuth();
   const conns = await db.select().from(customerConnections)

@@ -5,6 +5,8 @@ import { accessoryOrders } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const verifyPaymentSchema = z.object({
   orderId: z.string(),
 });

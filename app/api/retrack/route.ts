@@ -6,6 +6,8 @@ import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import { sendPushToAdmin } from '@/lib/push';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const user = await requireCustomerAuth();

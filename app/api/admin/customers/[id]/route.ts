@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { customers, recharges, plans } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

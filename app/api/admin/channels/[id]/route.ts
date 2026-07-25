@@ -5,6 +5,8 @@ import { channels } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const updateChannelSchema = z.object({
   price: z.number().int().nonnegative('Price must be non-negative').optional(),
   epg: z.number().int().positive('EPG must be positive').optional(),

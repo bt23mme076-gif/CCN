@@ -5,6 +5,8 @@ import { recharges, plans, customers } from '@/lib/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { sendPushToCustomer } from '@/lib/push';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }

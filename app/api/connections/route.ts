@@ -5,6 +5,8 @@ import { recharges } from '@/lib/db/schema';
 import { eq, desc, and, isNull } from 'drizzle-orm';
 import { getCustomerConnections } from '@/lib/connections';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const user = await getCurrentUser();
   if (!user || user.role !== 'customer') {

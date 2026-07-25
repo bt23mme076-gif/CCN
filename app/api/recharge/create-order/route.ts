@@ -7,6 +7,8 @@ import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { resolveConnection } from '@/lib/connections';
 
+export const dynamic = 'force-dynamic';
+
 const createOrderSchema = z.object({
   planId: z.string(),
   connectionId: z.string().optional(), // 'primary' or customer_connections.id

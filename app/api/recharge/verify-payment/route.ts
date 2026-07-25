@@ -6,6 +6,8 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { sendPushToAdmin } from '@/lib/push';
 
+export const dynamic = 'force-dynamic';
+
 const verifyPaymentSchema = z.object({
   orderId: z.string(),
 });

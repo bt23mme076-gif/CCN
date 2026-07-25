@@ -6,6 +6,8 @@ import bcrypt from 'bcryptjs';
 import { signToken, setAuthCookie } from '@/lib/auth';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),

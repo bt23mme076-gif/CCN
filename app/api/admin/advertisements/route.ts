@@ -5,6 +5,8 @@ import { advertisements } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     await requireAdminAuth();

@@ -5,6 +5,8 @@ import { recharges, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(_request: NextRequest) {
   try {
     const user = await requireCustomerAuth();

@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { accessoryOrders } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(
   _request: NextRequest,
   { params }: { params: { id: string } }

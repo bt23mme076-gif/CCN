@@ -7,6 +7,8 @@ import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const createCustomerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   mobile: z.string().regex(/^\d{10}$/, 'Mobile must be 10 digits'),

@@ -5,6 +5,8 @@ import { channels } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const createChannelSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   hd_sd: z.enum(['HD', 'SD']),

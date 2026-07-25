@@ -6,6 +6,8 @@ import { eq, sql } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const createPlanSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   price: z.number().int().positive('Price must be positive'),

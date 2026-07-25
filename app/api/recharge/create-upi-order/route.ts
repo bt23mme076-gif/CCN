@@ -6,6 +6,8 @@ import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { resolveConnection } from '@/lib/connections';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const user = await requireCustomerAuth();

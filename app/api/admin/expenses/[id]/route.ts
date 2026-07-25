@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { expenses } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } }

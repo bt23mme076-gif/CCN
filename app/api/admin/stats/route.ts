@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
 import { eq, sql, gte } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     await requireAdminAuth();

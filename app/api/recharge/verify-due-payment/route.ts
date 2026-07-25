@@ -6,6 +6,8 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { sendPushToAdmin } from '@/lib/push';
 
+export const dynamic = 'force-dynamic';
+
 const schema = z.object({ orderId: z.string() });
 
 export async function POST(request: NextRequest) {
