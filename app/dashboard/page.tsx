@@ -85,37 +85,50 @@ export default function DashboardPage() {
   const checkPaymentStatus = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('order_id');
-    const isFast = urlParams.get('type') === 'fast';
+    const type = urlParams.get('type');
+    const isFast = type === 'fast';
+    const isDue = type === 'due';
 
     if (!orderId) return;
 
     try {
-      const verifyResponse = await fetch('/api/recharge/verify-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId }),
-      });
-      const verifyData = await verifyResponse.json();
-
-      if (verifyData.success) {
-        const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
-        const cidParam = cid && cid !== 'primary' ? `?cid=${cid}` : '';
-        const rechargesRes = await fetch(`/api/recharge/history${cidParam}`, { cache: 'no-store' });
-        const rechargesData = await rechargesRes.json();
-        const all: Recharge[] = rechargesData.recharges || [];
-        const paid = all.find((r) => r.status === 'paid');
-        const existingActive = all.find(
-          (r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date() && !r.plan_name.toUpperCase().startsWith('ALA CARTE')
-        );
-        if (paid) {
-          setJustPaidRecharge(paid);
-          setPaymentHasActivePlan(!!existingActive);
-          setPaymentActivePlanExpiry(existingActive?.expires_at ?? null);
-          setShowActivationScreen(true);
+      if (isDue) {
+        const verifyResponse = await fetch('/api/recharge/verify-due-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId }),
+        });
+        const verifyData = await verifyResponse.json();
+        if (verifyData.success) {
+          alert('Due amount paid successfully! You can now recharge.');
         }
       } else {
-        // Fast recharge failure → homepage; normal recharge failure → stay on dashboard
-        if (isFast) router.push('/');
+        const verifyResponse = await fetch('/api/recharge/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId }),
+        });
+        const verifyData = await verifyResponse.json();
+
+        if (verifyData.success) {
+          const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+          const cidParam = cid && cid !== 'primary' ? `?cid=${cid}` : '';
+          const rechargesRes = await fetch(`/api/recharge/history${cidParam}`, { cache: 'no-store' });
+          const rechargesData = await rechargesRes.json();
+          const all: Recharge[] = rechargesData.recharges || [];
+          const paid = all.find((r) => r.status === 'paid');
+          const existingActive = all.find(
+            (r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date() && !r.plan_name.toUpperCase().startsWith('ALA CARTE')
+          );
+          if (paid) {
+            setJustPaidRecharge(paid);
+            setPaymentHasActivePlan(!!existingActive);
+            setPaymentActivePlanExpiry(existingActive?.expires_at ?? null);
+            setShowActivationScreen(true);
+          }
+        } else {
+          if (isFast) router.push('/');
+        }
       }
     } catch {
       if (isFast) router.push('/');

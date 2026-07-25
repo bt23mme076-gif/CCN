@@ -32,6 +32,7 @@ interface Customer {
   name: string;
   mobile: string;
   stb_number: string;
+  outstanding_balance: number;
   fast_recharge_enabled: boolean;
   fast_recharge_amount: number;
 }
@@ -150,6 +151,13 @@ export default function HomePage() {
   const [fastLoading, setFastLoading] = useState(false);
   const [fastPaymentFailed, setFastPaymentFailed] = useState(false);
 
+  const [showDueModal, setShowDueModal] = useState(false);
+  const [dueSessionId, setDueSessionId] = useState('');
+  const [dueOrderId, setDueOrderId] = useState('');
+  const [dueUpiLink, setDueUpiLink] = useState('');
+  const [dueAmount, setDueAmount] = useState(0);
+  const [dueLoading, setDueLoading] = useState(false);
+
   const handleFastRecharge = async () => {
     if (!customer) { router.push('/login'); return; }
     setFastLoading(true);
@@ -177,6 +185,29 @@ export default function HomePage() {
       alert('Failed to initiate payment. Please try again.');
     } finally {
       setFastLoading(false);
+    }
+  };
+
+  const handlePayDue = async () => {
+    if (!customer) { router.push('/login'); return; }
+    setDueLoading(true);
+    try {
+      const res = await fetch('/api/recharge/create-due-order', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
+      setDueAmount(data.amount);
+      setDueUpiLink(data.upiLink);
+      if (data.paymentSessionId) {
+        setDueSessionId(data.paymentSessionId);
+        setDueOrderId(data.orderId);
+        setShowDueModal(true);
+      } else {
+        window.location.href = data.upiLink;
+      }
+    } catch {
+      alert('Failed to initiate payment. Please try again.');
+    } finally {
+      setDueLoading(false);
     }
   };
 
@@ -299,6 +330,26 @@ export default function HomePage() {
             Recharge your cable TV from your phone — anytime, anywhere with instant activation
             and 100% secure payments.
           </p>
+
+          {customer && customer.outstanding_balance > 0 && (
+            <div className="animate-fadeInUp-delay-3 mb-4 mx-auto w-full max-w-md">
+              <div className="rounded-2xl px-5 py-4 flex items-center justify-between gap-4"
+                style={{ background: 'rgba(230,57,70,0.15)', border: '1px solid rgba(230,57,70,0.4)' }}>
+                <div>
+                  <p className="text-white font-bold text-sm">Outstanding Due</p>
+                  <p className="text-red-300 text-xs mt-0.5">Clear your due to continue recharging</p>
+                </div>
+                <button
+                  onClick={handlePayDue}
+                  disabled={dueLoading}
+                  className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-white text-sm disabled:opacity-70 transition-all hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #e63946, #c1121f)' }}
+                >
+                  {dueLoading ? '...' : `Pay ₹${customer.outstanding_balance / 100}`}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="animate-fadeInUp-delay-3 flex flex-col gap-3 justify-center items-center">
             {!customer ? (
@@ -1005,6 +1056,16 @@ export default function HomePage() {
         orderId={fastOrderId}
         amount={fastAmount}
         fallbackUpiLink={fastUpiLink}
+      />
+
+      <FastRechargeModal
+        isOpen={showDueModal}
+        onClose={() => setShowDueModal(false)}
+        paymentSessionId={dueSessionId}
+        orderId={dueOrderId}
+        amount={dueAmount}
+        fallbackUpiLink={dueUpiLink}
+        label="Pay Due Amount"
       />
 
       {customer && (

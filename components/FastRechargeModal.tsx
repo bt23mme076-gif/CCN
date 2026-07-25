@@ -10,6 +10,7 @@ interface FastRechargeModalProps {
   orderId: string;
   amount: number;
   fallbackUpiLink: string;
+  label?: string;
 }
 
 const UPI_APPS = [
@@ -18,7 +19,7 @@ const UPI_APPS = [
   { key: 'default', label: 'Other UPI Apps' },
 ] as const;
 
-export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, orderId, amount, fallbackUpiLink }: FastRechargeModalProps) {
+export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, orderId, amount, fallbackUpiLink, label = '{label}' }: FastRechargeModalProps) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
   const componentRefs = useRef<Record<string, any>>({});
@@ -81,7 +82,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, o
         <div className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl">
           <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Fast Recharge</p>
+              <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">{label}</p>
               <p className="text-3xl font-extrabold text-gray-900 mt-0.5">₹{amountRs}</p>
             </div>
             <button onClick={onClose} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
@@ -107,7 +108,7 @@ export default function FastRechargeModal({ isOpen, onClose, paymentSessionId, o
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Fast Recharge</p>
+            <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">{label}</p>
             <p className="text-3xl font-extrabold text-gray-900 mt-0.5">₹{amountRs}</p>
           </div>
           <button onClick={onClose}
