@@ -6,6 +6,8 @@ import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const createOrderSchema = z.object({
   accessoryId: z.string(),
 });
