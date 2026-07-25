@@ -28,7 +28,8 @@ export async function POST(_request: NextRequest) {
     }
 
     const orderId = generateOrderId();
-    const amountInRupees = (c.outstanding_balance / 100).toFixed(2);
+    const amountInPaise = c.outstanding_balance * 100; // outstanding_balance is stored in rupees
+    const amountInRupees = c.outstanding_balance.toFixed(2);
 
     await db.insert(recharges).values({
       id: orderId,
@@ -36,7 +37,7 @@ export async function POST(_request: NextRequest) {
       connection_id: null,
       plan_id: null,
       plan_name: 'Due Payment',
-      amount: c.outstanding_balance,
+      amount: amountInPaise,
       status: 'pending',
     });
 
@@ -81,7 +82,7 @@ export async function POST(_request: NextRequest) {
     const upiParams = `pa=9399974696-4@ibl&pn=CCN%20Networks&am=${amountInRupees}&cu=INR&tn=CCN%20Due%20Payment`;
     upiLink = `upi://pay?${upiParams}`;
 
-    return NextResponse.json({ orderId, upiLink, amount: c.outstanding_balance, paymentSessionId });
+    return NextResponse.json({ orderId, upiLink, amount: amountInPaise, paymentSessionId });
   } catch (error) {
     console.error('Due order error:', error);
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
