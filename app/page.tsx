@@ -345,7 +345,7 @@ export default function HomePage() {
                   className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-white text-sm disabled:opacity-70 transition-all hover:scale-105"
                   style={{ background: 'linear-gradient(135deg, #e63946, #c1121f)' }}
                 >
-                  {dueLoading ? '...' : `Pay ₹${customer.outstanding_balance / 100}`}
+                  {dueLoading ? '...' : `Pay ₹${customer.outstanding_balance}`}
                 </button>
               </div>
             </div>
