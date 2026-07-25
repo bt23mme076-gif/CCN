@@ -11,7 +11,8 @@ export async function POST(request: NextRequest) {
     const timestamp = request.headers.get('x-webhook-timestamp');
 
     if (!signature || !timestamp) {
-      return NextResponse.json({ error: 'Missing signature or timestamp' }, { status: 400 });
+      // Cashfree test ping — no signature, just acknowledge
+      return NextResponse.json({ success: true });
     }
 
     // Verify webhook signature
