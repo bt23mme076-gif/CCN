@@ -1,24 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plans, recharges, customers, customerPriceOverrides } from '@/lib/db/schema';
+import { plans, recharges, customers, customerPriceOverrides, customerPlanDiscounts } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { resolveConnection } from '@/lib/connections';
+import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
 
 export const dynamic = 'force-dynamic';
 
 const createOrderSchema = z.object({
   planId: z.string(),
   connectionId: z.string().optional(), // 'primary' or customer_connections.id
+  months: z.number().int().refine(isValidMonths, 'Invalid duration').optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const user = await requireCustomerAuth();
     const body = await request.json();
-    const { planId, connectionId } = createOrderSchema.parse(body);
+    const { planId, connectionId, months = 1 } = createOrderSchema.parse(body);
 
     const targetCustomerId = user.customerId;
     // Resolve which STB this recharge is for
@@ -52,8 +54,6 @@ export async function POST(request: NextRequest) {
       )
       .limit(1);
 
-    const finalPrice = override.length > 0 ? override[0].custom_price : plan[0].price;
-
     // Get customer details
     const customer = await db
       .select()
@@ -67,6 +67,31 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    let discountPercent = 0;
+    if (months > 1) {
+      const discountRow = await db
+        .select()
+        .from(customerPlanDiscounts)
+        .where(
+          and(
+            eq(customerPlanDiscounts.customer_id, targetCustomerId),
+            eq(customerPlanDiscounts.plan_id, planId),
+            eq(customerPlanDiscounts.months, months)
+          )
+        )
+        .limit(1);
+      discountPercent = discountRow.length > 0 ? discountRow[0].discount_percent : 0;
+    }
+
+    const basePrice = override.length > 0 ? override[0].custom_price : plan[0].price;
+    const { price: finalPrice, durationDays: finalDurationDays } = calcDurationPricing(
+      basePrice,
+      plan[0].duration_days,
+      months,
+      discountPercent
+    );
+    const displayPlanName = months > 1 ? `${plan[0].name} (${months} Months)` : plan[0].name;
 
     if (customer[0].outstanding_balance > 0) {
       return NextResponse.json(
@@ -148,7 +173,8 @@ export async function POST(request: NextRequest) {
       customer_id: targetCustomerId,
       connection_id: resolvedConnectionId,
       plan_id: plan[0].id,
-      plan_name: plan[0].name,
+      plan_name: displayPlanName,
+      duration_days: months > 1 ? finalDurationDays : null,
       amount: finalPrice,
       status: 'pending',
       cashfree_order_id: cashfreeOrder.order_id || rechargeId,

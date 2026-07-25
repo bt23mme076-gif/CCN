@@ -173,8 +173,9 @@ export async function POST(
       }
 
       // Shift base date into IST, add duration, set to midnight IST, convert back to UTC
+      const effectiveDurationDays = rechargeData.duration_days ?? plan!.duration_days;
       const expiryIstHelper = new Date(baseDate.getTime() + IST_OFFSET_MS);
-      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan!.duration_days);
+      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + effectiveDurationDays);
       expiryIstHelper.setUTCHours(0, 0, 0, 0);
       expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
     }

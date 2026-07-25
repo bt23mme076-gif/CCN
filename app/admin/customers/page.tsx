@@ -98,6 +98,11 @@ export default function CustomersPage() {
   const [togglingFastRecharge, setTogglingFastRecharge] = useState<string | null>(null);
   const [fastRechargeModal, setFastRechargeModal] = useState<{ id: string; name: string; currentAmount: number } | null>(null);
   const [fastRechargeAmountInput, setFastRechargeAmountInput] = useState('');
+  // States for per-plan multi-month discounts
+  const [planDiscountModal, setPlanDiscountModal] = useState<{ id: string; name: string } | null>(null);
+  const [planDiscountGrid, setPlanDiscountGrid] = useState<Record<string, { 3?: string; 6?: string; 12?: string }>>({});
+  const [loadingPlanDiscounts, setLoadingPlanDiscounts] = useState(false);
+  const [savingPlanDiscounts, setSavingPlanDiscounts] = useState(false);
   // Dropdown
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
@@ -135,6 +140,57 @@ export default function CustomersPage() {
       alert('Failed to enable Fast Recharge');
     } finally {
       setTogglingFastRecharge(null);
+    }
+  };
+
+  const handleOpenPlanDiscounts = async (c: { id: string; name: string }) => {
+    setPlanDiscountModal({ id: c.id, name: c.name });
+    setLoadingPlanDiscounts(true);
+    try {
+      const data = await (await fetch(`/api/admin/customers/${c.id}/plan-discounts`)).json();
+      const grid: Record<string, { 3?: string; 6?: string; 12?: string }> = {};
+      for (const d of data.discounts || []) {
+        grid[d.plan_id] = { ...grid[d.plan_id], [d.months]: String(d.discount_percent) };
+      }
+      setPlanDiscountGrid(grid);
+    } catch {
+      setPlanDiscountGrid({});
+    } finally {
+      setLoadingPlanDiscounts(false);
+    }
+  };
+
+  const handlePlanDiscountChange = (planId: string, months: 3 | 6 | 12, value: string) => {
+    setPlanDiscountGrid((prev) => ({ ...prev, [planId]: { ...prev[planId], [months]: value } }));
+  };
+
+  const handleSavePlanDiscounts = async () => {
+    if (!planDiscountModal) return;
+    setSavingPlanDiscounts(true);
+    try {
+      const discounts: { planId: string; months: number; percent: number }[] = [];
+      for (const [planId, tiers] of Object.entries(planDiscountGrid)) {
+        for (const months of [3, 6, 12] as const) {
+          const val = tiers[months];
+          if (val && parseFloat(val) > 0) {
+            discounts.push({ planId, months, percent: parseFloat(val) });
+          }
+        }
+      }
+      const res = await fetch(`/api/admin/customers/${planDiscountModal.id}/plan-discounts`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ discounts }),
+      });
+      if (res.ok) {
+        setPlanDiscountModal(null);
+      } else {
+        alert('Failed to save discounts');
+      }
+    } catch {
+      alert('Failed to save discounts');
+    } finally {
+      setSavingPlanDiscounts(false);
     }
   };
 
@@ -739,6 +795,7 @@ export default function CustomersPage() {
                 { label: '💲 Set Prices', action: () => handleManagePrices(c), color: '#a78bfa' },
                 { label: '🔑 Reset PIN', action: () => setSelectedCustForReset(c), color: '#ec4899' },
                 { label: togglingFastRecharge === c.id ? 'Updating…' : c.fast_recharge_enabled ? `⚡ Fast Recharge: ON (₹${c.fast_recharge_amount / 100})` : '⚡ Fast Recharge: OFF', action: () => handleToggleFastRecharge(c), color: c.fast_recharge_enabled ? '#facc15' : '#6b7280' },
+                { label: '🏷 Plan Discounts', action: () => handleOpenPlanDiscounts(c), color: '#4ade80' },
                 { label: deleting === c.id ? 'Deleting…' : '🗑 Delete', action: () => handleDelete(c.id, c.name), color: '#f87171' },
               ].map(({ label, action, color }) => (
                 <button key={label} onClick={() => { action(); setOpenDropdown(null); setDropdownPos(null); }}
@@ -1273,6 +1330,67 @@ export default function CustomersPage() {
                 className="flex-1 py-2.5 rounded-xl font-bold text-white disabled:opacity-50"
                 style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
                 {togglingFastRecharge === fastRechargeModal.id ? 'Saving…' : 'Enable'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Per-Plan Multi-Month Discount Grid Modal */}
+      {planDiscountModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl p-6 shadow-2xl text-white" style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <h3 className="font-bold text-lg mb-1">🏷 Plan Discounts</h3>
+            <p className="text-sm text-gray-400 mb-5">{planDiscountModal.name} ke liye har plan aur duration par discount % set karo. Khaali chodo agar discount nahi dena.</p>
+
+            {loadingPlanDiscounts ? (
+              <div className="py-8 text-center text-gray-400 text-sm">Loading…</div>
+            ) : (
+              <div className="overflow-x-auto mb-5">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-gray-400 text-xs uppercase">
+                      <th className="text-left pb-2">Plan</th>
+                      <th className="pb-2 px-2">3M %</th>
+                      <th className="pb-2 px-2">6M %</th>
+                      <th className="pb-2 px-2">12M %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {plans.map((plan) => (
+                      <tr key={plan.id} className="border-t border-white/5">
+                        <td className="py-2 font-semibold">{plan.name}</td>
+                        {([3, 6, 12] as const).map((months) => (
+                          <td key={months} className="py-2 px-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={planDiscountGrid[plan.id]?.[months] ?? ''}
+                              onChange={(e) => handlePlanDiscountChange(plan.id, months, e.target.value)}
+                              placeholder="0"
+                              className="w-16 px-2 py-1.5 rounded-lg text-white text-center outline-none"
+                              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={() => setPlanDiscountModal(null)}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-gray-400 border border-white/10 hover:bg-white/5 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleSavePlanDiscounts}
+                disabled={savingPlanDiscounts || loadingPlanDiscounts}
+                className="flex-1 py-2.5 rounded-xl font-bold text-white disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
+                {savingPlanDiscounts ? 'Saving…' : 'Save Discounts'}
               </button>
             </div>
           </div>

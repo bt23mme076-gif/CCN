@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const customers = pgTable('customers', {
@@ -45,6 +45,7 @@ export const recharges = pgTable('recharges', {
   connection_id: text('connection_id').references(() => customerConnections.id),
   plan_id: text('plan_id').references(() => plans.id),
   plan_name: text('plan_name').notNull(),
+  duration_days: integer('duration_days'), // overrides plan's default duration when a multi-month recharge was bought
   amount: integer('amount').notNull(), // in paise
   status: text('status').notNull(), // 'pending' | 'paid' | 'activated' | 'failed'
   cashfree_order_id: text('cashfree_order_id'),
@@ -86,6 +87,19 @@ export const customerPriceOverrides = pgTable('customer_price_overrides', {
 }, (table) => ({
   // /api/plans looks up overrides by customer_id on every logged-in page load.
   customerIdx: index('price_overrides_customer_id_idx').on(table.customer_id),
+}));
+
+// Customer-specific multi-month recharge discounts, set per plan per duration tier (3/6/12 months)
+export const customerPlanDiscounts = pgTable('customer_plan_discounts', {
+  id: text('id').primaryKey(),
+  customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  plan_id: text('plan_id').notNull().references(() => plans.id, { onDelete: 'cascade' }),
+  months: integer('months').notNull(), // 3, 6, or 12
+  discount_percent: integer('discount_percent').notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  customerIdx: index('plan_discounts_customer_id_idx').on(table.customer_id),
+  uniqueCombo: uniqueIndex('plan_discounts_customer_plan_months_idx').on(table.customer_id, table.plan_id, table.months),
 }));
 
 export const accessories = pgTable('accessories', {

@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { formatCurrency } from '@/lib/utils';
+import { DURATION_OPTIONS, calcDurationPricing } from '@/lib/planDuration';
 import ChannelListDownload from './ChannelListDownload';
 import { useTranslation } from '@/lib/useTranslation';
 
@@ -15,12 +17,47 @@ interface PlanCardProps {
     is_popular: boolean;
     isCustomPrice?: boolean;
   };
-  onSelect: (planId: string) => void;
+  onSelect: (planId: string, months: number) => void;
   index?: number;
+  discounts?: Record<number, number>; // customer-specific, admin controlled — e.g. { 3: 5, 6: 10, 12: 15 }
 }
 
-export default function PlanCard({ plan, onSelect, index }: PlanCardProps) {
+export default function PlanCard({ plan, onSelect, index, discounts = {} }: PlanCardProps) {
   const { t } = useTranslation();
+  const [months, setMonths] = useState(1);
+  const currentDiscountPercent = discounts[months] || 0;
+  const { price: displayPrice, durationDays: displayDurationDays } = calcDurationPricing(
+    plan.price,
+    plan.duration_days,
+    months,
+    currentDiscountPercent
+  );
+
+  const renderDurationSelector = (variant: 'popular' | 'standard') => (
+    <div className="mt-4 flex justify-center gap-1.5">
+      {DURATION_OPTIONS.map((opt) => {
+        const active = months === opt.months;
+        const activeClass = variant === 'popular'
+          ? 'bg-black text-white shadow-md scale-105'
+          : 'bg-pink-500 text-[#111] shadow-md scale-105';
+        const inactiveClass = variant === 'popular'
+          ? 'bg-black/10 text-black/60 hover:bg-black/15'
+          : 'bg-white/10 text-white/60 hover:bg-white/15';
+        const optDiscount = discounts[opt.months] || 0;
+        const showDiscount = opt.months > 1 && optDiscount > 0;
+        return (
+          <button
+            key={opt.months}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setMonths(opt.months); }}
+            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${active ? activeClass : inactiveClass}`}
+          >
+            {opt.label}{showDiscount ? ` -${optDiscount}%` : ''}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   // Determine styling role based on index or popular state
   const isPopular = plan.is_popular || index === 1;
@@ -58,10 +95,10 @@ export default function PlanCard({ plan, onSelect, index }: PlanCardProps) {
           <div className="text-center mb-6 pt-2">
             <div className="mb-2 text-lg font-black uppercase tracking-wider text-black/80">{plan.name}</div>
             <div className="mb-1 text-5xl font-black text-black">
-              {formatCurrency(plan.price)}
+              {formatCurrency(displayPrice)}
             </div>
             <div className="text-black/70 text-sm font-bold mt-1">
-              for {plan.duration_days} {t('days')}
+              for {displayDurationDays} {t('days')}
             </div>
           </div>
 
@@ -84,11 +121,13 @@ export default function PlanCard({ plan, onSelect, index }: PlanCardProps) {
           </ul>
 
           <button
-            onClick={() => onSelect(plan.id)}
+            onClick={() => onSelect(plan.id, months)}
             className="w-full rounded-xl bg-neutral-900 py-3.5 font-black text-white hover:bg-neutral-800 transition shadow-lg hover:shadow-black/25 active:scale-95 text-center"
           >
             {t('selectPlan')}
           </button>
+
+          {renderDurationSelector('popular')}
         </motion.div>
       </div>
     );
@@ -113,10 +152,10 @@ export default function PlanCard({ plan, onSelect, index }: PlanCardProps) {
         <div className="text-center mb-6">
           <div className="mb-2 text-lg font-bold text-pink-400 tracking-wider uppercase">{plan.name}</div>
           <div className="mb-1 text-3xl sm:text-4xl font-extrabold text-white">
-            {formatCurrency(plan.price)}
+            {formatCurrency(displayPrice)}
           </div>
           <div className="text-white/60 text-xs sm:text-sm">
-            for {plan.duration_days} {t('days')}
+            for {displayDurationDays} {t('days')}
           </div>
         </div>
 
@@ -139,11 +178,13 @@ export default function PlanCard({ plan, onSelect, index }: PlanCardProps) {
         </ul>
 
         <button
-          onClick={() => onSelect(plan.id)}
+          onClick={() => onSelect(plan.id, months)}
           className="w-full rounded-xl bg-pink-500 py-3.5 font-bold text-[#111] hover:bg-pink-400 transition shadow-md hover:shadow-pink-500/25 active:scale-95 text-center"
         >
           {t('selectPlan')}
         </button>
+
+        {renderDurationSelector('standard')}
       </motion.div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
+import { calcDurationPricing } from '@/lib/planDuration';
 import { load } from '@cashfreepayments/cashfree-js';
 
 
@@ -14,6 +15,8 @@ interface PaymentModalProps {
     price: number;
     duration_days: number;
   } | null;
+  months?: number;
+  discounts?: Record<number, number>;
   stbNumber: string;
   customerName?: string;
   customerMobile?: string;
@@ -40,6 +43,8 @@ export default function PaymentModal({
   isOpen,
   onClose,
   plan,
+  months = 1,
+  discounts = {},
   stbNumber,
   customerName = '',
   customerMobile = '',
@@ -52,6 +57,13 @@ export default function PaymentModal({
 
   if (!isOpen || !plan) return null;
 
+  const { price: displayPrice, durationDays: displayDurationDays } = calcDurationPricing(
+    plan.price,
+    plan.duration_days,
+    months,
+    discounts[months] || 0
+  );
+
   const handlePayment = async () => {
     try {
       setLoading(true);
@@ -59,7 +71,7 @@ export default function PaymentModal({
       const orderResponse = await fetch('/api/recharge/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: plan.id, connectionId: connectionId || 'primary' }),
+        body: JSON.stringify({ planId: plan.id, connectionId: connectionId || 'primary', months }),
       });
 
       if (!orderResponse.ok) {
@@ -206,11 +218,11 @@ export default function PaymentModal({
         <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
           <div className="flex justify-between text-sm sm:text-base">
             <span className="text-gray-600">Plan:</span>
-            <span className="font-medium">{plan.name}</span>
+            <span className="font-medium">{plan.name}{months > 1 ? ` (${months} Months)` : ''}</span>
           </div>
           <div className="flex justify-between text-sm sm:text-base">
             <span className="text-gray-600">Duration:</span>
-            <span className="font-medium">{plan.duration_days} days</span>
+            <span className="font-medium">{displayDurationDays} days</span>
           </div>
           <div className="flex justify-between text-sm sm:text-base">
             <span className="text-gray-600">STB Number:</span>
@@ -218,7 +230,7 @@ export default function PaymentModal({
           </div>
           <div className="flex justify-between text-base sm:text-lg font-bold pt-3 sm:pt-4 border-t">
             <span>Total Amount:</span>
-            <span className="text-accent-red">{formatCurrency(plan.price)}</span>
+            <span className="text-accent-red">{formatCurrency(displayPrice)}</span>
           </div>
         </div>
 

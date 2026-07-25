@@ -25,6 +25,7 @@ interface Plan {
   duration_days: number;
   channels: string[];
   is_popular: boolean;
+  discounts?: Record<number, number>;
 }
 
 interface Customer {
@@ -53,6 +54,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [selectedPlanMonths, setSelectedPlanMonths] = useState(1);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const [selectedAccessory, setSelectedAccessory] = useState<Accessory | null>(null);
@@ -191,7 +193,7 @@ export default function HomePage() {
     }
   };
 
-  const handleSelectPlan = async (planId: string) => {
+  const handleSelectPlan = async (planId: string, months: number = 1) => {
     if (!customer) {
       router.push('/login');
       return;
@@ -199,6 +201,7 @@ export default function HomePage() {
     const plan = plans.find((p) => p.id === planId);
     if (plan) {
       setSelectedPlan(plan);
+      setSelectedPlanMonths(months);
       setShowPaymentModal(true);
     }
   };
@@ -421,7 +424,13 @@ export default function HomePage() {
           ) : displayPlans.length > 0 ? (
             <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-12 md:gap-6 max-w-6xl mx-auto py-12 px-4">
               {displayPlans.map((plan, index) => (
-                <PlanCard key={plan.id} plan={plan} index={index} onSelect={handleSelectPlan} />
+                <PlanCard
+                  key={plan.id}
+                  plan={plan}
+                  index={index}
+                  onSelect={handleSelectPlan}
+                  discounts={plan.discounts}
+                />
               ))}
             </div>
           ) : (
@@ -1034,6 +1043,8 @@ export default function HomePage() {
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           plan={selectedPlan}
+          months={selectedPlanMonths}
+          discounts={selectedPlan?.discounts}
           stbNumber={customer.stb_number}
           customerName={customer.name}
           customerMobile={customer.mobile}

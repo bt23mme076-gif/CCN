@@ -14,6 +14,7 @@ interface Plan {
   channels: string[];
   is_popular: boolean;
   isCustomPrice?: boolean;
+  discounts?: Record<number, number>;
 }
 
 interface Customer {
@@ -29,6 +30,7 @@ export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [selectedPlanMonths, setSelectedPlanMonths] = useState(1);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -67,10 +69,11 @@ export default function PlansPage() {
     }
   };
 
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = (planId: string, months: number = 1) => {
     const plan = plans.find((p) => p.id === planId);
     if (plan) {
       setSelectedPlan(plan);
+      setSelectedPlanMonths(months);
       setShowPaymentModal(true);
     }
   };
@@ -179,7 +182,13 @@ export default function PlansPage() {
               {/* Regular Plans */}
               <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-8 md:gap-6 w-full">
                 {displayPlans.map((plan, index) => (
-                  <PlanCard key={plan.id} plan={plan} index={index} onSelect={handleSelectPlan} />
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    index={index}
+                    onSelect={handleSelectPlan}
+                    discounts={plan.discounts}
+                  />
                 ))}
               </div>
             </>
@@ -195,6 +204,8 @@ export default function PlansPage() {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         plan={selectedPlan}
+        months={selectedPlanMonths}
+        discounts={selectedPlan?.discounts}
         stbNumber={customer?.stb_number || ''}
         customerName={customer?.name || ''}
         customerMobile={customer?.mobile || ''}
