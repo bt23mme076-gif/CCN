@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
               customer_name: c.name,
             },
             order_meta: {
-              return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?order_id=${rechargeId}`,
+              return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?order_id=${rechargeId}&type=fast`,
             },
           }),
         });

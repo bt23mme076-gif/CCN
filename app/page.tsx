@@ -12,7 +12,7 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import ContactSection from '@/components/ContactSection';
 import AlacartePaymentModal from '@/components/AlacartePaymentModal';
 import SponsorSlideshow from '@/components/SponsorSlideshow';
-import FastRechargeModal from '@/components/FastRechargeModal';
+import { openCashfreeCheckout } from '@/lib/cashfreeCheckout';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
 import { getChannelLogo, getChannelColor } from '@/lib/channelLogos';
@@ -143,19 +143,8 @@ export default function HomePage() {
 
 
 
-  const [showFastModal, setShowFastModal] = useState(false);
-  const [fastSessionId, setFastSessionId] = useState('');
-  const [fastOrderId, setFastOrderId] = useState('');
-  const [fastUpiLink, setFastUpiLink] = useState('');
-  const [fastAmount, setFastAmount] = useState(0);
   const [fastLoading, setFastLoading] = useState(false);
   const [fastPaymentFailed, setFastPaymentFailed] = useState(false);
-
-  const [showDueModal, setShowDueModal] = useState(false);
-  const [dueSessionId, setDueSessionId] = useState('');
-  const [dueOrderId, setDueOrderId] = useState('');
-  const [dueUpiLink, setDueUpiLink] = useState('');
-  const [dueAmount, setDueAmount] = useState(0);
   const [dueLoading, setDueLoading] = useState(false);
 
   const handleFastRecharge = async () => {
@@ -171,13 +160,8 @@ export default function HomePage() {
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
 
-      setFastAmount(data.amount);
-      setFastUpiLink(data.upiLink);
-
       if (data.paymentSessionId) {
-        setFastSessionId(data.paymentSessionId);
-        setFastOrderId(data.orderId);
-        setShowFastModal(true);
+        await openCashfreeCheckout(data.paymentSessionId);
       } else {
         window.location.href = data.upiLink;
       }
@@ -195,12 +179,8 @@ export default function HomePage() {
       const res = await fetch('/api/recharge/create-due-order', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
-      setDueAmount(data.amount);
-      setDueUpiLink(data.upiLink);
       if (data.paymentSessionId) {
-        setDueSessionId(data.paymentSessionId);
-        setDueOrderId(data.orderId);
-        setShowDueModal(true);
+        await openCashfreeCheckout(data.paymentSessionId);
       } else {
         window.location.href = data.upiLink;
       }
@@ -1048,25 +1028,6 @@ export default function HomePage() {
           </div>
         </div>
       )}
-
-      <FastRechargeModal
-        isOpen={showFastModal}
-        onClose={() => setShowFastModal(false)}
-        paymentSessionId={fastSessionId}
-        orderId={fastOrderId}
-        amount={fastAmount}
-        fallbackUpiLink={fastUpiLink}
-      />
-
-      <FastRechargeModal
-        isOpen={showDueModal}
-        onClose={() => setShowDueModal(false)}
-        paymentSessionId={dueSessionId}
-        orderId={dueOrderId}
-        amount={dueAmount}
-        fallbackUpiLink={dueUpiLink}
-        label="Pay Due Amount"
-      />
 
       {customer && (
         <PaymentModal
