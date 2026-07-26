@@ -14,6 +14,7 @@ export default function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [customerName, setCustomerName] = useState('');
+  const [outstandingBalance, setOutstandingBalance] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [connections, setConnections] = useState<{ id: string; stb_number: string; label: string | null; isPrimary: boolean; isActive: boolean }[]>([]);
@@ -39,6 +40,7 @@ export default function Navbar() {
           const data = await response.json();
           setIsAuthenticated(true);
           setCustomerName(data.customer?.name || '');
+          setOutstandingBalance(data.customer?.outstanding_balance || 0);
           // Load connections group
           const connRes = await fetch('/api/connections');
           if (connRes.ok) {
@@ -51,11 +53,13 @@ export default function Navbar() {
         } else {
           setIsAuthenticated(false);
           setCustomerName('');
+          setOutstandingBalance(0);
           setConnections([]);
         }
       } catch {
         setIsAuthenticated(false);
         setCustomerName('');
+        setOutstandingBalance(0);
         setConnections([]);
       }
     };
@@ -343,8 +347,34 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Bulletin Bar — below navbar */}
-      {!isAuthPage && <BulletinBar />}
+      {/* Bulletin Bar — below navbar (suppressed when a due-payment warning is showing) */}
+      {!isAuthPage && outstandingBalance <= 0 && <BulletinBar />}
+
+      {/* Due Payment Warning Ticker — takes priority over the regular bulletin bar */}
+      {!isAuthPage && outstandingBalance > 0 && (
+        <div className="relative w-full overflow-hidden py-3"
+          style={{ background: 'linear-gradient(90deg, #7a0c14 0%, #b70909 50%, #7a0c14 100%)', borderTop: '1px solid rgba(255,255,255,0.15)', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+          <div
+            className="whitespace-nowrap inline-block font-black text-white uppercase tracking-wide"
+            style={{
+              fontSize: 'clamp(1.1rem, 3vw, 1.6rem)',
+              animation: 'dueTickerScroll 45s linear infinite',
+              paddingLeft: '100%',
+            }}
+          >
+            {[
+              '⚠️ Your account is currently suspended because your old amount is due — please clear this due using the Pay button below first, then recharge will work',
+              '⚠️ आपका अकाउंट सस्पेंड है क्योंकि पुराना बकाया राशि बाकी है — पहले नीचे दिए गए Pay बटन से बकाया चुकाएं, तभी रिचार्ज होगा',
+            ].join('     •     ')}
+          </div>
+          <style jsx>{`
+            @keyframes dueTickerScroll {
+              0%   { transform: translateX(0); }
+              100% { transform: translateX(-100%); }
+            }
+          `}</style>
+        </div>
+      )}
 
       {/* Retrack Popup */}
       {showRetrackPopup && (

@@ -315,68 +315,72 @@ export default function HomePage() {
           </p>
 
           {customer && customer.outstanding_balance > 0 && (
-            <div className="animate-fadeInUp-delay-3 mb-4 mx-auto w-full max-w-md">
-              <div className="rounded-2xl px-5 py-4 flex items-center justify-between gap-4"
-                style={{ background: 'rgba(230,57,70,0.15)', border: '1px solid rgba(230,57,70,0.4)' }}>
-                <div>
-                  <p className="text-white font-bold text-sm">Outstanding Due</p>
-                  <p className="text-red-300 text-xs mt-0.5">Clear your due to continue recharging</p>
+            <>
+              <div className="animate-fadeInUp-delay-3 mb-4 mx-auto w-full max-w-md">
+                <div className="rounded-2xl px-5 py-4 flex items-center justify-between gap-4"
+                  style={{ background: 'rgba(230,57,70,0.15)', border: '1px solid rgba(230,57,70,0.4)' }}>
+                  <div>
+                    <p className="text-white font-bold text-sm">Outstanding Due</p>
+                    <p className="text-red-300 text-xs mt-0.5">Clear your due to continue recharging</p>
+                  </div>
+                  <button
+                    onClick={handlePayDue}
+                    disabled={dueLoading}
+                    className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-white text-sm disabled:opacity-70 transition-all hover:scale-105"
+                    style={{ background: 'linear-gradient(135deg, #e63946, #c1121f)' }}
+                  >
+                    {dueLoading ? '...' : `Pay ₹${customer.outstanding_balance}`}
+                  </button>
                 </div>
-                <button
-                  onClick={handlePayDue}
-                  disabled={dueLoading}
-                  className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-white text-sm disabled:opacity-70 transition-all hover:scale-105"
-                  style={{ background: 'linear-gradient(135deg, #e63946, #c1121f)' }}
-                >
-                  {dueLoading ? '...' : `Pay ₹${customer.outstanding_balance}`}
-                </button>
               </div>
-            </div>
+            </>
           )}
 
-          <div className="animate-fadeInUp-delay-3 flex flex-col gap-3 justify-center items-center">
-            {!customer ? (
-              <>
+          {!(customer && customer.outstanding_balance > 0) && (
+            <div className="animate-fadeInUp-delay-3 flex flex-col gap-3 justify-center items-center">
+              {!customer ? (
+                <>
+                  <button
+                    onClick={() => router.push('/login')}
+                    className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
+                  >
+                    Login to Recharge
+                  </button>
+                  <button
+                    onClick={() => router.push('/register')}
+                    className="text-white/60 text-sm hover:text-white transition-colors underline underline-offset-2"
+                  >
+                    New user? Sign up
+                  </button>
+                </>
+              ) : customer.fast_recharge_enabled ? (
                 <button
-                  onClick={() => router.push('/login')}
+                  onClick={handleFastRecharge}
+                  disabled={fastLoading}
+                  className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {fastLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  )}
+                  {fastLoading ? 'Please wait...' : `Fast Recharge — ₹${customer.fast_recharge_amount / 100}`}
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('plans');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                   className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
                 >
-                  Login to Recharge
+                  Browse Plans
                 </button>
-                <button
-                  onClick={() => router.push('/register')}
-                  className="text-white/60 text-sm hover:text-white transition-colors underline underline-offset-2"
-                >
-                  New user? Sign up
-                </button>
-              </>
-            ) : customer.fast_recharge_enabled ? (
-              <button
-                onClick={handleFastRecharge}
-                disabled={fastLoading}
-                className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-70"
-              >
-                {fastLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                )}
-                {fastLoading ? 'Please wait...' : `Fast Recharge — ₹${customer.fast_recharge_amount / 100}`}
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const el = document.getElementById('plans');
-                  el?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
-              >
-                Browse Plans
-              </button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Trust indicators */}
           <div className="animate-fadeInUp-delay-3 mt-10 sm:mt-14 flex flex-wrap justify-center gap-6 sm:gap-10 text-sm text-gray-400">
