@@ -5,7 +5,7 @@ import { formatCurrency, formatDateTime, getInitials } from '@/lib/utils';
 
 interface Stats { pendingCount: number; todayRevenue: number; totalRevenue: number; totalCustomers: number; }
 interface PendingRecharge {
-  recharge: { id: string; plan_name: string; amount: number; paid_at: string; cashfree_order_id: string | null; };
+  recharge: { id: string; plan_name: string; amount: number; status: string; paid_at: string | null; created_at: string; cashfree_order_id: string | null; };
   customer: { name: string; mobile: string; stb_number: string; area: string; };
 }
 
@@ -224,7 +224,11 @@ export default function PendingActivationsPage() {
                   <div className="text-left sm:text-right">
                     <p className="font-bold text-white text-sm">{recharge.plan_name}</p>
                     <p className="text-xs text-gray-400">{formatCurrency(recharge.amount)}</p>
-                    <p className="text-xs text-gray-500">Paid: {formatDateTime(new Date(recharge.paid_at))}</p>
+                    <p className="text-xs text-gray-500">
+                      {recharge.paid_at
+                        ? `Paid: ${formatDateTime(new Date(recharge.paid_at))}`
+                        : `Ordered: ${formatDateTime(new Date(recharge.created_at))} (unpaid)`}
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => handleDelete(recharge.id)} disabled={deleting === recharge.id || bulkActivating || bulkDeleting}

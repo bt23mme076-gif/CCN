@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { plans, recharges, customers, customerPriceOverrides, customerPlanDiscounts } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { resolveConnection } from '@/lib/connections';
@@ -108,9 +108,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Clean up stale unpaid attempts for the same plan/connection so the admin
+    // queue doesn't fill up with duplicate abandoned checkouts.
+    await db
+      .update(recharges)
+      .set({ status: 'failed' })
+      .where(
+        and(
+          eq(recharges.customer_id, targetCustomerId),
+          eq(recharges.plan_id, planId),
+          resolvedConnectionId ? eq(recharges.connection_id, resolvedConnectionId) : isNull(recharges.connection_id),
+          eq(recharges.status, 'pending')
+        )
+      );
+
     // Create recharge record first
     const rechargeId = generateOrderId();
-    
+
     // Create Cashfree order using REST API
     const cashfreeApiUrl = process.env.CASHFREE_ENV === 'production'
       ? 'https://api.cashfree.com/pg/orders'
