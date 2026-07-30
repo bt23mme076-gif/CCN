@@ -51,6 +51,9 @@ export default function AllRechargesPage() {
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<CustomerDetailResponse | null>(null);
   const [loadingCustomerDetail, setLoadingCustomerDetail] = useState(false);
   const [customerDetailError, setCustomerDetailError] = useState('');
+  const [editingExpiryId, setEditingExpiryId] = useState<string | null>(null);
+  const [expiryDays, setExpiryDays] = useState('');
+  const [updatingExpiry, setUpdatingExpiry] = useState(false);
 
   useEffect(() => { fetchRecharges(); }, [search]); // eslint-disable-line
 
@@ -109,6 +112,33 @@ export default function AllRechargesPage() {
     setSelectedCustomerDetail(null);
     setCustomerDetailError('');
     setLoadingCustomerDetail(false);
+    setEditingExpiryId(null);
+    setExpiryDays('');
+  };
+
+  const handleUpdateExpiry = async (rechargeId: string) => {
+    const days = Number(expiryDays);
+    if (!days || days < 1 || days > 365) {
+      alert('Please enter a valid number of days (1–365)');
+      return;
+    }
+    setUpdatingExpiry(true);
+    try {
+      const response = await fetch(`/api/admin/recharges/${rechargeId}/update-expiry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days }),
+      });
+      if (response.ok) {
+        setEditingExpiryId(null);
+        setExpiryDays('');
+        if (selectedCustomerId) openCustomerDetails(selectedCustomerId);
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to update expiry');
+      }
+    } catch { alert('Failed to update expiry'); }
+    finally { setUpdatingExpiry(false); }
   };
 
   const handleShareReceipt = async (
@@ -439,8 +469,50 @@ export default function AllRechargesPage() {
                                   </button>
                                 </>
                               )}
+                              {recharge.status === 'activated' && (
+                                <button
+                                  onClick={() => {
+                                    setEditingExpiryId(recharge.id);
+                                    setExpiryDays('');
+                                  }}
+                                  className="px-3 py-1 rounded-lg text-xs font-bold text-white"
+                                  style={{ background: 'linear-gradient(135deg, #92400e, #d97706)' }}
+                                >
+                                  Fix Expiry
+                                </button>
+                              )}
                             </div>
                           </div>
+
+                          {editingExpiryId === recharge.id && (
+                            <div className="flex items-center gap-2 p-3 rounded-xl flex-wrap" style={{ background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.3)' }}>
+                              <span className="text-xs text-amber-300 whitespace-nowrap">Set validity from activation date:</span>
+                              <input
+                                type="number"
+                                min={1}
+                                max={365}
+                                value={expiryDays}
+                                onChange={(e) => setExpiryDays(e.target.value)}
+                                placeholder="Days (e.g. 30)"
+                                className="w-28 px-3 py-1.5 rounded-lg text-xs outline-none"
+                                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'white' }}
+                              />
+                              <button
+                                onClick={() => handleUpdateExpiry(recharge.id)}
+                                disabled={updatingExpiry}
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-50"
+                                style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}
+                              >
+                                {updatingExpiry ? 'Saving...' : 'Save'}
+                              </button>
+                              <button
+                                onClick={() => setEditingExpiryId(null)}
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          )}
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-gray-300">
                             <p>Date: <span className="text-gray-100">{formatDateTime(new Date(recharge.created_at))}</span></p>
