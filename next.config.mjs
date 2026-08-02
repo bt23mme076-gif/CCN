@@ -2,6 +2,10 @@
 const nextConfig = {
   output: 'standalone',
   poweredByHeader: false,
+  experimental: {
+    instrumentationHook: true,
+    serverComponentsExternalPackages: ['web-push'],
+  },
   async headers() {
     return [
       {
