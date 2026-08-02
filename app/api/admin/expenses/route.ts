@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireAdminAuth();
-    const { title, amount, category, note, date } = await request.json();
+    const { title, amount, category, note, date, employee_id } = await request.json();
 
     if (!title || !amount || !category || !date) {
       return NextResponse.json({ error: 'title, amount, category, date required' }, { status: 400 });
@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       title,
       amount: Math.round(amount),
       category,
+      employee_id: employee_id || null,
       note: note?.trim() || null,
       date: new Date(date),
     });

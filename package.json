@@ -17,7 +17,8 @@
     "hide-test-plan": "tsx hide-test-plan.ts",
     "change-admin-password": "tsx change-admin-password.ts",
     "check-admin": "tsx check-admin.ts",
-    "create-admin": "tsx create-admin-now.ts"
+    "create-admin": "tsx create-admin-now.ts",
+    "add-employees-table": "tsx add-employees-table.ts"
   },
   "dependencies": {
     "@cashfreepayments/cashfree-js": "^1.0.7",
