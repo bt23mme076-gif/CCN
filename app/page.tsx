@@ -12,6 +12,7 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import ContactSection from '@/components/ContactSection';
 import AlacartePaymentModal from '@/components/AlacartePaymentModal';
 import SponsorSlideshow from '@/components/SponsorSlideshow';
+import QuickRechargeModal from '@/components/QuickRechargeModal';
 import { openCashfreeCheckout } from '@/lib/cashfreeCheckout';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
@@ -56,6 +57,7 @@ export default function HomePage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [selectedPlanMonths, setSelectedPlanMonths] = useState(1);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showQuickRecharge, setShowQuickRecharge] = useState(false);
 
   const [selectedAccessory, setSelectedAccessory] = useState<Accessory | null>(null);
   const [showAccessoryModal, setShowAccessoryModal] = useState(false);
@@ -345,6 +347,12 @@ export default function HomePage() {
                     className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
                   >
                     Login to Recharge
+                  </button>
+                  <button
+                    onClick={() => setShowQuickRecharge(true)}
+                    className="border border-white/30 text-white px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto hover:bg-white/10 transition-colors"
+                  >
+                    ⚡ Quick Recharge (No Login)
                   </button>
                   <button
                     onClick={() => router.push('/register')}
@@ -1041,6 +1049,11 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      <QuickRechargeModal
+        isOpen={showQuickRecharge}
+        onClose={() => setShowQuickRecharge(false)}
+      />
 
       {customer && (
         <PaymentModal
