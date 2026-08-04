@@ -220,7 +220,7 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
           {step === 'stb' && (
             <div className="space-y-4">
               <p className="text-sm text-blue-200/80 leading-relaxed">
-                Apna STB (set-top box) number ya registered mobile number daalein — payment ke baad turant recharge queue mein chala jayega.
+                Enter your STB (set-top box) number or registered mobile number — your recharge will be queued for activation right after payment.
               </p>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-blue-300/70 mb-2">STB Number or Mobile Number</label>
@@ -270,7 +270,7 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
               {match.hasOutstandingBalance ? (
                 <div className="rounded-xl p-4 text-sm text-yellow-100"
                   style={{ background: 'rgba(245,166,35,0.15)', border: '1px solid rgba(245,166,35,0.35)' }}>
-                  ⚠️ Is connection par outstanding due hai. Kripya login karke pehle due clear karein.
+                  ⚠️ This connection has an outstanding due. Please log in and clear it before recharging.
                 </div>
               ) : (
                 <button onClick={proceedToPlans} className="btn-gradient w-full text-sm sm:text-base py-3.5">
