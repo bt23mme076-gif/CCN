@@ -45,6 +45,39 @@ export async function findCustomerByStb(stbNumber: string): Promise<GuestCustome
   return null;
 }
 
+export async function findCustomerByMobile(mobile: string): Promise<GuestCustomerMatch | null> {
+  const trimmed = mobile.trim();
+  if (!trimmed) return null;
+
+  const match = await db.select().from(customers).where(eq(customers.mobile, trimmed)).limit(1);
+  if (match.length === 0) return null;
+
+  const c = match[0];
+  return {
+    customerId: c.id,
+    connectionId: null, // mobile lookup always resolves to the primary connection
+    name: c.name,
+    area: c.area,
+    mobile: c.mobile,
+    outstanding_balance: c.outstanding_balance,
+  };
+}
+
+// Accepts either an STB number or a 10-digit mobile number and resolves it
+// to the matching customer/connection.
+export async function findCustomerByStbOrMobile(identifier: string): Promise<GuestCustomerMatch | null> {
+  const trimmed = identifier.trim();
+  if (!trimmed) return null;
+
+  const digitsOnly = /^\d{10}$/.test(trimmed);
+  if (digitsOnly) {
+    const byMobile = await findCustomerByMobile(trimmed);
+    if (byMobile) return byMobile;
+  }
+
+  return findCustomerByStb(trimmed);
+}
+
 export function maskName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return name;

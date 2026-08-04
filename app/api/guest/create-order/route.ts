@@ -5,12 +5,12 @@ import { eq, and, isNull } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
-import { findCustomerByStb } from '@/lib/guestLookup';
+import { findCustomerByStbOrMobile } from '@/lib/guestLookup';
 
 export const dynamic = 'force-dynamic';
 
 const createOrderSchema = z.object({
-  stbNumber: z.string().min(1),
+  identifier: z.string().min(1),
   planId: z.string(),
   months: z.number().int().refine(isValidMonths, 'Invalid duration').optional(),
 });
@@ -18,11 +18,11 @@ const createOrderSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { stbNumber, planId, months = 1 } = createOrderSchema.parse(body);
+    const { identifier, planId, months = 1 } = createOrderSchema.parse(body);
 
-    const match = await findCustomerByStb(stbNumber);
+    const match = await findCustomerByStbOrMobile(identifier);
     if (!match) {
-      return NextResponse.json({ error: 'STB number not found. Please check and try again.' }, { status: 404 });
+      return NextResponse.json({ error: 'Invalid STB or mobile number. Please check and try again.' }, { status: 404 });
     }
 
     if (match.outstanding_balance > 0) {

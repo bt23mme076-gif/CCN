@@ -31,9 +31,10 @@ function getInitials(name: string) {
 
 export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeModalProps) {
   const [step, setStep] = useState<Step>('stb');
-  const [stbNumber, setStbNumber] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
+  const [showInvalidDialog, setShowInvalidDialog] = useState(false);
   const [match, setMatch] = useState<{ name: string; area: string; hasOutstandingBalance: boolean } | null>(null);
 
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -44,34 +45,46 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
     if (!isOpen) {
       // Reset state each time it's closed so reopening starts fresh
       setStep('stb');
-      setStbNumber('');
+      setIdentifier('');
       setError('');
+      setShowInvalidDialog(false);
       setMatch(null);
       setPlans([]);
     }
   }, [isOpen]);
 
+  // Auto-dismiss the "invalid number" dialog after 5 seconds
+  useEffect(() => {
+    if (!showInvalidDialog) return;
+    const t = setTimeout(() => setShowInvalidDialog(false), 5000);
+    return () => clearTimeout(t);
+  }, [showInvalidDialog]);
+
   if (!isOpen) return null;
 
   const handleCheckStb = async () => {
-    if (!stbNumber.trim()) return;
+    if (!identifier.trim()) return;
     setChecking(true);
     setError('');
     try {
       const res = await fetch('/api/guest/lookup-stb', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stb_number: stbNumber.trim() }),
+        body: JSON.stringify({ identifier: identifier.trim() }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'STB number not found');
+        if (res.status === 404) {
+          setShowInvalidDialog(true);
+        } else {
+          setError(data.error || 'Something went wrong. Please try again.');
+        }
         return;
       }
       setMatch(data);
       setStep('confirm');
     } catch {
-      setError('Failed to check STB number. Please try again.');
+      setError('Failed to check number. Please try again.');
     } finally {
       setChecking(false);
     }
@@ -98,7 +111,7 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
       const orderRes = await fetch('/api/guest/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stbNumber: stbNumber.trim(), planId, months: 1 }),
+        body: JSON.stringify({ identifier: identifier.trim(), planId, months: 1 }),
       });
       const orderData = await orderRes.json();
       if (!orderRes.ok) {
@@ -145,6 +158,29 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
         <div className="absolute top-0 left-0 right-0 h-1 rounded-t-3xl"
           style={{ background: 'linear-gradient(90deg, transparent, #e63946, #f77f00, #e63946, transparent)' }} />
 
+        {/* Invalid number dialog — auto-dismisses after 5s */}
+        {showInvalidDialog && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center p-6 rounded-3xl bg-black/60 backdrop-blur-sm">
+            <div className="w-full max-w-xs rounded-2xl p-5 text-center shadow-2xl"
+              style={{ background: 'linear-gradient(160deg, #2d1015, #1a1a2e)', border: '1px solid rgba(230,57,70,0.4)' }}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"
+                style={{ background: 'rgba(230,57,70,0.2)', border: '1px solid rgba(230,57,70,0.4)' }}>
+                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+              <p className="font-bold text-white mb-1">Invalid STB or Mobile Number</p>
+              <p className="text-xs text-gray-400 mb-4">No connection found for this number. Please check and try again.</p>
+              <button
+                onClick={() => setShowInvalidDialog(false)}
+                className="btn-gradient w-full text-sm py-2.5"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="p-6 sm:p-8">
           <div className="flex justify-between items-start mb-5">
             <div>
@@ -160,7 +196,7 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
 
           {/* Step progress dots */}
           <div className="flex items-center gap-1.5 mb-6">
-            {['STB', 'Confirm', 'Plan', 'Pay'].map((label, i) => (
+            {['Number', 'Confirm', 'Plan', 'Pay'].map((label, i) => (
               <div key={label} className="flex-1 flex items-center gap-1.5">
                 <div
                   className="h-1.5 flex-1 rounded-full transition-all duration-300"
@@ -184,16 +220,16 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
           {step === 'stb' && (
             <div className="space-y-4">
               <p className="text-sm text-blue-200/80 leading-relaxed">
-                Bas apna STB (set-top box) number daalein — payment ke baad turant recharge queue mein chala jayega.
+                Apna STB (set-top box) number ya registered mobile number daalein — payment ke baad turant recharge queue mein chala jayega.
               </p>
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-blue-300/70 mb-2">STB Number</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-blue-300/70 mb-2">STB Number or Mobile Number</label>
                 <input
                   type="text"
-                  value={stbNumber}
-                  onChange={(e) => setStbNumber(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCheckStb()}
-                  placeholder="e.g. 100335254726513"
+                  placeholder="e.g. 100335254726513 or 9876543210"
                   className="w-full px-4 py-3.5 rounded-xl text-white placeholder-gray-500 text-sm outline-none transition-all font-mono tracking-wide"
                   style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)' }}
                   onFocus={(e) => (e.target.style.borderColor = 'rgba(230,57,70,0.6)')}
@@ -203,7 +239,7 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
               </div>
               <button
                 onClick={handleCheckStb}
-                disabled={checking || !stbNumber.trim()}
+                disabled={checking || !identifier.trim()}
                 className="btn-gradient w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base py-3.5"
               >
                 {checking ? 'Checking...' : 'Continue →'}
@@ -226,8 +262,8 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
                   </div>
                 </div>
                 <div className="mt-4 pt-4 flex items-center justify-between text-xs" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                  <span className="text-gray-400">STB Number</span>
-                  <span className="text-gray-200 font-mono">{stbNumber}</span>
+                  <span className="text-gray-400">Entered Number</span>
+                  <span className="text-gray-200 font-mono">{identifier}</span>
                 </div>
               </div>
 
@@ -245,7 +281,7 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
                 onClick={() => { setStep('stb'); setMatch(null); setError(''); }}
                 className="w-full text-center text-sm text-blue-300/70 hover:text-white transition-colors"
               >
-                Not you? Try a different STB number
+                Not you? Try a different number
               </button>
             </div>
           )}

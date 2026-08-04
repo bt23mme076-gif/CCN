@@ -1,19 +1,24 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 
 type Phase = 'verifying' | 'waiting' | 'activated' | 'failed';
 
+const REDIRECT_SECONDS = 5;
+
 function RechargeStatusInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const orderId = searchParams.get('order_id');
 
   const [phase, setPhase] = useState<Phase>('verifying');
   const [order, setOrder] = useState<{ plan_name: string; amount: number; expires_at: string | null } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [cancelled, setCancelled] = useState(false);
+  const [redirectIn, setRedirectIn] = useState(REDIRECT_SECONDS);
 
   useEffect(() => {
     if (!orderId) {
@@ -32,7 +37,8 @@ function RechargeStatusInner() {
         const data = await res.json();
         if (!res.ok || !data.success) {
           setPhase('failed');
-          setErrorMsg(data.error || 'Payment could not be verified.');
+          setCancelled(!!data.cancelled);
+          setErrorMsg(data.cancelled ? 'Payment was cancelled.' : (data.error || 'Payment could not be verified.'));
           return;
         }
         setPhase('waiting');
@@ -65,6 +71,17 @@ function RechargeStatusInner() {
     const interval = setInterval(poll, 10000);
     return () => clearInterval(interval);
   }, [phase, orderId]);
+
+  // Auto-redirect to homepage on failure/cancellation
+  useEffect(() => {
+    if (phase !== 'failed') return;
+    if (redirectIn <= 0) {
+      router.push('/');
+      return;
+    }
+    const t = setTimeout(() => setRedirectIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phase, redirectIn, router]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
@@ -116,9 +133,10 @@ function RechargeStatusInner() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-white">Something Went Wrong</h1>
+            <h1 className="text-2xl font-bold text-white">{cancelled ? 'Payment Cancelled' : 'Something Went Wrong'}</h1>
             <p className="text-red-200 text-sm">{errorMsg}</p>
-            <Link href="/" className="text-blue-300 text-sm underline">Back to Home</Link>
+            <p className="text-gray-400 text-xs">Redirecting to home in {redirectIn}s...</p>
+            <Link href="/" className="text-blue-300 text-sm underline">Go now</Link>
           </>
         )}
       </div>
