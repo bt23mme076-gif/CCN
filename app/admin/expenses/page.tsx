@@ -11,6 +11,11 @@ interface Expense {
   date: string;
 }
 
+interface Employee {
+  id: string;
+  name: string;
+}
+
 const CATEGORIES = [
   { value: 'salary', label: 'Salary', color: '#a78bfa' },
   { value: 'rent', label: 'Rent', color: '#60a5fa' },
@@ -41,11 +46,44 @@ export default function ExpensesPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const [form, setForm] = useState({ title: '', amount: '', category: 'salary', note: '', date: new Date().toISOString().split('T')[0] });
+  const [form, setForm] = useState({ title: '', amount: '', category: 'salary', note: '', date: new Date().toISOString().split('T')[0], employee_id: '' });
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [showNewEmployee, setShowNewEmployee] = useState(false);
+  const [newEmployeeName, setNewEmployeeName] = useState('');
+  const [addingEmployee, setAddingEmployee] = useState(false);
+
   useEffect(() => { fetchExpenses(); }, [month]); // eslint-disable-line
+  useEffect(() => { fetchEmployees(); }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const data = await (await fetch('/api/admin/employees')).json();
+      setEmployees(data.employees || []);
+    } catch { setEmployees([]); }
+  };
+
+  const handleAddEmployee = async () => {
+    if (!newEmployeeName.trim()) return;
+    setAddingEmployee(true);
+    try {
+      const res = await fetch('/api/admin/employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newEmployeeName.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.employee) {
+        setEmployees((prev) => [...prev, data.employee].sort((a, b) => a.name.localeCompare(b.name)));
+        setForm((f) => ({ ...f, employee_id: data.employee.id, title: `${data.employee.name} Salary` }));
+        setNewEmployeeName('');
+        setShowNewEmployee(false);
+      }
+    } catch { /* ignore */ }
+    finally { setAddingEmployee(false); }
+  };
 
   const fetchExpenses = async () => {
     setLoading(true);
@@ -69,7 +107,7 @@ export default function ExpensesPage() {
         body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      setForm({ title: '', amount: '', category: 'salary', note: '', date: new Date().toISOString().split('T')[0] });
+      setForm({ title: '', amount: '', category: 'salary', note: '', date: new Date().toISOString().split('T')[0], employee_id: '' });
       setShowForm(false);
       setMessage({ type: 'success', text: 'Expense add ho gaya' });
       fetchExpenses();
@@ -122,13 +160,58 @@ export default function ExpensesPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelStyle}>Title</label>
-                <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="e.g. Raju salary, Office rent" required
-                  className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all"
-                  style={inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+                {form.category === 'salary' ? (
+                  <>
+                    <label className={labelStyle}>Employee</label>
+                    {!showNewEmployee ? (
+                      <select
+                        value={form.employee_id}
+                        onChange={(e) => {
+                          if (e.target.value === '__new__') {
+                            setShowNewEmployee(true);
+                            return;
+                          }
+                          const emp = employees.find((x) => x.id === e.target.value);
+                          setForm({ ...form, employee_id: e.target.value, title: emp ? `${emp.name} Salary` : '' });
+                        }}
+                        required
+                        className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all text-white"
+                        style={inputStyle}>
+                        <option value="" className="bg-slate-900">Select employee...</option>
+                        {employees.map((emp) => (
+                          <option key={emp.id} value={emp.id} className="bg-slate-900">{emp.name}</option>
+                        ))}
+                        <option value="__new__" className="bg-slate-900">+ Add New Employee</option>
+                      </select>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input type="text" value={newEmployeeName} onChange={(e) => setNewEmployeeName(e.target.value)}
+                          placeholder="Employee name" autoFocus
+                          className="flex-1 px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all"
+                          style={inputStyle} />
+                        <button type="button" onClick={handleAddEmployee} disabled={addingEmployee}
+                          className="px-4 py-2 rounded-xl text-xs font-bold text-white disabled:opacity-50"
+                          style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
+                          {addingEmployee ? '...' : 'Save'}
+                        </button>
+                        <button type="button" onClick={() => { setShowNewEmployee(false); setNewEmployeeName(''); }}
+                          className="px-3 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white">
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <label className={labelStyle}>Title</label>
+                    <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      placeholder="e.g. Office rent" required
+                      className="w-full px-4 py-3 rounded-xl text-sm outline-none placeholder-gray-500 transition-all"
+                      style={inputStyle}
+                      onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
+                      onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+                  </>
+                )}
               </div>
               <div>
                 <label className={labelStyle}>Amount (₹)</label>
@@ -143,7 +226,11 @@ export default function ExpensesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelStyle}>Category</label>
-                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
+                <select value={form.category} onChange={(e) => {
+                    const category = e.target.value;
+                    setShowNewEmployee(false);
+                    setForm({ ...form, category, employee_id: '', title: category === 'salary' ? '' : form.title });
+                  }}
                   className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all text-white"
                   style={inputStyle}>
                   {CATEGORIES.map((c) => (

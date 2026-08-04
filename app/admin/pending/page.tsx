@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { formatCurrency, formatDateTime, getInitials } from '@/lib/utils';
+import StatusBadge from '@/components/StatusBadge';
 
 interface Stats { pendingCount: number; todayRevenue: number; totalRevenue: number; totalCustomers: number; }
 interface PendingRecharge {
@@ -18,6 +19,7 @@ const cardStyle = {
 export default function PendingActivationsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recharges, setRecharges] = useState<PendingRecharge[]>([]);
+  const [recent, setRecent] = useState<PendingRecharge[]>([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -29,14 +31,17 @@ export default function PendingActivationsPage() {
 
   const fetchData = async () => {
     try {
-      const [statsRes, rechargesRes] = await Promise.all([
+      const [statsRes, rechargesRes, recentRes] = await Promise.all([
         fetch('/api/admin/stats'),
         fetch('/api/admin/recharges?status=paid,pending'),
+        fetch('/api/admin/recharges?limit=5'),
       ]);
       setStats(await statsRes.json());
       const d = await rechargesRes.json();
       setRecharges(d.recharges || []);
       setSelected(new Set());
+      const r = await recentRes.json();
+      setRecent(r.recharges || []);
     } catch { setRecharges([]); }
     finally { setLoading(false); }
   };
@@ -62,8 +67,13 @@ export default function PendingActivationsPage() {
       if (res.ok) {
         setRecharges(prev => prev.filter(r => r.recharge.id !== rechargeId));
         setSelected(prev => { const n = new Set(prev); n.delete(rechargeId); return n; });
-        const statsRes = await fetch('/api/admin/stats');
+        const [statsRes, recentRes] = await Promise.all([
+          fetch('/api/admin/stats'),
+          fetch('/api/admin/recharges?limit=5'),
+        ]);
         setStats(await statsRes.json());
+        const r = await recentRes.json();
+        setRecent(r.recharges || []);
       } else alert('Failed to delete');
     } catch { alert('Failed to delete'); }
     finally { setDeleting(null); }
@@ -76,8 +86,13 @@ export default function PendingActivationsPage() {
       if (res.ok) {
         setRecharges(prev => prev.filter(r => r.recharge.id !== rechargeId));
         setSelected(prev => { const n = new Set(prev); n.delete(rechargeId); return n; });
-        const statsRes = await fetch('/api/admin/stats');
+        const [statsRes, recentRes] = await Promise.all([
+          fetch('/api/admin/stats'),
+          fetch('/api/admin/recharges?limit=5'),
+        ]);
         setStats(await statsRes.json());
+        const r = await recentRes.json();
+        setRecent(r.recharges || []);
       } else alert('Failed to activate');
     } catch { alert('Failed to activate'); }
     finally { setActivating(null); }
@@ -248,6 +263,33 @@ export default function PendingActivationsPage() {
           </div>
         )}
       </div>
+
+      {/* Recent Activity */}
+      {recent.length > 0 && (
+        <div className="mt-6 sm:mt-8">
+          <h2 className="font-display text-lg sm:text-xl font-bold text-white mb-4">Recent Activity</h2>
+          <div className="rounded-2xl overflow-hidden" style={cardStyle}>
+            <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+              {recent.map(({ recharge, customer }) => (
+                <div key={recharge.id} className="flex items-center gap-4 p-4 sm:p-5">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-white text-xs flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #475569, #64748b)' }}>
+                    {getInitials(customer?.name || '?')}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white text-sm truncate">{customer?.name || 'Unknown customer'}</p>
+                    <p className="text-xs text-gray-400 truncate">{recharge.plan_name} • {formatCurrency(recharge.amount)}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <StatusBadge status={recharge.status} />
+                    <p className="text-xs text-gray-500 mt-1">{formatDateTime(new Date(recharge.created_at))}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

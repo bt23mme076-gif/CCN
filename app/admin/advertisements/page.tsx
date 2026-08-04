@@ -12,12 +12,19 @@ interface Ad {
   created_at: string;
 }
 
+function isAndroidWebView() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
+}
+
 export default function AdvertisementsPage() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [inWebView, setInWebView] = useState(false);
 
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
@@ -36,7 +43,12 @@ export default function AdvertisementsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchAds(); }, []);
+  useEffect(() => { fetchAds(); setInWebView(isAndroidWebView()); }, []);
+
+  const openInChrome = () => {
+    const url = window.location.href.replace(/^https?:\/\//, '');
+    window.location.href = `intent://${url}#Intent;scheme=https;package=com.android.chrome;end`;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -141,13 +153,30 @@ export default function AdvertisementsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-gray-400 text-sm mb-1.5">Poster Image * (max 2 MB)</label>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="w-full text-sm text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 file:cursor-pointer cursor-pointer"
-              />
+              {inWebView ? (
+                <div className="rounded-xl p-3 text-xs" style={{ background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)' }}>
+                  <p className="text-yellow-200 mb-2">
+                    File upload is not supported inside this app view. Please open this page in Chrome to upload a poster.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={openInChrome}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold text-white"
+                    style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
+                  >
+                    Open in Chrome
+                  </button>
+                  <p className="text-gray-400 mt-2">Note: you may need to log in again in Chrome.</p>
+                </div>
+              ) : (
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full text-sm text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 file:cursor-pointer cursor-pointer"
+                />
+              )}
             </div>
             <div>
               <label className="block text-gray-400 text-sm mb-1.5">Expiry Date (optional)</label>

@@ -227,11 +227,19 @@ export const adminPushSubscriptions = pgTable('admin_push_subscriptions', {
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const employees = pgTable('employees', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  is_active: boolean('is_active').notNull().default(true),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const expenses = pgTable('expenses', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
   amount: integer('amount').notNull(), // in rupees
   category: text('category').notNull(), // 'salary' | 'rent' | 'maintenance' | 'fuel' | 'other'
+  employee_id: text('employee_id').references(() => employees.id),
   note: text('note'),
   date: timestamp('date').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
