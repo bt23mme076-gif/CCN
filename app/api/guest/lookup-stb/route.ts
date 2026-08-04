@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { findCustomerByStb, maskName } from '@/lib/guestLookup';
+import { findCustomerByStb } from '@/lib/guestLookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      name: maskName(match.name),
+      name: match.name,
       area: match.area,
       hasOutstandingBalance: match.outstanding_balance > 0,
     });
