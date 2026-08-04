@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
     const search = searchParams.get('search');
+    const limit = searchParams.get('limit');
 
     let query = db
       .select({
@@ -38,6 +39,11 @@ export async function GET(request: NextRequest) {
           ilike(customers.mobile, `%${search}%`)
         )
       );
+    }
+
+    if (limit) {
+      const n = parseInt(limit, 10);
+      if (n > 0) query = query.limit(n);
     }
 
     const results = await query;
