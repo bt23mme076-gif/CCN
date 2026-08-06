@@ -352,7 +352,7 @@ export default function HomePage() {
                     onClick={() => setShowQuickRecharge(true)}
                     className="btn-gradient-cyan px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
                   >
-                    ⚡ Quick Recharge (No Login)
+                    ⚡ Quick Recharge
                   </button>
                   <button
                     onClick={() => router.push('/register')}
