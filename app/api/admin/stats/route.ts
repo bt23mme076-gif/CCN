@@ -32,6 +32,19 @@ export async function GET() {
 
     const todayRevenue = todayRevenueResult[0]?.total || 0;
 
+    // Get current month's revenue
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthStartISO = monthStart.toISOString();
+
+    const monthRevenueResult = await db
+      .select({ total: sql<number>`coalesce(sum(${recharges.amount}), 0)::int` })
+      .from(recharges)
+      .where(
+        sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${monthStartISO}`
+      );
+
+    const monthRevenue = monthRevenueResult[0]?.total || 0;
+
     // Get total revenue
     const totalRevenueResult = await db
       .select({ total: sql<number>`coalesce(sum(${recharges.amount}), 0)::int` })
@@ -50,6 +63,7 @@ export async function GET() {
     return NextResponse.json({
       pendingCount,
       todayRevenue,
+      monthRevenue,
       totalRevenue,
       totalCustomers,
     });
