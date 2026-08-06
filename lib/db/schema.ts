@@ -1,24 +1,8 @@
 import { pgTable, text, integer, boolean, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// A tenant of this platform — one row per LCO (cable operator) using the app.
-// The original CCN Networks data lives under the 'ccn' operator row.
-export const operators = pgTable('operators', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  subdomain: text('subdomain').notNull().unique(),
-  logo_url: text('logo_url'),
-  whatsapp_number: text('whatsapp_number'),
-  cashfree_app_id: text('cashfree_app_id'),
-  cashfree_secret_key: text('cashfree_secret_key'),
-  cashfree_env: text('cashfree_env').default('sandbox').notNull(),
-  is_active: boolean('is_active').default(true).notNull(),
-  created_at: timestamp('created_at').defaultNow().notNull(),
-});
-
 export const customers = pgTable('customers', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   mobile: text('mobile').notNull().unique(),
   stb_number: text('stb_number').notNull(),
@@ -29,13 +13,10 @@ export const customers = pgTable('customers', {
   fast_recharge_enabled: boolean('fast_recharge_enabled').default(false).notNull(),
   fast_recharge_amount: integer('fast_recharge_amount').default(0).notNull(), // in paise
   created_at: timestamp('created_at').defaultNow().notNull(),
-}, (table) => ({
-  operatorIdx: index('customers_operator_id_idx').on(table.operator_id),
-}));
+});
 
 export const plans = pgTable('plans', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   price: integer('price').notNull(), // in paise
   duration_days: integer('duration_days').notNull(),
@@ -43,14 +24,11 @@ export const plans = pgTable('plans', {
   is_popular: boolean('is_popular').default(false).notNull(),
   is_active: boolean('is_active').default(true).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
-}, (table) => ({
-  operatorIdx: index('plans_operator_id_idx').on(table.operator_id),
-}));
+});
 
 // Additional STB connections for a customer (beyond their primary stb_number)
 export const customerConnections = pgTable('customer_connections', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
   stb_number: text('stb_number').notNull(),
   area: text('area').notNull().default(''),
@@ -62,7 +40,6 @@ export const customerConnections = pgTable('customer_connections', {
 
 export const recharges = pgTable('recharges', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   customer_id: text('customer_id').notNull().references(() => customers.id),
   // null = primary STB (customers.stb_number); set = additional connection
   connection_id: text('connection_id').references(() => customerConnections.id),
@@ -82,22 +59,17 @@ export const recharges = pgTable('recharges', {
 }, (table) => ({
   customerIdx: index('recharges_customer_id_idx').on(table.customer_id),
   statusIdx: index('recharges_status_idx').on(table.status),
-  operatorIdx: index('recharges_operator_id_idx').on(table.operator_id),
 }));
 
 export const admins = pgTable('admins', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   username: text('username').notNull().unique(),
   password_hash: text('password_hash').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
-}, (table) => ({
-  operatorIdx: index('admins_operator_id_idx').on(table.operator_id),
-}));
+});
 
 export const announcements = pgTable('announcements', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   text: text('text').notNull(),
   is_active: boolean('is_active').default(true).notNull(),
   speed: integer('speed').default(30).notNull(), // seconds for one full scroll (lower = faster)
@@ -107,7 +79,6 @@ export const announcements = pgTable('announcements', {
 // Customer-specific plan price overrides
 export const customerPriceOverrides = pgTable('customer_price_overrides', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
   plan_id: text('plan_id').notNull().references(() => plans.id, { onDelete: 'cascade' }),
   custom_price: integer('custom_price').notNull(), // in paise
@@ -121,7 +92,6 @@ export const customerPriceOverrides = pgTable('customer_price_overrides', {
 // Customer-specific multi-month recharge discounts, set per plan per duration tier (3/6/12 months)
 export const customerPlanDiscounts = pgTable('customer_plan_discounts', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
   plan_id: text('plan_id').notNull().references(() => plans.id, { onDelete: 'cascade' }),
   months: integer('months').notNull(), // 3, 6, or 12
@@ -134,7 +104,6 @@ export const customerPlanDiscounts = pgTable('customer_plan_discounts', {
 
 export const accessories = pgTable('accessories', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   price: integer('price').notNull(), // in paise
   description: text('description'),
@@ -144,7 +113,6 @@ export const accessories = pgTable('accessories', {
 
 export const advertisements = pgTable('advertisements', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   business_name: text('business_name').notNull(),
   image_data: text('image_data').notNull(), // base64 data URL or external https URL
   phone: text('phone'),
@@ -155,7 +123,6 @@ export const advertisements = pgTable('advertisements', {
 
 export const channels = pgTable('channels', {
   id: integer('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   hd_sd: text('hd_sd').notNull(),
   genre: text('genre').notNull(),
@@ -170,7 +137,6 @@ export const channels = pgTable('channels', {
 
 export const accessoryOrders = pgTable('accessory_orders', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   customer_id: text('customer_id').notNull().references(() => customers.id),
   accessory_id: text('accessory_id').notNull().references(() => accessories.id),
   accessory_name: text('accessory_name').notNull(),
@@ -190,7 +156,6 @@ export const accessoryOrders = pgTable('accessory_orders', {
 
 export const pushSubscriptions = pgTable('push_subscriptions', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
   endpoint: text('endpoint').notNull(),
   p256dh: text('p256dh').notNull(),
@@ -246,7 +211,6 @@ export const accessoryOrdersRelations = relations(accessoryOrders, ({ one }) => 
 
 export const retrackRequests = pgTable('retrack_requests', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
   customer_name: text('customer_name').notNull(),
   stb_number: text('stb_number').notNull(),
@@ -257,7 +221,6 @@ export const retrackRequests = pgTable('retrack_requests', {
 
 export const adminPushSubscriptions = pgTable('admin_push_subscriptions', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   endpoint: text('endpoint').notNull().unique(),
   p256dh: text('p256dh').notNull(),
   auth: text('auth').notNull(),
@@ -266,7 +229,6 @@ export const adminPushSubscriptions = pgTable('admin_push_subscriptions', {
 
 export const employees = pgTable('employees', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   is_active: boolean('is_active').notNull().default(true),
   created_at: timestamp('created_at').defaultNow().notNull(),
@@ -274,7 +236,6 @@ export const employees = pgTable('employees', {
 
 export const expenses = pgTable('expenses', {
   id: text('id').primaryKey(),
-  operator_id: text('operator_id').references(() => operators.id),
   title: text('title').notNull(),
   amount: integer('amount').notNull(), // in rupees
   category: text('category').notNull(), // 'salary' | 'rent' | 'maintenance' | 'fuel' | 'other'

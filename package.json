@@ -18,8 +18,7 @@
     "change-admin-password": "tsx change-admin-password.ts",
     "check-admin": "tsx check-admin.ts",
     "create-admin": "tsx create-admin-now.ts",
-    "add-employees-table": "tsx add-employees-table.ts",
-    "add-multitenancy-tables": "tsx add-multitenancy-tables.ts"
+    "add-employees-table": "tsx add-employees-table.ts"
   },
   "dependencies": {
     "@cashfreepayments/cashfree-js": "^1.0.7",
