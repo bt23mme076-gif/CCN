@@ -278,6 +278,34 @@ body::after {
     50% { background-position: 100% 50%; }
   }
 
+  @keyframes quickPulseRing {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(72,202,228,0.55); }
+    50% { box-shadow: 0 0 0 12px rgba(72,202,228,0); }
+  }
+
+  .animate-quick-pulse {
+    animation: quickPulseRing 2.4s ease-in-out infinite;
+  }
+
+  @keyframes shineSweep {
+    0% { transform: translateX(-150%) skewX(-20deg); }
+    45%, 100% { transform: translateX(250%) skewX(-20deg); }
+  }
+
+  .animate-shine-sweep {
+    animation: shineSweep 3.2s ease-in-out infinite;
+  }
+
+  @keyframes boltWiggle {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-12deg) scale(1.1); }
+    75% { transform: rotate(12deg) scale(1.1); }
+  }
+
+  .animate-bolt-wiggle {
+    animation: boltWiggle 1.8s ease-in-out infinite;
+  }
+
   @keyframes bulletinShimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
