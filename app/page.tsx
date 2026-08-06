@@ -350,21 +350,9 @@ export default function HomePage() {
                   </button>
                   <button
                     onClick={() => setShowQuickRecharge(true)}
-                    className="relative text-white px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto transition-all duration-300 hover:scale-105 group overflow-hidden animate-quick-pulse"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(69,123,157,0.35), rgba(72,202,228,0.28))',
-                      border: '1px solid rgba(72,202,228,0.6)',
-                    }}
+                    className="btn-gradient-cyan px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
                   >
-                    {/* Shine sweep */}
-                    <span
-                      className="absolute inset-y-0 left-0 w-1/3 pointer-events-none animate-shine-sweep"
-                      style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)' }}
-                    />
-                    <span className="relative z-10 inline-flex items-center gap-2">
-                      <span className="inline-block animate-bolt-wiggle">⚡</span>
-                      Quick Recharge (No Login)
-                    </span>
+                    ⚡ Quick Recharge (No Login)
                   </button>
                   <button
                     onClick={() => router.push('/register')}
