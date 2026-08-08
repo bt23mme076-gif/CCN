@@ -137,6 +137,27 @@ body::after {
     box-shadow: 0 8px 25px -5px rgba(72, 202, 228, 0.4);
   }
 
+  /* Combine with .btn-gradient to add an idle glow, marking it as the
+     primary action next to a plainer outline secondary button. */
+  .btn-glow {
+    box-shadow: 0 0 18px rgba(230, 57, 70, 0.35), 0 0 36px rgba(247, 127, 0, 0.15);
+  }
+  .btn-glow:hover {
+    box-shadow: 0 0 26px rgba(230, 57, 70, 0.5), 0 0 46px rgba(247, 127, 0, 0.25), 0 8px 25px -5px rgba(230, 57, 70, 0.4);
+  }
+
+  .btn-outline-cyan {
+    @apply px-6 py-2.5 rounded-lg font-medium transition-all duration-300;
+    background: transparent;
+    border: 1.5px solid rgba(72, 202, 228, 0.55);
+    color: #7dd8ee;
+  }
+  .btn-outline-cyan:hover {
+    background: rgba(72, 202, 228, 0.1);
+    border-color: rgba(72, 202, 228, 0.85);
+    color: #ffffff;
+  }
+
   .btn-primary {
     @apply bg-accent-red text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors;
   }

@@ -344,13 +344,13 @@ export default function HomePage() {
                 <>
                   <button
                     onClick={() => router.push('/login')}
-                    className="btn-gradient px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
+                    className="btn-gradient btn-glow px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
                   >
                     Login to Recharge
                   </button>
                   <button
                     onClick={() => setShowQuickRecharge(true)}
-                    className="btn-gradient-cyan px-6 py-2.5 rounded-lg font-medium text-sm sm:text-base w-full sm:w-auto"
+                    className="btn-outline-cyan text-sm sm:text-base w-full sm:w-auto"
                   >
                     ⚡ Quick Recharge
                   </button>
