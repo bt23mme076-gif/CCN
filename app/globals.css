@@ -137,13 +137,19 @@ body::after {
     box-shadow: 0 8px 25px -5px rgba(72, 202, 228, 0.4);
   }
 
-  /* Combine with .btn-gradient to add an idle glow, marking it as the
-     primary action next to a plainer outline secondary button. */
-  .btn-glow {
-    box-shadow: 0 0 18px rgba(230, 57, 70, 0.35), 0 0 36px rgba(247, 127, 0, 0.15);
+  /* Primary CTA: outline pill with a strong idle glow — brighter/thicker
+     than .btn-outline-cyan so it still reads as the primary action. */
+  .btn-outline-glow-red {
+    @apply px-8 py-3.5 rounded-xl font-semibold transition-all duration-300;
+    background: rgba(230, 57, 70, 0.14);
+    border: 2px solid rgba(230, 57, 70, 0.85);
+    color: #ffffff;
+    box-shadow: 0 0 22px rgba(230, 57, 70, 0.5), 0 0 42px rgba(247, 127, 0, 0.22);
   }
-  .btn-glow:hover {
-    box-shadow: 0 0 26px rgba(230, 57, 70, 0.5), 0 0 46px rgba(247, 127, 0, 0.25), 0 8px 25px -5px rgba(230, 57, 70, 0.4);
+  .btn-outline-glow-red:hover {
+    background: rgba(230, 57, 70, 0.22);
+    border-color: #e63946;
+    box-shadow: 0 0 32px rgba(230, 57, 70, 0.65), 0 0 55px rgba(247, 127, 0, 0.32);
   }
 
   .btn-outline-cyan {

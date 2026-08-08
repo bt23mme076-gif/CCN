@@ -344,7 +344,7 @@ export default function HomePage() {
                 <>
                   <button
                     onClick={() => router.push('/login')}
-                    className="btn-gradient btn-glow px-8 py-3.5 rounded-xl font-semibold text-base sm:text-lg w-full sm:w-auto"
+                    className="btn-outline-glow-red text-base sm:text-lg w-full sm:w-auto"
                   >
                     Login to Recharge
                   </button>
