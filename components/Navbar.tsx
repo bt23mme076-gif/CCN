@@ -175,22 +175,24 @@ export default function Navbar() {
                               {connections.length > 1 && (
                                 <>
                                   <p className="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>My Connections</p>
-                                  {connections.map((conn) => (
-                                    <button
-                                      key={conn.id}
-                                      onClick={() => switchConnection(conn.id)}
-                                      className="flex items-center justify-between gap-2 px-4 py-2 text-sm w-full text-left transition-colors"
-                                      style={{ color: activeConnectionId === conn.id ? '#4ade80' : 'rgba(147,197,253,0.85)' }}
-                                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
-                                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                                    >
-                                      <span className="flex items-center gap-1.5">
-                                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
-                                        {conn.stb_number}{conn.label ? ` · ${conn.label}` : ''}
-                                      </span>
-                                      {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓</span>}
-                                    </button>
-                                  ))}
+                                  <div className="max-h-48 overflow-y-auto">
+                                    {connections.map((conn) => (
+                                      <button
+                                        key={conn.id}
+                                        onClick={() => switchConnection(conn.id)}
+                                        className="flex items-center justify-between gap-2 px-4 py-2 text-sm w-full text-left transition-colors"
+                                        style={{ color: activeConnectionId === conn.id ? '#4ade80' : 'rgba(147,197,253,0.85)' }}
+                                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
+                                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                      >
+                                        <span className="flex items-center gap-1.5">
+                                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
+                                          {conn.stb_number}{conn.label ? ` · ${conn.label}` : ''}
+                                        </span>
+                                        {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓</span>}
+                                      </button>
+                                    ))}
+                                  </div>
                                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
                                 </>
                               )}
@@ -282,20 +284,22 @@ export default function Navbar() {
                     {connections.length > 1 && (
                       <div className="mx-1 mb-1 rounded-lg overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                         <p className="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>My Connections</p>
-                        {connections.map((conn) => (
-                          <button
-                            key={conn.id}
-                            onClick={() => switchConnection(conn.id)}
-                            className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm w-full text-left"
-                            style={{ color: activeConnectionId === conn.id ? '#4ade80' : '#93c5fd' }}
-                          >
-                            <span className="flex items-center gap-2">
-                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
-                              <span className="font-mono">{conn.stb_number}{conn.label ? ` · ${conn.label}` : ''}</span>
-                            </span>
-                            {activeConnectionId === conn.id && <span className="text-green-400 text-xs font-semibold">✓</span>}
-                          </button>
-                        ))}
+                        <div className="max-h-48 overflow-y-auto">
+                          {connections.map((conn) => (
+                            <button
+                              key={conn.id}
+                              onClick={() => switchConnection(conn.id)}
+                              className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm w-full text-left"
+                              style={{ color: activeConnectionId === conn.id ? '#4ade80' : '#93c5fd' }}
+                            >
+                              <span className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
+                                <span className="font-mono">{conn.stb_number}{conn.label ? ` · ${conn.label}` : ''}</span>
+                              </span>
+                              {activeConnectionId === conn.id && <span className="text-green-400 text-xs font-semibold">✓</span>}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                     <MobileNavLink href="/" label="Home" onClick={() => setMobileMenuOpen(false)}
