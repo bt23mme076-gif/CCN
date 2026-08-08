@@ -354,12 +354,6 @@ export default function HomePage() {
                   >
                     ⚡ Quick Recharge
                   </button>
-                  <button
-                    onClick={() => router.push('/register')}
-                    className="text-white/60 text-sm hover:text-white transition-colors underline underline-offset-2"
-                  >
-                    New user? Sign up
-                  </button>
                 </>
               ) : customer.fast_recharge_enabled ? (
                 <button
