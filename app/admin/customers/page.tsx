@@ -105,7 +105,7 @@ export default function CustomersPage() {
   const [savingPlanDiscounts, setSavingPlanDiscounts] = useState(false);
   // Dropdown
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top?: number; bottom?: number; right: number } | null>(null);
 
   const handleToggleFastRecharge = (c: { id: string; name: string; fast_recharge_enabled: boolean; fast_recharge_amount: number }) => {
     if (c.fast_recharge_enabled) {
@@ -197,7 +197,17 @@ export default function CustomersPage() {
   const toggleDropdown = (id: string, e: React.MouseEvent<HTMLButtonElement>) => {
     if (openDropdown === id) { setOpenDropdown(null); setDropdownPos(null); return; }
     const rect = e.currentTarget.getBoundingClientRect();
-    setDropdownPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    const right = window.innerWidth - rect.right;
+    // The menu has ~11 items (~37px each) — if there isn't enough room below
+    // the button to fit it, anchor it upward from the button instead so the
+    // lower options aren't pushed off-screen for rows near the bottom.
+    const estimatedMenuHeight = 410;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < estimatedMenuHeight && rect.top > spaceBelow) {
+      setDropdownPos({ bottom: window.innerHeight - rect.top + 4, right });
+    } else {
+      setDropdownPos({ top: rect.bottom + 4, right });
+    }
     setOpenDropdown(id);
   };
 
@@ -776,8 +786,15 @@ export default function CustomersPage() {
         return (
           <>
             <div className="fixed inset-0 z-40" onClick={() => { setOpenDropdown(null); setDropdownPos(null); }} />
-            <div className="fixed z-50 w-44 rounded-xl shadow-2xl overflow-hidden"
-              style={{ top: dropdownPos.top, right: dropdownPos.right, background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <div className="fixed z-50 w-44 rounded-xl shadow-2xl overflow-y-auto"
+              style={{
+                top: dropdownPos.top,
+                bottom: dropdownPos.bottom,
+                right: dropdownPos.right,
+                maxHeight: 'calc(100vh - 16px)',
+                background: '#1a1a2e',
+                border: '1px solid rgba(255,255,255,0.12)',
+              }}>
               {[
                 { label: '👁 View Details', action: () => openCustomerDetails(c.id), color: '#e2e8f0' },
                 { label: '✏️ Edit', action: () => {
