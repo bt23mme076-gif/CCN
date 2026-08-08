@@ -1191,7 +1191,7 @@ export default function CustomersPage() {
       {/* Edit Customer Modal */}
       {selectedCustForEdit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl p-5 sm:p-6 shadow-2xl border"
+          <div className="w-full max-w-sm rounded-2xl p-5 sm:p-6 overflow-y-auto max-h-[90vh] shadow-2xl border"
                style={{ background: '#121214', borderColor: 'rgba(255,255,255,0.1)', color: 'white' }}>
             <div className="flex justify-between items-center mb-5">
               <div>
