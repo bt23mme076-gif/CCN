@@ -156,7 +156,10 @@ export default function AllRechargesPage() {
     setSharing(rechargeId);
 
     const amountRs = (amount / 100).toFixed(2);
-    const receiptUrl = `/api/admin/receipt/${rechargeId}`;
+    // Public, no-login-required link so the customer can actually open their
+    // bill — the admin receipt route requires an admin session and would
+    // reject the customer.
+    const shareUrl = `${window.location.origin}/api/receipt/share/${rechargeId}`;
 
     const phone = mobile.replace(/\D/g, '').replace(/^0/, '');
     const waPhone = phone.startsWith('91') ? phone : `91${phone}`;
@@ -175,14 +178,16 @@ export default function AllRechargesPage() {
       (activatedAt ? `🗓️ Activated: ${new Date(activatedAt).toLocaleDateString('en-IN')}\n` : '') +
       (expiresAt ? `⏳ Valid Till: ${new Date(expiresAt).toLocaleDateString('en-IN')}\n` : '') +
       `━━━━━━━━━━━━━━━━━━━\n\n` +
+      `🧾 View/Download your Bill:\n${shareUrl}\n\n` +
       `_CCN Networks — Your Trusted Cable Provider_ 🙏`;
 
     const ua = navigator.userAgent;
-    alert(ua); // TEMP: remove after checking
     const isAndroidWebView = /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
 
     if (isAndroidWebView) {
-      // WebView: navigator.share and wa.me both fail — use Android Intent URL to launch WhatsApp directly
+      // WebView: navigator.share fails silently here — launch WhatsApp
+      // directly via an Android Intent URL instead. The bill link in the
+      // message text is what actually gets the bill to the customer.
       setSharing(null);
       window.location.href =
         `intent://send?phone=${waPhone}&text=${encodeURIComponent(msg)}` +
@@ -190,30 +195,19 @@ export default function AllRechargesPage() {
       return;
     }
 
-    // Try file sharing (mobile native share sheet — works in real browsers)
+    // Real mobile browsers: native share sheet lets the admin pick WhatsApp
+    // (or any other app) — the bill link is already in the text.
     if (navigator.share) {
       try {
-        const res = await fetch(receiptUrl, { credentials: 'include' });
-        if (res.ok) {
-          const blob = await res.blob();
-          const file = new File(
-            [blob],
-            `CCN-Receipt-${customerName.replace(/\s+/g, '-')}-${rechargeId.slice(0, 8)}.html`,
-            { type: 'text/html' },
-          );
-          const shareData = navigator.canShare && navigator.canShare({ files: [file] })
-            ? { title: `CCN Receipt — ${customerName}`, text: msg, files: [file] }
-            : { title: `CCN Receipt — ${customerName}`, text: msg };
-          await navigator.share(shareData);
-          setSharing(null);
-          return;
-        }
+        await navigator.share({ title: `CCN Receipt — ${customerName}`, text: msg });
+        setSharing(null);
+        return;
       } catch (err) {
         if ((err as Error)?.name === 'AbortError') { setSharing(null); return; }
       }
     }
 
-    // Desktop fallback: open in new tab
+    // Desktop fallback: open WhatsApp Web with the message pre-filled
     setSharing(null);
     const a = document.createElement('a');
     a.href = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
