@@ -4,6 +4,15 @@ import { useEffect, useState } from 'react';
 import StatusBadge from '@/components/StatusBadge';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 
+// The Android app spoofs its User-Agent to look like real Chrome (see
+// MainActivity.java), so UA sniffing can't reliably detect it. The app also
+// injects a JS interface named "Android" (addJavascriptInterface) which is
+// only present inside that WebView — check for that instead.
+function isInNativeApp(): boolean {
+  if (typeof window === 'undefined') return false;
+  return !!(window as any).Android;
+}
+
 interface RechargeItem {
   recharge: { id: string; plan_name: string; amount: number; status: string; created_at: string; cashfree_order_id: string | null; };
   customer: { id: string; name: string; mobile: string; stb_number?: string; area?: string; };
@@ -141,6 +150,21 @@ export default function AllRechargesPage() {
     finally { setUpdatingExpiry(false); }
   };
 
+  const openReceipt = (rechargeId: string) => {
+    const receiptUrl = `/api/admin/receipt/${rechargeId}`;
+    if (isInNativeApp()) {
+      // target="_blank" / window.open() need the app's WebChromeClient to
+      // implement onCreateWindow, which this app may not have yet. A plain
+      // top-level navigation to an intent:// URL is already handled by
+      // MainActivity's shouldOverrideUrlLoading, so route through Chrome
+      // instead of trying to open a new tab inside the WebView.
+      const target = `${window.location.origin}${receiptUrl}`.replace(/^https?:\/\//, '');
+      window.location.href = `intent://${target}#Intent;scheme=https;package=com.android.chrome;end`;
+      return;
+    }
+    window.open(receiptUrl, '_blank');
+  };
+
   const handleShareReceipt = async (
     rechargeId: string,
     planName: string,
@@ -182,7 +206,7 @@ export default function AllRechargesPage() {
       `_CCN Networks — Your Trusted Cable Provider_ 🙏`;
 
     const ua = navigator.userAgent;
-    const isAndroidWebView = /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
+    const isAndroidWebView = isInNativeApp() || /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
 
     if (isAndroidWebView) {
       // WebView: navigator.share fails silently here — launch WhatsApp
@@ -288,15 +312,13 @@ export default function AllRechargesPage() {
                       <td>
                         {(recharge.status === 'paid' || recharge.status === 'activated') && (
                           <div className="flex items-center gap-1.5">
-                            <a
-                              href={`/api/admin/receipt/${recharge.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              onClick={() => openReceipt(recharge.id)}
                               className="px-3 py-1.5 rounded-lg text-xs font-bold text-white inline-block hover:opacity-80 transition-opacity"
                               style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
                             >
                               Receipt
-                            </a>
+                            </button>
                             <button
                               onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '', customer.mobile || '')}
                               disabled={sharing === recharge.id}
@@ -349,15 +371,13 @@ export default function AllRechargesPage() {
                   </button>
                   {(recharge.status === 'paid' || recharge.status === 'activated') && (
                     <div className="flex gap-2">
-                      <a
-                        href={`/api/admin/receipt/${recharge.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => openReceipt(recharge.id)}
                         className="flex-1 py-2 rounded-xl text-sm font-bold text-white text-center block"
                         style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
                       >
                         Receipt
-                      </a>
+                      </button>
                       <button
                         onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, customer.name, customer.stb_number || '', customer.mobile || '')}
                         disabled={sharing === recharge.id}
@@ -444,15 +464,13 @@ export default function AllRechargesPage() {
                               <StatusBadge status={recharge.status} />
                               {(recharge.status === 'paid' || recharge.status === 'activated') && (
                                 <>
-                                  <a
-                                    href={`/api/admin/receipt/${recharge.id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                  <button
+                                    onClick={() => openReceipt(recharge.id)}
                                     className="px-3 py-1 rounded-lg text-xs font-bold text-white"
                                     style={{ background: 'linear-gradient(135deg, #1e3a5f, #2563eb)' }}
                                   >
                                     Receipt
-                                  </a>
+                                  </button>
                                   <button
                                     onClick={() => handleShareReceipt(recharge.id, recharge.plan_name, recharge.amount, recharge.status, selectedCustomerDetail.customer?.name || '', selectedCustomerDetail.customer?.stb_number || '', selectedCustomerDetail.customer?.mobile || '', recharge.activated_at, recharge.expires_at)}
                                     disabled={sharing === recharge.id}
