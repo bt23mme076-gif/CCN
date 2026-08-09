@@ -152,14 +152,12 @@ export function generateReceiptHTML(data: ReceiptData): string {
     .notes-section p, .notes-section li { line-height: 1.5; color: #444; }
     .notes-section ol { padding-left: 16px; }
 
-    .print-btn { display: block; width: calc(100% - 32px); margin: 14px 16px 6px; padding: 10px; background: #111; color: white; border: none; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
-    .pdf-btn { display: block; width: calc(100% - 32px); margin: 0 16px 14px; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
-    .pdf-btn:disabled { opacity: 0.6; cursor: default; }
+    .print-btn { display: block; width: calc(100% - 32px); margin: 14px 16px; padding: 10px; background: #111; color: white; border: none; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
 
     @media print {
       body { background: white; padding: 0; }
       .page { max-width: 100%; }
-      .print-btn, .pdf-btn { display: none; }
+      .print-btn { display: none; }
     }
   </style>
 </head>
@@ -269,36 +267,8 @@ export function generateReceiptHTML(data: ReceiptData): string {
     </ol>
   </div>
 
-  <button class="print-btn" onclick="window.print()">Print</button>
-  <button class="pdf-btn" id="pdfBtn" onclick="downloadPdf()">Download PDF</button>
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script>
-  async function downloadPdf() {
-    var btn = document.getElementById('pdfBtn');
-    var originalText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Generating...';
-    try {
-      var page = document.querySelector('.page');
-      var canvas = await html2canvas(page, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-      var imgData = canvas.toDataURL('image/png');
-      var jsPDF = window.jspdf.jsPDF;
-      var pdfWidth = 210; // A4 width in mm
-      var pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfWidth, pdfHeight] });
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save('CCN-Receipt-${invoiceNo}.pdf');
-    } catch (err) {
-      alert('Failed to generate PDF. Please use Print instead.');
-      console.error(err);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
-  }
-</script>
 </body>
 </html>`;
 }
