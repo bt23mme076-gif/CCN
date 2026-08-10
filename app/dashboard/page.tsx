@@ -196,9 +196,12 @@ export default function DashboardPage() {
     finally { setRetrackLoading(false); }
   };
 
-  const activePlan = recharges.find(
-    (r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date() && !r.plan_name.toUpperCase().startsWith('ALA CARTE')
-  );
+  // Match buy/history's "next expiring plan" logic: among active plans, show
+  // the one expiring soonest — not just whichever comes first in the list
+  // (which could be a future pre-paid renewal instead of the current plan).
+  const activePlan = recharges
+    .filter((r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date() && !r.plan_name.toUpperCase().startsWith('ALA CARTE'))
+    .sort((a, b) => new Date(a.expires_at!).getTime() - new Date(b.expires_at!).getTime())[0];
 
   const pendingActivation = recharges.find(r => r.status === 'paid');
 
