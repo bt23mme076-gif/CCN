@@ -37,11 +37,10 @@ export async function POST(
 
     const baseDate = recharge.activated_at ? new Date(recharge.activated_at) : new Date();
 
-    // Calculate new expiry: activated_at + days + 1, at IST midnight, so the
-    // customer stays active through the entire last day instead of losing it
+    // Calculate new expiry: activated_at + days, at IST midnight
     const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
     const expiryIstHelper = new Date(baseDate.getTime() + IST_OFFSET_MS);
-    expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + days + 1);
+    expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + days);
     expiryIstHelper.setUTCHours(0, 0, 0, 0);
     const newExpiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
 

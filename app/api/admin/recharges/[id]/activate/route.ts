@@ -69,11 +69,8 @@ export async function POST(
       );
       const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
       const baseDate = futurePlans.length > 0 ? new Date(futurePlans[0].expires_at!) : now;
-      // Chaining from a prior expiry (already midnight-aligned) needs no extra day;
-      // starting fresh from "now" (mid-day) needs +1 so today still counts as active.
-      const extraDay = futurePlans.length > 0 ? 0 : 1;
       const expiryIstHelper = new Date(baseDate.getTime() + IST_OFFSET_MS);
-      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + 30 + extraDay);
+      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + 30);
       expiryIstHelper.setUTCHours(0, 0, 0, 0);
       const expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
 
@@ -133,10 +130,9 @@ export async function POST(
         expiresAt = activeBasePlans[0].expires_at!;
       } else {
         // Fallback: If no active base plan is found, standard duration.
-        // Starting fresh from "now" (mid-day) needs +1 day so today still counts as active.
         const nowUtc = new Date();
         const expiryIstHelper = new Date(nowUtc.getTime() + IST_OFFSET_MS);
-        expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan!.duration_days + 1);
+        expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + plan!.duration_days);
         expiryIstHelper.setUTCHours(0, 0, 0, 0);
         expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
       }
@@ -177,12 +173,9 @@ export async function POST(
       }
 
       // Shift base date into IST, add duration, set to midnight IST, convert back to UTC.
-      // Chaining from a prior expiry (already midnight-aligned) needs no extra day;
-      // starting fresh from "now" (mid-day) needs +1 so today still counts as active.
       const effectiveDurationDays = rechargeData.duration_days ?? plan!.duration_days;
-      const extraDay = futureActivePlans.length > 0 ? 0 : 1;
       const expiryIstHelper = new Date(baseDate.getTime() + IST_OFFSET_MS);
-      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + effectiveDurationDays + extraDay);
+      expiryIstHelper.setUTCDate(expiryIstHelper.getUTCDate() + effectiveDurationDays);
       expiryIstHelper.setUTCHours(0, 0, 0, 0);
       expiresAt = new Date(expiryIstHelper.getTime() - IST_OFFSET_MS);
     }
