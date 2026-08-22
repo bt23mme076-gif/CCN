@@ -18,7 +18,13 @@
     "change-admin-password": "tsx change-admin-password.ts",
     "check-admin": "tsx check-admin.ts",
     "create-admin": "tsx create-admin-now.ts",
-    "add-employees-table": "tsx add-employees-table.ts"
+    "add-employees-table": "tsx add-employees-table.ts",
+    "add-multitenancy-v2": "tsx add-multitenancy-v2.ts",
+    "add-super-admins-table": "tsx add-super-admins-table.ts",
+    "create-super-admin": "tsx create-super-admin.ts",
+    "add-settlements-refunds-tables": "tsx add-settlements-refunds-tables.ts",
+    "add-operator-branding-columns": "tsx add-operator-branding-columns.ts",
+    "delete-super-admin": "tsx delete-super-admin.ts"
   },
   "dependencies": {
     "@cashfreepayments/cashfree-js": "^1.0.7",
@@ -29,10 +35,10 @@
     "bcryptjs": "^2.4.3",
     "cashfree-pg": "^6.0.4",
     "dotenv": "^16.6.1",
-    "drizzle-orm": "^0.33.0",
+    "drizzle-orm": "^0.45.2",
     "jsonwebtoken": "^9.0.2",
     "motion": "^12.40.0",
-    "next": "14.2.5",
+    "next": "^16.3.1",
     "postgres": "^3.4.4",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
@@ -49,12 +55,17 @@
     "@types/react-dom": "^18.3.7",
     "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.5.0",
-    "drizzle-kit": "^0.24.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "postcss": "^8.5.15",
     "tailwindcss": "^3.4.19",
     "tsx": "^4.16.2",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "axios": "^1.19.0",
+    "glob": "^10.4.5",
+    "minimatch": "^9.0.5"
   }
 }
