@@ -16,9 +16,9 @@ const createAccessorySchema = z.object({
 
 export async function GET() {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
-    const allAccessories = await db.select().from(accessories).orderBy(accessories.price);
+    const allAccessories = await db.select().from(accessories).where(eq(accessories.operator_id, admin.operatorId)).orderBy(accessories.price);
 
     return NextResponse.json({ accessories: allAccessories });
   } catch (error) {
@@ -32,7 +32,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const body = await request.json();
     const validatedData = createAccessorySchema.parse(body);
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
 
     await db.insert(accessories).values({
       id: accessoryId,
+      operator_id: admin.operatorId,
       name: validatedData.name,
       price: validatedData.price,
       description: validatedData.description || '',

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { admins } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { signToken, setAuthCookie } from '@/lib/auth';
+import { getCurrentOperator } from '@/lib/db/tenant';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -18,11 +19,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = loginSchema.parse(body);
 
-    // Find admin
+    // Resolve operator from subdomain (injected by middleware)
+    const operator = await getCurrentOperator();
+    if (!operator) {
+      return NextResponse.json({ error: 'Unknown operator' }, { status: 400 });
+    }
+
+    // Find admin scoped to this operator
     const admin = await db
       .select()
       .from(admins)
-      .where(eq(admins.username, validatedData.username))
+      .where(
+        and(
+          eq(admins.username, validatedData.username),
+          eq(admins.operator_id, operator.id)
+        )
+      )
       .limit(1);
 
     if (admin.length === 0) {
@@ -50,6 +62,7 @@ export async function POST(request: NextRequest) {
       adminId: admin[0].id,
       username: admin[0].username,
       role: 'admin',
+      operatorId: operator.id,
     });
 
     // Create response

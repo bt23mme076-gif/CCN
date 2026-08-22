@@ -9,7 +9,7 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(accessoryOrders.created_at))
       .$dynamic();
 
-    const conditions = [];
+    const conditions: ReturnType<typeof eq>[] = [eq(accessoryOrders.operator_id, admin.operatorId)];
 
     // Filter by status (e.g. 'paid' for pending delivery, or 'delivered')
     if (status) {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         or(
           eq(accessoryOrders.status, 'paid'),
           eq(accessoryOrders.status, 'delivered')
-        )
+        )!
       );
     }
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         or(
           ilike(customers.name, `%${search}%`),
           ilike(customers.mobile, `%${search}%`)
-        )
+        )!
       );
     }
 

@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { employees } from '@/lib/db/schema';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, and } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const rows = await db
       .select()
       .from(employees)
-      .where(eq(employees.is_active, true))
+      .where(and(eq(employees.is_active, true), eq(employees.operator_id, admin.operatorId)))
       .orderBy(asc(employees.name));
 
     return NextResponse.json({ employees: rows });
@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const { name } = await request.json();
 
     if (!name || !name.trim()) {
@@ -35,14 +35,14 @@ export async function POST(request: NextRequest) {
     const existing = await db
       .select()
       .from(employees)
-      .where(eq(employees.name, name.trim()));
+      .where(and(eq(employees.name, name.trim()), eq(employees.operator_id, admin.operatorId)));
 
     if (existing.length > 0 && existing[0].is_active) {
       return NextResponse.json({ employee: existing[0] });
     }
 
     const id = `emp_${randomBytes(8).toString('hex')}`;
-    await db.insert(employees).values({ id, name: name.trim() });
+    await db.insert(employees).values({ id, operator_id: admin.operatorId, name: name.trim() });
 
     return NextResponse.json({ success: true, employee: { id, name: name.trim(), is_active: true } });
   } catch (error) {

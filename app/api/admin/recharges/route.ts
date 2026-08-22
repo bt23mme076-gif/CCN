@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
-import { eq, desc, or, ilike, inArray } from 'drizzle-orm';
+import { eq, desc, or, ilike, inArray, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
@@ -22,21 +22,23 @@ export async function GET(request: NextRequest) {
       })
       .from(recharges)
       .leftJoin(customers, eq(recharges.customer_id, customers.id))
+      .where(eq(recharges.operator_id, admin.operatorId))
       .orderBy(desc(recharges.created_at))
       .$dynamic();
 
-    // Filter by status (supports comma-separated: paid,pending)
     if (status) {
       const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
-      query = query.where(statuses.length === 1 ? eq(recharges.status, statuses[0]) : inArray(recharges.status, statuses));
+      query = query.where(and(eq(recharges.operator_id, admin.operatorId), statuses.length === 1 ? eq(recharges.status, statuses[0]) : inArray(recharges.status, statuses)));
     }
 
-    // Search by customer name or mobile
     if (search) {
       query = query.where(
-        or(
-          ilike(customers.name, `%${search}%`),
-          ilike(customers.mobile, `%${search}%`)
+        and(
+          eq(recharges.operator_id, admin.operatorId),
+          or(
+            ilike(customers.name, `%${search}%`),
+            ilike(customers.mobile, `%${search}%`)
+          )
         )
       );
     }

@@ -2,24 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, plans } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 1. Verify admin authorization
-    await requireAdminAuth();
-    const rechargeId = params.id;
+    const admin = await requireAdminAuth();
+    const rechargeId = (await params).id;
 
-    // 2. Fetch recharge details
+    // Fetch recharge details, scoped to this operator
     const recharge = await db
       .select()
       .from(recharges)
-      .where(eq(recharges.id, rechargeId))
+      .where(and(eq(recharges.id, rechargeId), eq(recharges.operator_id, admin.operatorId)))
       .limit(1);
 
     if (recharge.length === 0) {

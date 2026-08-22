@@ -1,8 +1,33 @@
 import { pgTable, text, integer, boolean, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
+export const superAdmins = pgTable('super_admins', {
+  id: text('id').primaryKey(),
+  username: text('username').notNull().unique(),
+  password_hash: text('password_hash').notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const operators = pgTable('operators', {
+  id: text('id').primaryKey(), // slug, e.g. 'ccn', 'reliancecable'
+  name: text('name').notNull(), // display name
+  business_name: text('business_name').notNull(),
+  subdomain: text('subdomain').notNull().unique(), // ccn → ccn.yourdomain.com
+  cashfree_vendor_id: text('cashfree_vendor_id'), // set after Easy Split KYC
+  commission_percent: integer('commission_percent').notNull().default(10), // CCN's cut
+  kyc_status: text('kyc_status').notNull().default('pending'), // 'pending' | 'approved' | 'rejected'
+  status: text('status').notNull().default('active'), // 'active' | 'pending' | 'suspended'
+  // Branding — shown on customer-facing pages for this operator's subdomain
+  logo_url: text('logo_url'),
+  primary_color: text('primary_color').default('#6366f1'), // hex color for buttons/accents
+  tagline: text('tagline'),
+  support_phone: text('support_phone'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const customers = pgTable('customers', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   mobile: text('mobile').notNull().unique(),
   stb_number: text('stb_number').notNull(),
@@ -17,6 +42,7 @@ export const customers = pgTable('customers', {
 
 export const plans = pgTable('plans', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   price: integer('price').notNull(), // in paise
   duration_days: integer('duration_days').notNull(),
@@ -40,6 +66,7 @@ export const customerConnections = pgTable('customer_connections', {
 
 export const recharges = pgTable('recharges', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   customer_id: text('customer_id').notNull().references(() => customers.id),
   // null = primary STB (customers.stb_number); set = additional connection
   connection_id: text('connection_id').references(() => customerConnections.id),
@@ -63,6 +90,7 @@ export const recharges = pgTable('recharges', {
 
 export const admins = pgTable('admins', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   username: text('username').notNull().unique(),
   password_hash: text('password_hash').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
@@ -70,6 +98,7 @@ export const admins = pgTable('admins', {
 
 export const announcements = pgTable('announcements', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   text: text('text').notNull(),
   is_active: boolean('is_active').default(true).notNull(),
   speed: integer('speed').default(30).notNull(), // seconds for one full scroll (lower = faster)
@@ -104,6 +133,7 @@ export const customerPlanDiscounts = pgTable('customer_plan_discounts', {
 
 export const accessories = pgTable('accessories', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   price: integer('price').notNull(), // in paise
   description: text('description'),
@@ -113,6 +143,7 @@ export const accessories = pgTable('accessories', {
 
 export const advertisements = pgTable('advertisements', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   business_name: text('business_name').notNull(),
   image_data: text('image_data').notNull(), // base64 data URL or external https URL
   phone: text('phone'),
@@ -123,6 +154,7 @@ export const advertisements = pgTable('advertisements', {
 
 export const channels = pgTable('channels', {
   id: integer('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   hd_sd: text('hd_sd').notNull(),
   genre: text('genre').notNull(),
@@ -137,6 +169,7 @@ export const channels = pgTable('channels', {
 
 export const accessoryOrders = pgTable('accessory_orders', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   customer_id: text('customer_id').notNull().references(() => customers.id),
   accessory_id: text('accessory_id').notNull().references(() => accessories.id),
   accessory_name: text('accessory_name').notNull(),
@@ -227,8 +260,29 @@ export const adminPushSubscriptions = pgTable('admin_push_subscriptions', {
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const settlements = pgTable('settlements', {
+  id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
+  cashfree_settlement_id: text('cashfree_settlement_id'),
+  amount_paise: integer('amount_paise').notNull(),
+  settled_at: timestamp('settled_at'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const refunds = pgTable('refunds', {
+  id: text('id').primaryKey(),
+  recharge_id: text('recharge_id').references(() => recharges.id),
+  operator_id: text('operator_id').references(() => operators.id),
+  amount_paise: integer('amount_paise').notNull(),
+  cashfree_refund_id: text('cashfree_refund_id'),
+  reason: text('reason'),
+  status: text('status').notNull().default('pending'), // 'pending' | 'processed' | 'failed'
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const employees = pgTable('employees', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   name: text('name').notNull(),
   is_active: boolean('is_active').notNull().default(true),
   created_at: timestamp('created_at').defaultNow().notNull(),
@@ -236,6 +290,7 @@ export const employees = pgTable('employees', {
 
 export const expenses = pgTable('expenses', {
   id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
   title: text('title').notNull(),
   amount: integer('amount').notNull(), // in rupees
   category: text('category').notNull(), // 'salary' | 'rent' | 'maintenance' | 'fuel' | 'other'

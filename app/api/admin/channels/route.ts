@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { channels } from '@/lib/db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ const createChannelSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const body = await request.json();
     const parsed = createChannelSchema.parse(body);
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       .insert(channels)
       .values({
         id: nextId,
+        operator_id: admin.operatorId,
         name: parsed.name,
         hd_sd: parsed.hd_sd,
         genre: parsed.genre,

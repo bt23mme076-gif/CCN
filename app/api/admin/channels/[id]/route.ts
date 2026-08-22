@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { channels } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -18,14 +18,14 @@ const updateChannelSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const body = await request.json();
     const { price, epg, name, hd_sd, genre, type } = updateChannelSchema.parse(body);
-    const channelId = parseInt(params.id);
+    const channelId = parseInt((await params).id);
 
     if (isNaN(channelId)) {
       return NextResponse.json({ error: 'Invalid channel ID' }, { status: 400 });
@@ -45,13 +45,12 @@ export async function PATCH(
     await db
       .update(channels)
       .set(updateData)
-      .where(eq(channels.id, channelId));
-
+      .where(and(eq(channels.id, channelId), eq(channels.operator_id, admin.operatorId)));
 
     const updatedChannel = await db
       .select()
       .from(channels)
-      .where(eq(channels.id, channelId))
+      .where(and(eq(channels.id, channelId), eq(channels.operator_id, admin.operatorId)))
       .limit(1);
 
     if (updatedChannel.length === 0) {
@@ -76,12 +75,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
-    const channelId = parseInt(params.id);
+    const channelId = parseInt((await params).id);
 
     if (isNaN(channelId)) {
       return NextResponse.json({ error: 'Invalid channel ID' }, { status: 400 });
@@ -89,7 +88,7 @@ export async function DELETE(
 
     const deleted = await db
       .delete(channels)
-      .where(eq(channels.id, channelId))
+      .where(and(eq(channels.id, channelId), eq(channels.operator_id, admin.operatorId)))
       .returning();
 
     if (deleted.length === 0) {

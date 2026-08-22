@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { expenses } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
-    await db.delete(expenses).where(eq(expenses.id, params.id));
+    const admin = await requireAdminAuth();
+    await db.delete(expenses).where(and(eq(expenses.id, (await params).id), eq(expenses.operator_id, admin.operatorId)));
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Delete expense error:', error);

@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { advertisements } from '@/lib/db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const ads = await db
       .select()
       .from(advertisements)
+      .where(eq(advertisements.operator_id, admin.operatorId))
       .orderBy(desc(advertisements.created_at));
     return NextResponse.json({ advertisements: ads });
   } catch (error) {
@@ -23,7 +24,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const body = await request.json();
     const { business_name, image_data, phone, expires_at } = body;
 
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
       .insert(advertisements)
       .values({
         id,
+        operator_id: admin.operatorId,
         business_name: business_name.trim(),
         image_data: image_data.trim(),
         phone: phone?.trim() || null,

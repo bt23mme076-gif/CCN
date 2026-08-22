@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plans, recharges, customers, customerPriceOverrides, customerPlanDiscounts } from '@/lib/db/schema';
+import { plans, recharges, customers, customerPriceOverrides, customerPlanDiscounts, operators } from '@/lib/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { resolveConnection } from '@/lib/connections';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
+import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,16 +101,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Cashfree is configured
-    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
-      return NextResponse.json(
-        { error: 'Payment gateway not configured. Please contact administrator.' },
-        { status: 503 }
-      );
-    }
+    // Resolve operator for split payments
+    const operator = customer[0].operator_id
+      ? await db.select().from(operators).where(eq(operators.id, customer[0].operator_id)).limit(1).then(r => r[0] ?? null)
+      : null;
 
-    // Clean up stale unpaid attempts for the same plan/connection so the admin
-    // queue doesn't fill up with duplicate abandoned checkouts.
+    // Clean up stale unpaid attempts for the same plan/connection.
     await db
       .update(recharges)
       .set({ status: 'failed' })
@@ -122,68 +119,26 @@ export async function POST(request: NextRequest) {
         )
       );
 
-    // Create recharge record first
     const rechargeId = generateOrderId();
 
-    // Create Cashfree order using REST API
-    const cashfreeApiUrl = process.env.CASHFREE_ENV === 'production'
-      ? 'https://api.cashfree.com/pg/orders'
-      : 'https://sandbox.cashfree.com/pg/orders';
-
-    const orderData = {
-      order_id: rechargeId,
-      order_amount: (finalPrice / 100).toFixed(2), // Convert paise to rupees
-      order_currency: 'INR',
-      customer_details: {
-        customer_id: targetCustomerId,
-        customer_phone: customer[0].mobile,
-        customer_name: customer[0].name,
-      },
-      order_meta: {
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?order_id=${rechargeId}`,
-      },
-    };
-
-    const cashfreeResponse = await fetch(cashfreeApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-client-id': process.env.CASHFREE_APP_ID,
-        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-        'x-api-version': '2023-08-01',
-      },
-      body: JSON.stringify(orderData),
-    });
-
-    const responseText = await cashfreeResponse.text();
-
-    if (!cashfreeResponse.ok) {
-      let errorData;
-      try {
-        errorData = JSON.parse(responseText);
-      } catch {
-        errorData = { message: responseText };
-      }
-      console.error('Cashfree API error:', errorData);
-      return NextResponse.json(
-        { error: `Payment gateway error: ${errorData.message || 'Unknown error'}` },
-        { status: 503 }
-      );
+    let cfResult;
+    try {
+      cfResult = await createCashfreeOrder({
+        orderId: rechargeId,
+        amountPaise: finalPrice,
+        customerId: targetCustomerId,
+        customerPhone: customer[0].mobile,
+        customerName: customer[0].name,
+        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?order_id=${rechargeId}`,
+        operator,
+      });
+    } catch (err) {
+      return NextResponse.json({ error: (err as Error).message }, { status: 503 });
     }
 
-    const cashfreeOrder = JSON.parse(responseText);
-
-    if (!cashfreeOrder.payment_session_id) {
-      console.error('Missing payment_session_id in Cashfree response:', cashfreeOrder);
-      return NextResponse.json(
-        { error: 'Payment gateway error: Missing payment session ID' },
-        { status: 503 }
-      );
-    }
-
-    // Save recharge record
     await db.insert(recharges).values({
       id: rechargeId,
+      operator_id: customer[0].operator_id,
       customer_id: targetCustomerId,
       connection_id: resolvedConnectionId,
       plan_id: plan[0].id,
@@ -191,14 +146,13 @@ export async function POST(request: NextRequest) {
       duration_days: months > 1 ? finalDurationDays : null,
       amount: finalPrice,
       status: 'pending',
-      cashfree_order_id: cashfreeOrder.order_id || rechargeId,
+      cashfree_order_id: cfResult.cashfreeOrderId,
     });
 
     return NextResponse.json({
       orderId: rechargeId,
-      cashfreeOrderId: cashfreeOrder.order_id,
-      paymentSessionId: cashfreeOrder.payment_session_id,
-      paymentLink: cashfreeOrder.payment_link || null,
+      cashfreeOrderId: cfResult.cashfreeOrderId,
+      paymentSessionId: cfResult.paymentSessionId,
       amount: finalPrice,
       currency: 'INR',
     });

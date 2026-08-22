@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdminAuth();
@@ -17,7 +17,7 @@ export async function GET(
     const [recharge] = await db
       .select()
       .from(recharges)
-      .where(eq(recharges.id, params.id));
+      .where(eq(recharges.id, (await params).id));
 
     if (!recharge) {
       return NextResponse.json({ error: 'Recharge not found' }, { status: 404 });

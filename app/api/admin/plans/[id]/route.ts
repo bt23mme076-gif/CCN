@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { plans, recharges } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -18,24 +18,24 @@ const updatePlanSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const body = await request.json();
     const validatedData = updatePlanSchema.parse(body);
-    const planId = params.id;
+    const planId = (await params).id;
 
     await db
       .update(plans)
       .set(validatedData)
-      .where(eq(plans.id, planId));
+      .where(and(eq(plans.id, planId), eq(plans.operator_id, admin.operatorId)));
 
     const updatedPlan = await db
       .select()
       .from(plans)
-      .where(eq(plans.id, planId))
+      .where(and(eq(plans.id, planId), eq(plans.operator_id, admin.operatorId)))
       .limit(1);
 
     if (updatedPlan.length === 0) {
@@ -60,18 +60,18 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
-    const planId = params.id;
+    const planId = (await params).id;
 
-    // Check if plan exists
+    // Check if plan exists and belongs to this operator
     const existingPlan = await db
       .select()
       .from(plans)
-      .where(eq(plans.id, planId))
+      .where(and(eq(plans.id, planId), eq(plans.operator_id, admin.operatorId)))
       .limit(1);
 
     if (existingPlan.length === 0) {
@@ -90,16 +90,15 @@ export async function DELETE(
       await db
         .update(plans)
         .set({ is_active: false })
-        .where(eq(plans.id, planId));
+        .where(and(eq(plans.id, planId), eq(plans.operator_id, admin.operatorId)));
 
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Plan has existing recharges. Plan has been hidden instead of deleted.' 
+      return NextResponse.json({
+        success: true,
+        message: 'Plan has existing recharges. Plan has been hidden instead of deleted.'
       });
     }
 
-    // No recharges, safe to delete
-    await db.delete(plans).where(eq(plans.id, planId));
+    await db.delete(plans).where(and(eq(plans.id, planId), eq(plans.operator_id, admin.operatorId)));
 
     return NextResponse.json({ success: true, message: 'Plan deleted successfully' });
   } catch (error) {

@@ -2,23 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { accessoryOrders } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const admin = await requireAdminAuth();
-    const orderId = params.id;
+    const orderId = (await params).id;
 
-    // Get order details
+    // Get order details, scoped to this operator
     const order = await db
       .select()
       .from(accessoryOrders)
-      .where(eq(accessoryOrders.id, orderId))
+      .where(and(eq(accessoryOrders.id, orderId), eq(accessoryOrders.operator_id, admin.operatorId)))
       .limit(1);
 
     if (order.length === 0) {

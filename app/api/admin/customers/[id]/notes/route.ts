@@ -2,22 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { customers } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const { notes } = await request.json();
 
     const updated = await db
       .update(customers)
       .set({ notes: notes || null })
-      .where(eq(customers.id, params.id))
+      .where(and(eq(customers.id, (await params).id), eq(customers.operator_id, admin.operatorId)))
       .returning({ id: customers.id, notes: customers.notes });
 
     if (updated.length === 0) {

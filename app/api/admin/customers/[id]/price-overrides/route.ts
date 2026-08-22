@@ -1,19 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { customerPriceOverrides, plans } from '@/lib/db/schema';
+import { customerPriceOverrides, plans, customers } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 export const dynamic = 'force-dynamic';
 
+async function verifyCustomerOwnership(customerId: string, operatorId: string) {
+  const [c] = await db.select({ id: customers.id }).from(customers)
+    .where(and(eq(customers.id, customerId), eq(customers.operator_id, operatorId))).limit(1);
+  return !!c;
+}
+
 // GET — list all overrides for a customer
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
+    if (!await verifyCustomerOwnership((await params).id, admin.operatorId))
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     const overrides = await db
       .select({
         id: customerPriceOverrides.id,
@@ -26,7 +34,7 @@ export async function GET(
       })
       .from(customerPriceOverrides)
       .leftJoin(plans, eq(customerPriceOverrides.plan_id, plans.id))
-      .where(eq(customerPriceOverrides.customer_id, params.id));
+      .where(eq(customerPriceOverrides.customer_id, (await params).id));
 
     return NextResponse.json({ overrides });
   } catch (error) {
@@ -38,10 +46,12 @@ export async function GET(
 // POST — set/update a price override
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
+    if (!await verifyCustomerOwnership((await params).id, admin.operatorId))
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     const { plan_id, custom_price, note } = await request.json();
 
     if (!plan_id || typeof custom_price !== 'number' || custom_price <= 0) {
@@ -55,7 +65,7 @@ export async function POST(
       .select()
       .from(customerPriceOverrides)
       .where(and(
-        eq(customerPriceOverrides.customer_id, params.id),
+        eq(customerPriceOverrides.customer_id, (await params).id),
         eq(customerPriceOverrides.plan_id, plan_id)
       ))
       .limit(1);
@@ -68,7 +78,7 @@ export async function POST(
     } else {
       await db.insert(customerPriceOverrides).values({
         id: `cpo_${nanoid(12)}`,
-        customer_id: params.id,
+        customer_id: (await params).id,
         plan_id,
         custom_price: customPricePaise,
         note: note || null,
@@ -85,16 +95,18 @@ export async function POST(
 // DELETE — remove a price override
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
+    if (!await verifyCustomerOwnership((await params).id, admin.operatorId))
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     const { plan_id } = await request.json();
 
     await db
       .delete(customerPriceOverrides)
       .where(and(
-        eq(customerPriceOverrides.customer_id, params.id),
+        eq(customerPriceOverrides.customer_id, (await params).id),
         eq(customerPriceOverrides.plan_id, plan_id)
       ));
 

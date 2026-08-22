@@ -1,21 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { customerConnections } from '@/lib/db/schema';
+import { customerConnections, customers } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  await requireAdminAuth();
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await requireAdminAuth();
+  const [cust] = await db.select({ id: customers.id }).from(customers)
+    .where(and(eq(customers.id, (await params).id), eq(customers.operator_id, admin.operatorId))).limit(1);
+  if (!cust) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
   const conns = await db.select().from(customerConnections)
-    .where(eq(customerConnections.customer_id, params.id));
+    .where(eq(customerConnections.customer_id, (await params).id));
   return NextResponse.json({ connections: conns });
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  await requireAdminAuth();
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await requireAdminAuth();
+  const [cust] = await db.select({ id: customers.id }).from(customers)
+    .where(and(eq(customers.id, (await params).id), eq(customers.operator_id, admin.operatorId))).limit(1);
+  if (!cust) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
   const { stb_number, area, label } = await request.json();
   if (!stb_number?.trim()) {
     return NextResponse.json({ error: 'STB number required' }, { status: 400 });
@@ -23,7 +29,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const id = randomBytes(8).toString('hex');
   await db.insert(customerConnections).values({
     id,
-    customer_id: params.id,
+    customer_id: (await params).id,
     stb_number: stb_number.trim(),
     area: area?.trim() || '',
     label: label?.trim() || null,
@@ -31,11 +37,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   return NextResponse.json({ id });
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  await requireAdminAuth();
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await requireAdminAuth();
+  const [cust] = await db.select({ id: customers.id }).from(customers)
+    .where(and(eq(customers.id, (await params).id), eq(customers.operator_id, admin.operatorId))).limit(1);
+  if (!cust) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
   const { connectionId } = await request.json();
   if (!connectionId) return NextResponse.json({ error: 'connectionId required' }, { status: 400 });
   await db.delete(customerConnections)
-    .where(and(eq(customerConnections.id, connectionId), eq(customerConnections.customer_id, params.id)));
+    .where(and(eq(customerConnections.id, connectionId), eq(customerConnections.customer_id, (await params).id)));
   return NextResponse.json({ success: true });
 }

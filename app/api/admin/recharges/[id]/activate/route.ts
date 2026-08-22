@@ -9,13 +9,13 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const admin = await requireAdminAuth();
-    const rechargeId = params.id;
+    const rechargeId = (await params).id;
 
-    // Get recharge with plan details
+    // Get recharge with plan details, scoped to this operator
     const recharge = await db
       .select({
         recharge: recharges,
@@ -23,7 +23,7 @@ export async function POST(
       })
       .from(recharges)
       .leftJoin(plans, eq(recharges.plan_id, plans.id))
-      .where(eq(recharges.id, rechargeId))
+      .where(and(eq(recharges.id, rechargeId), eq(recharges.operator_id, admin.operatorId)))
       .limit(1);
 
     if (recharge.length === 0) {

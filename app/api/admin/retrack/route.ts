@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { retrackRequests } from '@/lib/db/schema';
+import { retrackRequests, customers } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    await requireAdminAuth();
-    const rows = await db.select().from(retrackRequests).orderBy(desc(retrackRequests.created_at));
+    const admin = await requireAdminAuth();
+    // retrack_requests doesn't have operator_id — scope via customer join
+    const rows = await db
+      .select({ request: retrackRequests })
+      .from(retrackRequests)
+      .innerJoin(customers, eq(retrackRequests.customer_id, customers.id))
+      .where(eq(customers.operator_id, admin.operatorId))
+      .orderBy(desc(retrackRequests.created_at))
+      .then(r => r.map(x => x.request));
     return NextResponse.json({ requests: rows });
   } catch (error) {
     console.error('Get retrack requests error:', error);

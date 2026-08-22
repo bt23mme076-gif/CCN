@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { recharges, customers } from '@/lib/db/schema';
+import { recharges, customers, operators } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
+import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,12 +28,17 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ error: 'No outstanding balance' }, { status: 400 });
     }
 
+    const operator = c.operator_id
+      ? await db.select().from(operators).where(eq(operators.id, c.operator_id)).limit(1).then(r => r[0] ?? null)
+      : null;
+
     const orderId = generateOrderId();
-    const amountInPaise = c.outstanding_balance * 100; // outstanding_balance is stored in rupees
+    const amountInPaise = c.outstanding_balance * 100;
     const amountInRupees = c.outstanding_balance.toFixed(2);
 
     await db.insert(recharges).values({
       id: orderId,
+      operator_id: c.operator_id,
       customer_id: user.customerId,
       connection_id: null,
       plan_id: null,
@@ -42,45 +48,21 @@ export async function POST(_request: NextRequest) {
     });
 
     let paymentSessionId: string | null = null;
-    let upiLink = '';
-
-    if (process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY) {
-      try {
-        const cashfreeApiUrl = process.env.CASHFREE_ENV === 'production'
-          ? 'https://api.cashfree.com/pg/orders'
-          : 'https://sandbox.cashfree.com/pg/orders';
-
-        const cfRes = await fetch(cashfreeApiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-client-id': process.env.CASHFREE_APP_ID,
-            'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-            'x-api-version': '2023-08-01',
-          },
-          body: JSON.stringify({
-            order_id: orderId,
-            order_amount: amountInRupees,
-            order_currency: 'INR',
-            customer_details: {
-              customer_id: user.customerId,
-              customer_phone: '+91' + c.mobile,
-              customer_name: c.name,
-            },
-            order_meta: {
-              return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?order_id=${orderId}&type=due`,
-            },
-          }),
-        });
-        if (cfRes.ok) {
-          const cfData = await cfRes.json();
-          paymentSessionId = cfData.payment_session_id || null;
-        }
-      } catch { /* fallback */ }
-    }
+    try {
+      const cfResult = await createCashfreeOrder({
+        orderId,
+        amountPaise: amountInPaise,
+        customerId: user.customerId,
+        customerPhone: '+91' + c.mobile,
+        customerName: c.name,
+        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?order_id=${orderId}&type=due`,
+        operator,
+      });
+      paymentSessionId = cfResult.paymentSessionId;
+    } catch { /* fallback to UPI link */ }
 
     const upiParams = `pa=9399974696-4@ibl&pn=CCN%20Networks&am=${amountInRupees}&cu=INR&tn=CCN%20Due%20Payment`;
-    upiLink = `upi://pay?${upiParams}`;
+    const upiLink = `upi://pay?${upiParams}`;
 
     return NextResponse.json({ orderId, upiLink, amount: amountInPaise, paymentSessionId });
   } catch (error) {

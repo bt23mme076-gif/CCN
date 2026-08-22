@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { advertisements } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const body = await request.json();
     const updates: Record<string, unknown> = {};
 
@@ -23,7 +23,7 @@ export async function PATCH(
     const [ad] = await db
       .update(advertisements)
       .set(updates)
-      .where(eq(advertisements.id, params.id))
+      .where(and(eq(advertisements.id, (await params).id), eq(advertisements.operator_id, admin.operatorId)))
       .returning();
 
     if (!ad) return NextResponse.json({ error: 'Advertisement not found' }, { status: 404 });
@@ -36,11 +36,11 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
-    await db.delete(advertisements).where(eq(advertisements.id, params.id));
+    const admin = await requireAdminAuth();
+    await db.delete(advertisements).where(and(eq(advertisements.id, (await params).id), eq(advertisements.operator_id, admin.operatorId)));
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Admin DELETE /api/admin/advertisements/[id] error:', error);

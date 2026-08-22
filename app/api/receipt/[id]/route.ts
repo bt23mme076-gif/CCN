@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireCustomerAuth();
@@ -17,7 +17,7 @@ export async function GET(
     const [recharge] = await db
       .select()
       .from(recharges)
-      .where(and(eq(recharges.id, params.id), eq(recharges.customer_id, user.customerId)));
+      .where(and(eq(recharges.id, (await params).id), eq(recharges.customer_id, user.customerId)));
 
     if (!recharge) {
       return NextResponse.json({ error: 'Recharge not found' }, { status: 404 });

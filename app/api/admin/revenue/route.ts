@@ -2,17 +2,17 @@ import { NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges } from '@/lib/db/schema';
-import { sql, and, gte, lte } from 'drizzle-orm';
+import { sql, and, gte, lte, eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
+    const opId = admin.operatorId;
 
     const now = new Date();
 
-    // --- This month ---
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
@@ -22,19 +22,19 @@ export async function GET() {
     const [thisMonthRes, lastMonthRes, todayRes, totalAllRes] = await Promise.all([
       db.select({ total: sql<number>`coalesce(sum(${recharges.amount}),0)::int`, count: sql<number>`count(*)::int` })
         .from(recharges)
-        .where(sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${thisMonthStart.toISOString()}`),
+        .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${thisMonthStart.toISOString()}`)),
 
       db.select({ total: sql<number>`coalesce(sum(${recharges.amount}),0)::int` })
         .from(recharges)
-        .where(sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${lastMonthStart.toISOString()} AND ${recharges.paid_at} <= ${lastMonthEnd.toISOString()}`),
+        .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${lastMonthStart.toISOString()} AND ${recharges.paid_at} <= ${lastMonthEnd.toISOString()}`)),
 
       db.select({ total: sql<number>`coalesce(sum(${recharges.amount}),0)::int`, count: sql<number>`count(*)::int` })
         .from(recharges)
-        .where(sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${todayStart.toISOString()}`),
+        .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${todayStart.toISOString()}`)),
 
       db.select({ total: sql<number>`coalesce(sum(${recharges.amount}),0)::int`, count: sql<number>`count(*)::int` })
         .from(recharges)
-        .where(sql`${recharges.status} IN ('paid','activated')`),
+        .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid','activated')`)),
     ]);
 
     const thisMonth = thisMonthRes[0] ?? { total: 0, count: 0 };
@@ -51,7 +51,7 @@ export async function GET() {
         count: sql<number>`count(*)::int`,
       })
       .from(recharges)
-      .where(sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${thirtyDaysAgo.toISOString()}`)
+      .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${thirtyDaysAgo.toISOString()}`))
       .groupBy(sql`DATE(${recharges.paid_at} AT TIME ZONE 'Asia/Kolkata')`)
       .orderBy(sql`DATE(${recharges.paid_at} AT TIME ZONE 'Asia/Kolkata')`);
 
@@ -74,7 +74,7 @@ export async function GET() {
         count: sql<number>`count(*)::int`,
       })
       .from(recharges)
-      .where(sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${sixMonthsAgo.toISOString()}`)
+      .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid','activated') AND ${recharges.paid_at} >= ${sixMonthsAgo.toISOString()}`))
       .groupBy(sql`TO_CHAR(${recharges.paid_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM')`)
       .orderBy(sql`TO_CHAR(${recharges.paid_at} AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM')`);
 
@@ -97,7 +97,7 @@ export async function GET() {
         count: sql<number>`count(*)::int`,
       })
       .from(recharges)
-      .where(sql`${recharges.status} IN ('paid','activated')`)
+      .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid','activated')`))
       .groupBy(recharges.plan_name)
       .orderBy(sql`sum(${recharges.amount}) DESC`)
       .limit(5);

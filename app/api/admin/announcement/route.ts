@@ -8,13 +8,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    await requireAdminAuth();
-    const result = await db
-      .select()
-      .from(announcements)
-      .where(eq(announcements.id, 'announcement_main'))
-      .limit(1);
-
+    const admin = await requireAdminAuth();
+    const announcementId = `announcement_${admin.operatorId}`;
+    const result = await db.select().from(announcements).where(eq(announcements.id, announcementId)).limit(1);
     return NextResponse.json({ announcement: result[0] || null });
   } catch (error) {
     console.error('Get announcement error:', error);
@@ -24,19 +20,24 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const { text, is_active, speed } = await request.json();
 
     if (typeof text !== 'string' || text.trim().length === 0) {
       return NextResponse.json({ error: 'Announcement text is required' }, { status: 400 });
     }
 
+    const announcementId = `announcement_${admin.operatorId}`;
     const scrollSpeed = typeof speed === 'number' && speed >= 5 && speed <= 120 ? speed : 30;
 
+    // Upsert — insert on first save, update on subsequent saves
     await db
-      .update(announcements)
-      .set({ text: text.trim(), is_active: is_active ?? true, speed: scrollSpeed, updated_at: new Date() })
-      .where(eq(announcements.id, 'announcement_main'));
+      .insert(announcements)
+      .values({ id: announcementId, operator_id: admin.operatorId, text: text.trim(), is_active: is_active ?? true, speed: scrollSpeed })
+      .onConflictDoUpdate({
+        target: announcements.id,
+        set: { text: text.trim(), is_active: is_active ?? true, speed: scrollSpeed, updated_at: new Date() },
+      });
 
     return NextResponse.json({ success: true, message: 'Announcement updated!' });
   } catch (error) {

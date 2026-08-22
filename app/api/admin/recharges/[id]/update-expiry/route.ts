@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
-    const rechargeId = params.id;
+    const admin = await requireAdminAuth();
+    const rechargeId = (await params).id;
 
     const body = await request.json();
     const days = Number(body.days);
@@ -24,7 +24,7 @@ export async function POST(
     const [recharge] = await db
       .select()
       .from(recharges)
-      .where(eq(recharges.id, rechargeId))
+      .where(and(eq(recharges.id, rechargeId), eq(recharges.operator_id, admin.operatorId)))
       .limit(1);
 
     if (!recharge) {
@@ -47,7 +47,7 @@ export async function POST(
     await db
       .update(recharges)
       .set({ expires_at: newExpiresAt })
-      .where(eq(recharges.id, rechargeId));
+      .where(and(eq(recharges.id, rechargeId), eq(recharges.operator_id, admin.operatorId)));
 
     return NextResponse.json({ success: true, expires_at: newExpiresAt });
   } catch (error) {

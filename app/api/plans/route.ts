@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { plans, customerPriceOverrides, customerPlanDiscounts } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth';
+import { getCurrentOperator } from '@/lib/db/tenant';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const operator = await getCurrentOperator();
     const activePlans = await db
       .select()
       .from(plans)
-      .where(eq(plans.is_active, true))
+      .where(and(eq(plans.is_active, true), operator ? eq(plans.operator_id, operator.id) : undefined))
       .orderBy(plans.price);
 
     // Check if customer is logged in — apply price overrides + multi-month discounts if any

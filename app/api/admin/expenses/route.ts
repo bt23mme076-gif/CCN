@@ -2,29 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { expenses } from '@/lib/db/schema';
-import { desc, gte, lte, and } from 'drizzle-orm';
+import { desc, gte, lte, and, eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const { searchParams } = request.nextUrl;
     const month = searchParams.get('month'); // format: "2026-07"
 
-    let conditions: any[] = [];
+    const conditions: ReturnType<typeof eq>[] = [eq(expenses.operator_id, admin.operatorId)];
     if (month) {
       const [y, m] = month.split('-').map(Number);
       const start = new Date(y, m - 1, 1);
       const end = new Date(y, m, 1);
-      conditions = [gte(expenses.date, start), lte(expenses.date, end)];
+      conditions.push(gte(expenses.date, start), lte(expenses.date, end));
     }
 
     const rows = await db
       .select()
       .from(expenses)
-      .where(conditions.length ? and(...conditions) : undefined)
+      .where(and(...conditions))
       .orderBy(desc(expenses.date));
 
     const total = rows.reduce((s, r) => s + r.amount, 0);
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const { title, amount, category, note, date, employee_id } = await request.json();
 
     if (!title || !amount || !category || !date) {
@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
     const id = `exp_${randomBytes(8).toString('hex')}`;
     await db.insert(expenses).values({
       id,
+      operator_id: admin.operatorId,
       title,
       amount: Math.round(amount),
       category,

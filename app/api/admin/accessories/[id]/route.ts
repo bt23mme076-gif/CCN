@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { accessories, accessoryOrders } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -16,24 +16,24 @@ const updateAccessorySchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const body = await request.json();
     const validatedData = updateAccessorySchema.parse(body);
-    const accessoryId = params.id;
+    const accessoryId = (await params).id;
 
     await db
       .update(accessories)
       .set(validatedData)
-      .where(eq(accessories.id, accessoryId));
+      .where(and(eq(accessories.id, accessoryId), eq(accessories.operator_id, admin.operatorId)));
 
     const updatedAccessory = await db
       .select()
       .from(accessories)
-      .where(eq(accessories.id, accessoryId))
+      .where(and(eq(accessories.id, accessoryId), eq(accessories.operator_id, admin.operatorId)))
       .limit(1);
 
     if (updatedAccessory.length === 0) {
@@ -58,18 +58,18 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
-    const accessoryId = params.id;
+    const accessoryId = (await params).id;
 
-    // Check if accessory exists
+    // Check if accessory exists and belongs to this operator
     const existingAccessory = await db
       .select()
       .from(accessories)
-      .where(eq(accessories.id, accessoryId))
+      .where(and(eq(accessories.id, accessoryId), eq(accessories.operator_id, admin.operatorId)))
       .limit(1);
 
     if (existingAccessory.length === 0) {
@@ -88,16 +88,16 @@ export async function DELETE(
       await db
         .update(accessories)
         .set({ is_active: false })
-        .where(eq(accessories.id, accessoryId));
+        .where(and(eq(accessories.id, accessoryId), eq(accessories.operator_id, admin.operatorId)));
 
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Accessory has existing orders. Accessory has been hidden instead of deleted.' 
+      return NextResponse.json({
+        success: true,
+        message: 'Accessory has existing orders. Accessory has been hidden instead of deleted.'
       });
     }
 
     // No orders, safe to delete
-    await db.delete(accessories).where(eq(accessories.id, accessoryId));
+    await db.delete(accessories).where(and(eq(accessories.id, accessoryId), eq(accessories.operator_id, admin.operatorId)));
 
     return NextResponse.json({ success: true, message: 'Accessory deleted successfully' });
   } catch (error) {

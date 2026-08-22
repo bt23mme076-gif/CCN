@@ -8,17 +8,17 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
-    const customerId = params.id;
+    const admin = await requireAdminAuth();
+    const customerId = (await params).id;
 
-    // 1. Verify customer exists
+    // 1. Verify customer exists and belongs to this operator
     const customer = await db
       .select()
       .from(customers)
-      .where(eq(customers.id, customerId))
+      .where(and(eq(customers.id, customerId), eq(customers.operator_id, admin.operatorId)))
       .limit(1);
 
     if (customer.length === 0) {

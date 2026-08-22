@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { customerPlanDiscounts } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { customerPlanDiscounts, customers } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 export const dynamic = 'force-dynamic';
 
 const VALID_MONTHS = [3, 6, 12];
 
+async function verifyCustomerOwnership(customerId: string, operatorId: string) {
+  const [c] = await db.select({ id: customers.id }).from(customers)
+    .where(and(eq(customers.id, customerId), eq(customers.operator_id, operatorId))).limit(1);
+  return !!c;
+}
+
 // GET — list all plan discounts for a customer
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
+    if (!await verifyCustomerOwnership((await params).id, admin.operatorId))
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     const discounts = await db
       .select({
         plan_id: customerPlanDiscounts.plan_id,
@@ -23,7 +31,7 @@ export async function GET(
         discount_percent: customerPlanDiscounts.discount_percent,
       })
       .from(customerPlanDiscounts)
-      .where(eq(customerPlanDiscounts.customer_id, params.id));
+      .where(eq(customerPlanDiscounts.customer_id, (await params).id));
 
     return NextResponse.json({ discounts });
   } catch (error) {
@@ -35,10 +43,13 @@ export async function GET(
 // PUT — bulk-replace all plan discounts for a customer
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
+    const customerId = (await params).id;
+    if (!await verifyCustomerOwnership(customerId, admin.operatorId))
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     const { discounts } = await request.json();
 
     if (!Array.isArray(discounts)) {
@@ -53,13 +64,13 @@ export async function PUT(
       )
       .map((d: any) => ({
         id: `cpd_${nanoid(12)}`,
-        customer_id: params.id,
+        customer_id: customerId,
         plan_id: d.planId,
         months: Number(d.months),
         discount_percent: Math.max(1, Math.min(100, Math.round(Number(d.percent)))),
       }));
 
-    await db.delete(customerPlanDiscounts).where(eq(customerPlanDiscounts.customer_id, params.id));
+    await db.delete(customerPlanDiscounts).where(eq(customerPlanDiscounts.customer_id, customerId));
 
     if (cleaned.length > 0) {
       await db.insert(customerPlanDiscounts).values(cleaned);

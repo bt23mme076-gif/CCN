@@ -18,9 +18,9 @@ const createPlanSchema = z.object({
 
 export async function GET() {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
-    const allPlans = await db.select().from(plans).orderBy(plans.price);
+    const allPlans = await db.select().from(plans).where(eq(plans.operator_id, admin.operatorId)).orderBy(plans.price);
 
     return NextResponse.json({ plans: allPlans });
   } catch (error) {
@@ -34,7 +34,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const body = await request.json();
     const validatedData = createPlanSchema.parse(body);
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     await db.insert(plans).values({
       id: planId,
+      operator_id: admin.operatorId,
       name: validatedData.name,
       price: validatedData.price,
       duration_days: validatedData.duration_days,

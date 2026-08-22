@@ -8,22 +8,22 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const admin = await requireAdminAuth();
-    const customerId = params.id;
+    const customerId = (await params).id;
 
     const { planId, customExpiryDate } = await request.json();
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
     }
 
-    // 1. Verify customer exists
+    // 1. Verify customer exists and belongs to this operator
     const customer = await db
       .select()
       .from(customers)
-      .where(eq(customers.id, customerId))
+      .where(and(eq(customers.id, customerId), eq(customers.operator_id, admin.operatorId)))
       .limit(1);
 
     if (customer.length === 0) {
@@ -121,6 +121,7 @@ export async function POST(
       .insert(recharges)
       .values({
         id: rechargeId,
+        operator_id: admin.operatorId,
         customer_id: customerId,
         plan_id: plan.id,
         plan_name: plan.name.toUpperCase().startsWith('ALA CARTE') && plan.channels?.length

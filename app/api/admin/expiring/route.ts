@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const now = new Date();
     const in3Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -26,10 +26,13 @@ export async function GET() {
       .from(recharges)
       .leftJoin(customers, eq(recharges.customer_id, customers.id))
       .where(
-        sql`${recharges.status} = 'activated'
-          AND ${recharges.expires_at} >= ${now.toISOString()}
-          AND ${recharges.expires_at} <= ${in3Days.toISOString()}
-          AND ${recharges.plan_name} NOT ILIKE 'ALA CARTE%'`
+        and(
+          eq(recharges.operator_id, admin.operatorId),
+          sql`${recharges.status} = 'activated'
+            AND ${recharges.expires_at} >= ${now.toISOString()}
+            AND ${recharges.expires_at} <= ${in3Days.toISOString()}
+            AND ${recharges.plan_name} NOT ILIKE 'ALA CARTE%'`
+        )
       )
       .orderBy(recharges.expires_at);
 

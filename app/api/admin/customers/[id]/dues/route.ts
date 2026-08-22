@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { customers } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
     const { amount } = await request.json(); // rupees, 0 = clear due
 
     if (typeof amount !== 'number' || amount < 0 || !Number.isInteger(amount)) {
@@ -21,7 +21,7 @@ export async function PATCH(
     const updated = await db
       .update(customers)
       .set({ outstanding_balance: amount })
-      .where(eq(customers.id, params.id))
+      .where(and(eq(customers.id, (await params).id), eq(customers.operator_id, admin.operatorId)))
       .returning({ id: customers.id, outstanding_balance: customers.outstanding_balance });
 
     if (updated.length === 0) {

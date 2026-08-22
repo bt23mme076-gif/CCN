@@ -2,23 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { customers, recharges, plans } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
-    const customerId = params.id;
+    const customerId = (await params).id;
 
     const customer = await db
       .select()
       .from(customers)
-      .where(eq(customers.id, customerId))
+      .where(and(eq(customers.id, customerId), eq(customers.operator_id, admin.operatorId)))
       .limit(1);
 
     const rechargeHistory = await db
@@ -46,11 +46,11 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
-    const customerId = params.id;
+    const admin = await requireAdminAuth();
+    const customerId = (await params).id;
     const body = await request.json();
 
     const { name, mobile, stb_number, area } = body;
@@ -61,7 +61,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Mobile must be 10 digits' }, { status: 400 });
     }
 
-    await db.update(customers).set({ name, mobile, stb_number, area }).where(eq(customers.id, customerId));
+    await db.update(customers).set({ name, mobile, stb_number, area }).where(and(eq(customers.id, customerId), eq(customers.operator_id, admin.operatorId)));
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -72,18 +72,18 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
-    const customerId = params.id;
+    const customerId = (await params).id;
 
-    // Check if customer exists
+    // Check if customer exists and belongs to this operator
     const existingCustomer = await db
       .select()
       .from(customers)
-      .where(eq(customers.id, customerId))
+      .where(and(eq(customers.id, customerId), eq(customers.operator_id, admin.operatorId)))
       .limit(1);
 
     if (existingCustomer.length === 0) {

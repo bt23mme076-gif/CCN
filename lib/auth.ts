@@ -13,9 +13,16 @@ export interface AdminJWTPayload {
   adminId: string;
   username: string;
   role: 'admin';
+  operatorId: string;
 }
 
-export type JWTPayload = CustomerJWTPayload | AdminJWTPayload;
+export interface SuperAdminJWTPayload {
+  superAdminId: string;
+  username: string;
+  role: 'super_admin';
+}
+
+export type JWTPayload = CustomerJWTPayload | AdminJWTPayload | SuperAdminJWTPayload;
 
 export function signToken(payload: JWTPayload): string {
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
@@ -74,4 +81,12 @@ export async function requireAdminAuth(): Promise<AdminJWTPayload> {
     throw new Error('Unauthorized');
   }
   return user as AdminJWTPayload;
+}
+
+export async function requireSuperAdminAuth(): Promise<SuperAdminJWTPayload> {
+  const token = await getAuthToken();
+  if (!token) throw new Error('Unauthorized');
+  const decoded = verifyToken(token);
+  if (!decoded || decoded.role !== 'super_admin') throw new Error('Unauthorized');
+  return decoded as SuperAdminJWTPayload;
 }

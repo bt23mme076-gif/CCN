@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { recharges, customers } from '@/lib/db/schema';
+import { recharges, customers, operators } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { resolveConnection } from '@/lib/connections';
+import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,11 +46,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const operator = c.operator_id
+      ? await db.select().from(operators).where(eq(operators.id, c.operator_id)).limit(1).then(r => r[0] ?? null)
+      : null;
+
     const rechargeId = generateOrderId();
     const amountInRupees = (c.fast_recharge_amount / 100).toFixed(2);
 
     await db.insert(recharges).values({
       id: rechargeId,
+      operator_id: c.operator_id,
       customer_id: user.customerId,
       connection_id: resolvedConnectionId,
       plan_id: null,
@@ -62,42 +68,19 @@ export async function POST(request: NextRequest) {
     const upiLink = `upi://pay?${upiParams}`;
     const intentLink = `intent://pay?${upiParams}#Intent;scheme=upi;end`;
 
-    // Create Cashfree order for upiApp component
     let paymentSessionId: string | null = null;
-    if (process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY) {
-      try {
-        const cashfreeApiUrl = process.env.CASHFREE_ENV === 'production'
-          ? 'https://api.cashfree.com/pg/orders'
-          : 'https://sandbox.cashfree.com/pg/orders';
-
-        const cfRes = await fetch(cashfreeApiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-client-id': process.env.CASHFREE_APP_ID,
-            'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-            'x-api-version': '2023-08-01',
-          },
-          body: JSON.stringify({
-            order_id: rechargeId,
-            order_amount: amountInRupees,
-            order_currency: 'INR',
-            customer_details: {
-              customer_id: user.customerId,
-              customer_phone: '+91' + c.mobile,
-              customer_name: c.name,
-            },
-            order_meta: {
-              return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?order_id=${rechargeId}&type=fast`,
-            },
-          }),
-        });
-        if (cfRes.ok) {
-          const cfData = await cfRes.json();
-          paymentSessionId = cfData.payment_session_id || null;
-        }
-      } catch { /* fallback to direct UPI */ }
-    }
+    try {
+      const cfResult = await createCashfreeOrder({
+        orderId: rechargeId,
+        amountPaise: c.fast_recharge_amount,
+        customerId: user.customerId,
+        customerPhone: '+91' + c.mobile,
+        customerName: c.name,
+        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?order_id=${rechargeId}&type=fast`,
+        operator,
+      });
+      paymentSessionId = cfResult.paymentSessionId;
+    } catch { /* fallback to direct UPI link */ }
 
     return NextResponse.json({ orderId: rechargeId, upiLink, intentLink, amount: c.fast_recharge_amount, paymentSessionId });
   } catch (error) {

@@ -1,27 +1,39 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Extracts the leftmost subdomain segment from the hostname.
+// ccn.atyant.in       → 'ccn'
+// op2.atyant.in       → 'op2'
+// localhost           → 'ccn'  (dev fallback)
+function extractSubdomain(hostname: string): string {
+  const host = hostname.split(':')[0]; // strip port
+  const parts = host.split('.');
+  // If only one segment (e.g. 'localhost') or a raw IP, fall back to ccn.
+  if (parts.length <= 2) return process.env.DEFAULT_OPERATOR_SUBDOMAIN ?? 'ccn';
+  return parts[0];
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const response = NextResponse.next({
-    request: {
-      headers: new Headers(request.headers),
-    },
-  });
+  const requestHeaders = new Headers(request.headers);
 
-  // Propagate the real client IP from Cloudflare so server-side code
-  // sees the visitor's IP instead of Cloudflare's edge node IP.
+  // Resolve tenant subdomain and forward it so server components and API
+  // routes can call getCurrentOperator() without touching the hostname again.
+  const subdomain = extractSubdomain(request.headers.get('host') ?? '');
+  requestHeaders.set('x-operator-subdomain', subdomain);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+
+  // Propagate the real client IP from Cloudflare.
   const cfIP = request.headers.get('cf-connecting-ip');
   if (cfIP) {
     response.headers.set('x-real-ip', cfIP);
   }
 
-  // Only protect customer routes in middleware
-  // Admin routes are protected in the layout
+  // Protect customer routes.
   if (pathname.startsWith('/dashboard') || (pathname.startsWith('/plans') && pathname !== '/plans')) {
     const token = request.cookies.get('auth_token')?.value;
-
     if (!token) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
@@ -31,5 +43,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/plans/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { customers, recharges } from '@/lib/db/schema';
-import { eq, desc, or, ilike, sql } from 'drizzle-orm';
+import { eq, desc, or, ilike, sql, and } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
@@ -19,12 +19,11 @@ const createCustomerSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search');
 
-    // Get all customers with recharge stats
     let query = db
       .select({
         customer: customers,
@@ -33,18 +32,21 @@ export async function GET(request: NextRequest) {
       })
       .from(customers)
       .leftJoin(recharges, eq(customers.id, recharges.customer_id))
+      .where(eq(customers.operator_id, admin.operatorId))
       .groupBy(customers.id)
       .orderBy(desc(customers.created_at))
       .$dynamic();
 
-    // Search filter
     if (search) {
       query = query.where(
-        or(
-          ilike(customers.name, `%${search}%`),
-          ilike(customers.mobile, `%${search}%`),
-          ilike(customers.stb_number, `%${search}%`),
-          ilike(customers.area, `%${search}%`)
+        and(
+          eq(customers.operator_id, admin.operatorId),
+          or(
+            ilike(customers.name, `%${search}%`),
+            ilike(customers.mobile, `%${search}%`),
+            ilike(customers.stb_number, `%${search}%`),
+            ilike(customers.area, `%${search}%`)
+          )
         )
       );
     }
@@ -63,7 +65,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminAuth();
+    const admin = await requireAdminAuth();
 
     const body = await request.json();
     const validatedData = createCustomerSchema.parse(body);
@@ -90,6 +92,7 @@ export async function POST(request: NextRequest) {
 
     await db.insert(customers).values({
       id: customerId,
+      operator_id: admin.operatorId,
       name: validatedData.name,
       mobile: validatedData.mobile,
       stb_number: validatedData.stb_number,
