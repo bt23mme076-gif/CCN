@@ -2,10 +2,9 @@
 const nextConfig = {
   output: 'standalone',
   poweredByHeader: false,
-  experimental: {
-    instrumentationHook: true,
-    serverComponentsExternalPackages: ['web-push'],
-  },
+  // instrumentation.ts is picked up automatically since Next 15 — the old
+  // experimental.instrumentationHook flag was removed.
+  serverExternalPackages: ['web-push'],
   async headers() {
     return [
       {

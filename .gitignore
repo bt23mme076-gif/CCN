@@ -38,3 +38,6 @@ next-env.d.ts
 
 # drizzle
 drizzle/
+
+# TLS certs for self-hosted deploy — never commit private keys
+/certs/

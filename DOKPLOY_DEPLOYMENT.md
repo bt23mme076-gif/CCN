@@ -6,7 +6,9 @@ Yeh Next.js application hai jo frontend aur backend dono ko ek saath deploy kare
 ## Prerequisites
 - Dokploy account aur server setup
 - PostgreSQL database (Supabase ya koi bhi)
-- Razorpay account (optional, testing ke liye)
+- Cashfree account (payment gateway)
+- Wildcard domain (e.g. `*.atyant.in`) — multi-tenant operators har ek apni
+  subdomain se serve hote hain, see nginx.conf
 
 ---
 
@@ -22,19 +24,35 @@ Dokploy dashboard me jaake yeh environment variables add karo:
 # Database
 DATABASE_URL=postgresql://postgres.PROJECT:PASSWORD@HOST:PORT/postgres
 
-# Razorpay (optional for testing)
-RAZORPAY_KEY_ID=rzp_test_xxxxx
-RAZORPAY_KEY_SECRET=xxxxx
+# Cashfree
+CASHFREE_APP_ID=xxxxx
+CASHFREE_SECRET_KEY=xxxxx
+CASHFREE_ENV=PRODUCTION          # or SANDBOX for testing
+NEXT_PUBLIC_CASHFREE_ENV=production   # or sandbox — must match CASHFREE_ENV
 
 # JWT Secret (koi bhi random 32+ character string)
 JWT_SECRET=your-super-secret-jwt-key-min-32-chars-long
 
-# Public Razorpay Key
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_xxxxx
+# Public app URL — used to build Cashfree return_url after payment
+NEXT_PUBLIC_APP_URL=https://ccn.atyant.in
+
+# Web push (optional — generate with `npx web-push generate-vapid-keys`)
+VAPID_PUBLIC_KEY=xxxxx
+VAPID_PRIVATE_KEY=xxxxx
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=xxxxx
+
+# Multi-tenant fallback — which operator to serve when the Host header
+# doesn't match a known subdomain (e.g. requests hitting the bare server IP)
+DEFAULT_OPERATOR_SUBDOMAIN=ccn
 
 # Node Environment
 NODE_ENV=production
 ```
+
+> `NEXT_PUBLIC_*` values get baked into the client bundle at **build time**,
+> not read at container start. Dokploy needs to pass them as Docker build
+> args (see `docker-compose.yml`), not just runtime env vars — otherwise the
+> browser bundle ships with `undefined`/sandbox defaults.
 
 ## Step 3: Dokploy Me Deploy Kaise Kare
 
@@ -176,15 +194,35 @@ npm run db:seed
 
 ---
 
-## Custom Domain Setup
+## Wildcard Subdomain Setup (Multi-Tenant)
 
-1. Dokploy dashboard me "Domains" section me jao
-2. Apna domain add karo (e.g., `cableeasy.com`)
-3. DNS settings me A record add karo:
-   - Type: `A`
-   - Name: `@` (or `www`)
-   - Value: `[Dokploy Server IP]`
-4. SSL certificate automatic generate hoga
+Har operator apni subdomain se serve hota hai (`ccn.atyant.in`, `op2.atyant.in`,
+...). `middleware.ts` request ke `Host` header se subdomain nikalta hai aur
+`x-operator-subdomain` header set karta hai; `lib/db/tenant.ts` usse operator
+row lookup karta hai. Naya operator add karne ke liye sirf DB me row banani
+hai — nginx ya DNS me kuch nahi badalna padta.
+
+1. **DNS** — apne domain registrar/Cloudflare me ek wildcard record daalo:
+   - Type: `A` (ya `CNAME` agar Dokploy/Cloudflare proxy chahiye)
+   - Name: `*` (matlab `*.atyant.in`)
+   - Value: server ka IP
+   - Apex domain (`atyant.in`) ke liye alag se `@` A record bhi daalo
+2. **SSL** — ek certificate chahiye jo `*.atyant.in` cover kare (single-domain
+   cert kaam nahi karega, kyunki subdomains dynamic hain):
+   - **Cloudflare use kar rahe ho:** SSL/TLS → Origin Server → Create
+     Certificate → hostname `*.atyant.in, atyant.in` daalo. Cert +
+     key ko `./certs/atyant.in.pem` aur `./certs/atyant.in.key` me save karo
+     (yehi paths `nginx.conf` me hardcoded hain). Cloudflare proxy mode
+     "Full (strict)" pe rakho.
+   - **Cloudflare nahi use kar rahe:** `certbot` ke DNS-01 challenge se
+     wildcard Let's Encrypt cert lo (`certbot certonly --manual
+     --preferred-challenges dns -d atyant.in -d '*.atyant.in'`) — HTTP-01
+     challenge wildcard certs ke liye kaam nahi karta.
+3. `docker-compose.yml` `./certs` folder ko container me mount karta hai —
+   pehle folder banao aur cert/key wahan daalo, phir `docker compose up -d`.
+4. Naya operator onboard karne ke liye — bas `operators` table me ek row
+   insert karo jiska `subdomain` column us tenant ka naam ho
+   (e.g. `op2`); DNS/nginx/deploy me koi change nahi chahiye.
 
 ---
 
