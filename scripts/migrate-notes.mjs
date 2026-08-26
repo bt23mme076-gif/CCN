@@ -1,6 +1,11 @@
+import 'dotenv/config';
 import postgres from 'postgres';
 
-const sql = postgres('postgresql://postgres.rsvetmwgqhxisloklsau:123456789nitinrai22082004@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres', { ssl: 'require' });
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is not set');
+}
+
+const sql = postgres(process.env.DATABASE_URL, { ssl: 'require' });
 
 try {
   await sql`ALTER TABLE customers ADD COLUMN IF NOT EXISTS notes text`;

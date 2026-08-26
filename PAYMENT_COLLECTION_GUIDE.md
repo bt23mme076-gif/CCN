@@ -168,7 +168,7 @@ Your `.env` file should have:
 
 ```env
 # Database (Already Working ✅)
-DATABASE_URL=postgresql://postgres.rsvetmwgqhxisloklsau:123456789nitinrai22082004@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
 
 # Cashfree (Need to Add ⚠️)
 CASHFREE_APP_ID=your_app_id_from_dashboard

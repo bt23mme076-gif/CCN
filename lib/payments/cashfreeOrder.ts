@@ -66,6 +66,7 @@ export async function createCashfreeOrder(params: CashfreeOrderParams): Promise<
   if (!res.ok) {
     let msg = text;
     try { msg = JSON.parse(text).message ?? text; } catch { /* keep raw */ }
+    console.error(`Cashfree order creation failed (status ${res.status}):`, msg);
     throw new Error(`Payment gateway error: ${msg}`);
   }
 

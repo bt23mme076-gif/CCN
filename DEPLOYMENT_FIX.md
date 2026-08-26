@@ -171,7 +171,7 @@ The deployment will work, but online payments need Razorpay keys:
 ### 2. Environment Variables in Dokploy
 Make sure these are set in Dokploy dashboard:
 ```env
-DATABASE_URL=postgresql://postgres.rsvetmwgqhxisloklsau:123456789nitinrai22082004@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
 JWT_SECRET=244ac9d587dd9414de9b7ace484cfec224e0bc4d2490bc162c898c8220467a18
 RAZORPAY_KEY_ID=your_razorpay_key_here
 RAZORPAY_KEY_SECRET=your_razorpay_secret_here

@@ -5,6 +5,12 @@ import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
 async function createAdmin() {
+  const password = process.env.SEED_ADMIN_PASSWORD;
+  if (!password) {
+    console.error('SEED_ADMIN_PASSWORD env var is required (no default password allowed).');
+    process.exit(1);
+  }
+
   console.log('Testing database connection...\n');
   console.log('DATABASE_URL:', process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@'));
   console.log('');
@@ -22,7 +28,7 @@ async function createAdmin() {
 
     // Create new admin
     console.log('Creating new admin user...');
-    const passwordHash = await bcrypt.hash('admin123', 10);
+    const passwordHash = await bcrypt.hash(password, 10);
     
     const newAdmin = await db.insert(admins).values({
       id: `admin_${randomBytes(8).toString('hex')}`,
@@ -35,7 +41,7 @@ async function createAdmin() {
     console.log('  LOGIN CREDENTIALS');
     console.log('═══════════════════════════════');
     console.log('  Username: admin');
-    console.log('  Password: admin123');
+    console.log('  Password: (set via SEED_ADMIN_PASSWORD)');
     console.log('═══════════════════════════════\n');
     console.log('Login URL: http://localhost:3000/admin/login\n');
     

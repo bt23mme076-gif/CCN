@@ -9,7 +9,7 @@ JWT_SECRET ek secret key hai jo JSON Web Tokens (JWT) ko sign karne ke liye use 
 ## Your Generated JWT_SECRET
 
 ```
-244ac9d587dd9414de9b7ace484cfec224e0bc4d2490bc162c898c8220467a18
+<see .env — never store real secrets in this file>
 ```
 
 ✅ **Yeh already aapki `.env` file me add ho gaya hai!**
@@ -87,7 +87,7 @@ openssl rand -hex 32
 
 ### Development (.env.local)
 ```env
-JWT_SECRET=244ac9d587dd9414de9b7ace484cfec224e0bc4d2490bc162c898c8220467a18
+JWT_SECRET=<generate-your-own-see-methods-above>
 ```
 
 ### Production (Dokploy/Vercel)
@@ -154,7 +154,7 @@ Production me JWT_SECRET ko regularly rotate karna chahiye:
 
 ```env
 # Local Development
-JWT_SECRET=244ac9d587dd9414de9b7ace484cfec224e0bc4d2490bc162c898c8220467a18
+JWT_SECRET=<generate-your-own-see-methods-above>
 
 # For Dokploy Deployment
 # Generate a new secret for production:
@@ -184,7 +184,7 @@ CSRF attacks se protection ke liye SameSite=Lax set hai
 ✅ **Your JWT_SECRET is ready to use!**
 
 ```
-JWT_SECRET=244ac9d587dd9414de9b7ace484cfec224e0bc4d2490bc162c898c8220467a18
+JWT_SECRET=<see your local .env — do not commit real values here>
 ```
 
 **Next Steps:**

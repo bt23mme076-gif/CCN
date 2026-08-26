@@ -29,12 +29,34 @@ export async function POST(request: NextRequest) {
     if (!connInfo) return NextResponse.json({ error: 'Invalid connection' }, { status: 400 });
     const resolvedConnectionId = connInfo.connectionId; // null for primary
 
-    // Get plan details
-    const plan = await db
-      .select()
-      .from(plans)
-      .where(eq(plans.id, planId))
-      .limit(1);
+    // Plan, override, customer, and discount lookups are independent — run them together.
+    const [plan, override, customer, discountRow] = await Promise.all([
+      db.select().from(plans).where(eq(plans.id, planId)).limit(1),
+      db
+        .select()
+        .from(customerPriceOverrides)
+        .where(
+          and(
+            eq(customerPriceOverrides.customer_id, targetCustomerId),
+            eq(customerPriceOverrides.plan_id, planId)
+          )
+        )
+        .limit(1),
+      db.select().from(customers).where(eq(customers.id, targetCustomerId)).limit(1),
+      months > 1
+        ? db
+            .select()
+            .from(customerPlanDiscounts)
+            .where(
+              and(
+                eq(customerPlanDiscounts.customer_id, targetCustomerId),
+                eq(customerPlanDiscounts.plan_id, planId),
+                eq(customerPlanDiscounts.months, months)
+              )
+            )
+            .limit(1)
+        : Promise.resolve([]),
+    ]);
 
     if (plan.length === 0 || !plan[0].is_active) {
       return NextResponse.json(
@@ -43,25 +65,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if there is a customer price override for this plan
-    const override = await db
-      .select()
-      .from(customerPriceOverrides)
-      .where(
-        and(
-          eq(customerPriceOverrides.customer_id, targetCustomerId),
-          eq(customerPriceOverrides.plan_id, planId)
-        )
-      )
-      .limit(1);
-
-    // Get customer details
-    const customer = await db
-      .select()
-      .from(customers)
-      .where(eq(customers.id, targetCustomerId))
-      .limit(1);
-
     if (customer.length === 0) {
       return NextResponse.json(
         { error: 'Customer not found' },
@@ -69,21 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let discountPercent = 0;
-    if (months > 1) {
-      const discountRow = await db
-        .select()
-        .from(customerPlanDiscounts)
-        .where(
-          and(
-            eq(customerPlanDiscounts.customer_id, targetCustomerId),
-            eq(customerPlanDiscounts.plan_id, planId),
-            eq(customerPlanDiscounts.months, months)
-          )
-        )
-        .limit(1);
-      discountPercent = discountRow.length > 0 ? discountRow[0].discount_percent : 0;
-    }
+    const discountPercent = discountRow.length > 0 ? discountRow[0].discount_percent : 0;
 
     const basePrice = override.length > 0 ? override[0].custom_price : plan[0].price;
     const { price: finalPrice, durationDays: finalDurationDays } = calcDurationPricing(

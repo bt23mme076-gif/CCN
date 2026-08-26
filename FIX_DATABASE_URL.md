@@ -17,12 +17,12 @@ Aap **Direct Connection** use kar rahe the jo serverless apps ke liye kaam nahi 
 
 ### Old (Wrong):
 ```
-postgresql://postgres:@Passwordrai22082004@db.rsvetmwgqhxisloklsau.supabase.co:5432/postgres
+postgresql://postgres:PASSWORD@db.rsvetmwgqhxisloklsau.supabase.co:5432/postgres
 ```
 
 ### New (Correct):
 ```
-postgresql://postgres.rsvetmwgqhxisloklsau:%40Passwordrai22082004@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+postgresql://postgres.rsvetmwgqhxisloklsau:ENCODED_PASSWORD@aws-0-us-east-1.pooler.supabase.com:6543/postgres
 ```
 
 ---
@@ -127,7 +127,7 @@ Application working when you see:
 Update environment variable:
 
 ```env
-DATABASE_URL=postgresql://postgres.rsvetmwgqhxisloklsau:%40Passwordrai22082004@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres.rsvetmwgqhxisloklsau:ENCODED_PASSWORD@aws-0-us-east-1.pooler.supabase.com:6543/postgres
 ```
 
 **Important:** 

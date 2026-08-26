@@ -109,7 +109,7 @@ Here's what your complete `.env` should look like:
 
 ```env
 # Database Connection (Already Working ✅)
-DATABASE_URL=postgresql://postgres.rsvetmwgqhxisloklsau:123456789nitinrai22082004@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
 
 # Razorpay Credentials (UPDATE THESE ⚠️)
 RAZORPAY_KEY_ID=rzp_test_YOUR_KEY_ID_HERE
