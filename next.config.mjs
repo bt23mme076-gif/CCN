@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // 'standalone' output is only needed for the Dockerfile (unused VPS deploy path).
+  // It breaks Vercel's own build/tracing pipeline, so skip it there.
+  ...(process.env.VERCEL ? {} : { output: 'standalone' }),
   poweredByHeader: false,
   // instrumentation.ts is picked up automatically since Next 15 — the old
   // experimental.instrumentationHook flag was removed.
