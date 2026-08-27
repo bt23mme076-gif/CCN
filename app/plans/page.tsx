@@ -105,7 +105,7 @@ export default function PlansPage() {
               <p className="text-xs text-red-300/70 mt-1">Pay this amount to your cable operator to unlock recharge</p>
             </div>
             <p className="text-sm text-gray-400">
-              Contact <span className="font-semibold text-white">CCN Networks</span> to pay your dues and unlock your account.
+              Contact <span className="font-semibold text-white">Chandni Cable Network</span> to pay your dues and unlock your account.
             </p>
           </div>
         </div>

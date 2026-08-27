@@ -906,7 +906,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14">
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3">
-              Why Choose CCN Networks?
+              Why Choose Chandni Cable Network?
             </h2>
             <p className="text-gray-500 text-base max-w-xl mx-auto">
               We make cable TV recharge simple, fast, and reliable

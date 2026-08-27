@@ -245,7 +245,7 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 rounded-lg blur-sm opacity-60 group-hover:opacity-90 transition-opacity" style={{ background: 'linear-gradient(135deg, #e94560, #f5a623)' }} />
                 <Image src="/logo.jpg" alt="CCN Cable" width={40} height={40} className="relative h-10 w-10 rounded-lg object-cover border border-white/20" />
               </div>
-              <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">CCN Networks</span>
+              <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">Chandni Cable Network</span>
             </Link>
             <div className="flex items-center gap-3">
               <span className="text-sm hidden sm:flex items-center gap-1.5" style={{ color: '#93c5fd' }}>
@@ -352,7 +352,7 @@ export default function DashboardPage() {
                   Outstanding Due: <span className="text-yellow-300">₹{customer.outstanding_balance}</span>
                 </p>
                 <p className="text-xs text-red-100 mt-0.5">
-                  Recharge is blocked. Contact CCN Networks to clear your dues.
+                  Recharge is blocked. Contact Chandni Cable Network to clear your dues.
                 </p>
               </div>
             </div>

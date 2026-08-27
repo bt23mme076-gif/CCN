@@ -243,7 +243,7 @@ export default function BuyHistoryPage() {
       const blob = await res.blob();
       const file = new File([blob], `CCN-Receipt-${recharge.id.slice(0, 8)}.html`, { type: 'text/html' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ title: 'CCN Networks Receipt', files: [file] });
+        await navigator.share({ title: 'Chandni Cable Network Receipt', files: [file] });
         return;
       }
     } catch { /* fall through */ }
@@ -292,7 +292,7 @@ export default function BuyHistoryPage() {
                   <div className="absolute inset-0 rounded-lg blur-sm opacity-60 group-hover:opacity-90 transition-opacity" style={{ background: 'linear-gradient(135deg, #e94560, #f5a623)' }} />
                   <Image src="/logo.jpg" alt="CCN Cable" width={40} height={40} className="relative h-10 w-10 rounded-lg object-cover border border-white/20" />
                 </div>
-                <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">CCN Networks</span>
+                <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">Chandni Cable Network</span>
               </Link>
               <div className="relative">
                 <button onClick={() => setShowNavMenu((p) => !p)}
@@ -349,7 +349,7 @@ export default function BuyHistoryPage() {
               <p className="text-xs text-red-400 mt-1">Pay this amount to your cable operator to unlock recharge</p>
             </div>
             <p className="text-sm text-gray-500">
-              Contact <span className="font-semibold text-brand-navy">CCN Networks</span> to pay your dues and unlock your account.
+              Contact <span className="font-semibold text-brand-navy">Chandni Cable Network</span> to pay your dues and unlock your account.
             </p>
           </div>
         </div>
@@ -369,7 +369,7 @@ export default function BuyHistoryPage() {
                 <div className="absolute inset-0 rounded-lg blur-sm opacity-60 group-hover:opacity-90 transition-opacity" style={{ background: 'linear-gradient(135deg, #e94560, #f5a623)' }} />
                 <Image src="/logo.jpg" alt="CCN Cable" width={40} height={40} className="relative h-10 w-10 rounded-lg object-cover border border-white/20" />
               </div>
-              <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">CCN Networks</span>
+              <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">Chandni Cable Network</span>
             </Link>
             <div className="flex items-center gap-3">
               <span className="text-sm hidden sm:flex items-center gap-1.5" style={{ color: '#93c5fd' }}>

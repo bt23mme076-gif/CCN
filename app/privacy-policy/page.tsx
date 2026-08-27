@@ -2,7 +2,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata = {
-  title: 'Privacy Policy — CCN Networks',
+  title: 'Privacy Policy — Chandni Cable Network',
 };
 
 export default function PrivacyPolicyPage() {
@@ -19,9 +19,9 @@ export default function PrivacyPolicyPage() {
       <div className="flex-1 py-10 sm:py-14 px-4 sm:px-6">
         <div className="card max-w-3xl mx-auto space-y-6 text-sm sm:text-base leading-relaxed text-gray-700">
           <p>
-            This Privacy Policy explains how CCN Networks (a trading name of Chandni Cable Network,
-            Udyam MSME Registration No. UDYAM-MP-13-0025439) collects, uses, and protects your
-            information when you use our website and services.
+            This Privacy Policy explains how Chandni Cable Network (Udyam MSME Registration No.
+            UDYAM-MP-13-0025439) collects, uses, and protects your information when you use our
+            website and services.
           </p>
 
           <div>
@@ -82,7 +82,7 @@ export default function PrivacyPolicyPage() {
           <div>
             <h2 className="font-display text-lg font-bold text-brand-navy mb-2">7. Contact Us</h2>
             <p>
-              Chandni Cable Network (CCN Networks)<br />
+              Chandni Cable Network<br />
               Main, Chaurai, Madhya Pradesh, 480115<br />
               Phone: <a href="tel:+919399974696" className="text-accent-blue underline">+91 93999 74696</a><br />
               Email: <a href="mailto:jatinrai254@gmail.com" className="text-accent-blue underline">jatinrai254@gmail.com</a>

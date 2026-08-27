@@ -2,7 +2,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata = {
-  title: 'Refund & Cancellation Policy — CCN Networks',
+  title: 'Refund & Cancellation Policy — Chandni Cable Network',
 };
 
 export default function RefundPolicyPage() {
@@ -63,7 +63,7 @@ export default function RefundPolicyPage() {
               brief description of the issue:
             </p>
             <p className="mt-2">
-              Chandni Cable Network (CCN Networks)<br />
+              Chandni Cable Network<br />
               Phone: <a href="tel:+919399974696" className="text-accent-blue underline">+91 93999 74696</a><br />
               Email: <a href="mailto:jatinrai254@gmail.com" className="text-accent-blue underline">jatinrai254@gmail.com</a>
             </p>

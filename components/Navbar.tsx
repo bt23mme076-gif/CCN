@@ -140,8 +140,8 @@ export default function Navbar() {
                 />
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">
-                  CCN Networks
+                <span className="font-display text-sm sm:text-base font-extrabold tracking-wide text-white">
+                  CHANDNI CABLE NETWORK
                 </span>
               </div>
             </Link>

@@ -3,7 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CCN Networks",
+  title: "Chandni Cable Network",
   description: "Fast, secure, and hassle-free cable recharge with instant activation",
 };
 

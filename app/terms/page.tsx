@@ -3,7 +3,7 @@ import Footer from '@/components/Footer';
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Terms & Conditions — CCN Networks',
+  title: 'Terms & Conditions — Chandni Cable Network',
 };
 
 export default function TermsPage() {
@@ -20,10 +20,10 @@ export default function TermsPage() {
       <div className="flex-1 py-10 sm:py-14 px-4 sm:px-6">
         <div className="card max-w-3xl mx-auto space-y-6 text-sm sm:text-base leading-relaxed text-gray-700">
           <p>
-            These Terms &amp; Conditions ("Terms") govern your use of the CCN Networks website
-            (ccn.atyant.in) and the cable TV subscription services offered through it. CCN Networks
-            is a trading/brand name of <strong>Chandni Cable Network</strong> (Udyam MSME
-            Registration No. UDYAM-MP-13-0025439), located at Main, Chaurai, Madhya Pradesh, 480115.
+            These Terms &amp; Conditions ("Terms") govern your use of the website
+            (ccn.atyant.in) and the cable TV subscription services offered by{' '}
+            <strong>Chandni Cable Network</strong> (Udyam MSME Registration No.
+            UDYAM-MP-13-0025439), located at Main, Chaurai, Madhya Pradesh, 480115.
             By using this website or subscribing to our services, you agree to these Terms.
           </p>
 
@@ -95,7 +95,7 @@ export default function TermsPage() {
           <div>
             <h2 className="font-display text-lg font-bold text-brand-navy mb-2">9. Contact Us</h2>
             <p>
-              Chandni Cable Network (CCN Networks)<br />
+              Chandni Cable Network<br />
               Main, Chaurai, Madhya Pradesh, 480115<br />
               Phone: <a href="tel:+919399974696" className="text-accent-blue underline">+91 93999 74696</a><br />
               Email: <a href="mailto:jatinrai254@gmail.com" className="text-accent-blue underline">jatinrai254@gmail.com</a>

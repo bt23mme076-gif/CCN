@@ -191,7 +191,7 @@ export default function AllRechargesPage() {
     const msg =
       `Hello ${customerName} 😊\n\n` +
       `✅ *Thank you for doing business with us!*\n\n` +
-      `📋 *CCN Networks - Payment Receipt*\n` +
+      `📋 *Chandni Cable Network - Payment Receipt*\n` +
       `━━━━━━━━━━━━━━━━━━━\n` +
       `👤 Customer: ${customerName}\n` +
       `📱 Mobile: ${mobile}\n` +
@@ -203,7 +203,7 @@ export default function AllRechargesPage() {
       (expiresAt ? `⏳ Valid Till: ${new Date(expiresAt).toLocaleDateString('en-IN')}\n` : '') +
       `━━━━━━━━━━━━━━━━━━━\n\n` +
       `🧾 View/Download your Bill:\n${shareUrl}\n\n` +
-      `_CCN Networks — Your Trusted Cable Provider_ 🙏`;
+      `_Chandni Cable Network — Your Trusted Cable Provider_ 🙏`;
 
     const ua = navigator.userAgent;
     const isAndroidWebView = isInNativeApp() || /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
