@@ -53,6 +53,21 @@ export default function Footer() {
                   Login
                 </Link>
               </li>
+              <li>
+                <Link href="/terms" className="text-gray-300 hover:text-white transition-colors text-sm">
+                  Terms &amp; Conditions
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy-policy" className="text-gray-300 hover:text-white transition-colors text-sm">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/refund-policy" className="text-gray-300 hover:text-white transition-colors text-sm">
+                  Refund &amp; Cancellation Policy
+                </Link>
+              </li>
             </ul>
           </div>
 
