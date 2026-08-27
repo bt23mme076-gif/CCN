@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { sendPushToAdmin } from '@/lib/push';
 
@@ -42,6 +42,27 @@ export async function POST(request: NextRequest) {
 
     const payment = payments[0];
 
+    // Only trust this order if it belongs to the calling customer and is
+    // actually the pending "Due Payment" order — otherwise a customer could
+    // replay any of their own (or a guessed) successful order id here to
+    // wipe their outstanding balance for free.
+    const dueOrder = await db
+      .select()
+      .from(recharges)
+      .where(
+        and(
+          eq(recharges.id, orderId),
+          eq(recharges.customer_id, user.customerId),
+          eq(recharges.plan_name, 'Due Payment'),
+          eq(recharges.status, 'pending')
+        )
+      )
+      .limit(1);
+
+    if (dueOrder.length === 0) {
+      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+    }
+
     if (payment.payment_status === 'SUCCESS') {
       await db.update(recharges).set({
         status: 'paid',
@@ -49,14 +70,17 @@ export async function POST(request: NextRequest) {
         paid_at: new Date(),
       }).where(eq(recharges.id, orderId));
 
-      await db.update(customers).set({ outstanding_balance: 0 }).where(eq(customers.id, user.customerId));
-
       const customer = await db.select().from(customers).where(eq(customers.id, user.customerId)).limit(1);
       if (customer.length > 0) {
         const c = customer[0];
+        const paidRupees = Math.round(dueOrder[0].amount / 100);
+        await db.update(customers)
+          .set({ outstanding_balance: Math.max(0, c.outstanding_balance - paidRupees) })
+          .where(eq(customers.id, user.customerId));
+
         sendPushToAdmin({
           title: '✅ Due Payment Received',
-          body: `${c.name} ne ₹${(payment.order_amount || 0)} ka due amount pay kar diya`,
+          body: `${c.name} ne ₹${paidRupees} ka due amount pay kar diya`,
           url: '/admin/pending',
         });
       }

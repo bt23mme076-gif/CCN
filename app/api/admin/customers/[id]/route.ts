@@ -21,14 +21,14 @@ export async function GET(
       .where(and(eq(customers.id, customerId), eq(customers.operator_id, admin.operatorId)))
       .limit(1);
 
-    const rechargeHistory = await db
+    const rechargeHistory = customer.length === 0 ? [] : await db
       .select({
         recharge: recharges,
         plan: plans,
       })
       .from(recharges)
       .leftJoin(plans, eq(recharges.plan_id, plans.id))
-      .where(eq(recharges.customer_id, customerId))
+      .where(and(eq(recharges.customer_id, customerId), eq(recharges.operator_id, admin.operatorId)))
       .orderBy(desc(recharges.created_at));
 
     return NextResponse.json({
