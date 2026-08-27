@@ -5,6 +5,7 @@ import { recharges, customers, operators } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
+import { buildUpiLink } from '@/lib/payments/upi';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,6 @@ export async function POST(_request: NextRequest) {
 
     const orderId = generateOrderId();
     const amountInPaise = c.outstanding_balance * 100;
-    const amountInRupees = c.outstanding_balance.toFixed(2);
 
     await db.insert(recharges).values({
       id: orderId,
@@ -61,8 +61,7 @@ export async function POST(_request: NextRequest) {
       paymentSessionId = cfResult.paymentSessionId;
     } catch { /* fallback to UPI link */ }
 
-    const upiParams = `pa=9399974696-4@ibl&pn=CCN%20Networks&am=${amountInRupees}&cu=INR&tn=CCN%20Due%20Payment`;
-    const upiLink = `upi://pay?${upiParams}`;
+    const upiLink = buildUpiLink(amountInPaise, `${c.name} - Due Payment`);
 
     return NextResponse.json({ orderId, upiLink, amount: amountInPaise, paymentSessionId });
   } catch (error) {

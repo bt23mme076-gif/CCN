@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { resolveConnection } from '@/lib/connections';
 import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
+import { buildUpiLink } from '@/lib/payments/upi';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,7 +52,6 @@ export async function POST(request: NextRequest) {
       : null;
 
     const rechargeId = generateOrderId();
-    const amountInRupees = (c.fast_recharge_amount / 100).toFixed(2);
 
     await db.insert(recharges).values({
       id: rechargeId,
@@ -64,9 +64,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
-    const upiParams = `pa=9399974696-4@ibl&pn=CCN%20Networks&am=${amountInRupees}&cu=INR&tn=CCN%20Fast%20Recharge`;
-    const upiLink = `upi://pay?${upiParams}`;
-    const intentLink = `intent://pay?${upiParams}#Intent;scheme=upi;end`;
+    const upiLink = buildUpiLink(c.fast_recharge_amount, `${c.name} - Fast Recharge`);
 
     let paymentSessionId: string | null = null;
     try {
@@ -82,7 +80,7 @@ export async function POST(request: NextRequest) {
       paymentSessionId = cfResult.paymentSessionId;
     } catch { /* fallback to direct UPI link */ }
 
-    return NextResponse.json({ orderId: rechargeId, upiLink, intentLink, amount: c.fast_recharge_amount, paymentSessionId });
+    return NextResponse.json({ orderId: rechargeId, upiLink, amount: c.fast_recharge_amount, paymentSessionId });
   } catch (error) {
     console.error('UPI order error:', error);
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });

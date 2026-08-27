@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { resolveConnection } from '@/lib/connections';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
 import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
+import { buildUpiLink } from '@/lib/payments/upi';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     const rechargeId = generateOrderId();
 
-    let cfResult;
+    let cfResult: { cashfreeOrderId: string; paymentSessionId: string } | null = null;
     try {
       cfResult = await createCashfreeOrder({
         orderId: rechargeId,
@@ -121,9 +122,7 @@ export async function POST(request: NextRequest) {
         returnUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?order_id=${rechargeId}`,
         operator,
       });
-    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 503 });
-    }
+    } catch { /* fallback to direct UPI link while gateway verification is pending */ }
 
     await db.insert(recharges).values({
       id: rechargeId,
@@ -135,13 +134,16 @@ export async function POST(request: NextRequest) {
       duration_days: months > 1 ? finalDurationDays : null,
       amount: finalPrice,
       status: 'pending',
-      cashfree_order_id: cfResult.cashfreeOrderId,
+      cashfree_order_id: cfResult?.cashfreeOrderId,
     });
+
+    const upiLink = buildUpiLink(finalPrice, `${customer[0].name} - ${displayPlanName}`);
 
     return NextResponse.json({
       orderId: rechargeId,
-      cashfreeOrderId: cfResult.cashfreeOrderId,
-      paymentSessionId: cfResult.paymentSessionId,
+      cashfreeOrderId: cfResult?.cashfreeOrderId ?? null,
+      paymentSessionId: cfResult?.paymentSessionId ?? null,
+      upiLink,
       amount: finalPrice,
       currency: 'INR',
     });

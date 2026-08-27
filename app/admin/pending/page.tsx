@@ -7,7 +7,7 @@ import StatusBadge from '@/components/StatusBadge';
 
 interface Stats { pendingCount: number; todayRevenue: number; monthRevenue: number; totalRevenue: number; totalCustomers: number; }
 interface PendingRecharge {
-  recharge: { id: string; plan_name: string; amount: number; status: string; paid_at: string | null; created_at: string; cashfree_order_id: string | null; };
+  recharge: { id: string; plan_name: string; amount: number; status: string; paid_at: string | null; created_at: string; cashfree_order_id: string | null; upi_reference: string | null; };
   customer: { name: string; mobile: string; stb_number: string; area: string; };
 }
 
@@ -353,6 +353,11 @@ export default function PendingActivationsPage() {
                         ? `Paid: ${formatDateTime(new Date(recharge.paid_at))}`
                         : `Ordered: ${formatDateTime(new Date(recharge.created_at))} (unpaid)`}
                     </p>
+                    {recharge.upi_reference && (
+                      <p className="text-xs mt-1" style={{ color: '#34d399' }}>
+                        UPI UTR: {recharge.upi_reference}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => handleDelete(recharge.id)} disabled={deleting === recharge.id || bulkActivating || bulkDeleting}

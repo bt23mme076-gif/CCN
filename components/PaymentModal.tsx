@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import QRCode from 'qrcode';
 import { formatCurrency } from '@/lib/utils';
 import { calcDurationPricing } from '@/lib/planDuration';
 import { load } from '@cashfreepayments/cashfree-js';
@@ -57,9 +58,22 @@ export default function PaymentModal({
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [upiOrder, setUpiOrder] = useState<{ orderId: string; upiLink: string; amount: number; qrDataUrl: string } | null>(null);
+  const [utrInput, setUtrInput] = useState('');
+  const [showUtrForm, setShowUtrForm] = useState(false);
+  const [submittingUtr, setSubmittingUtr] = useState(false);
+  const [utrSubmitted, setUtrSubmitted] = useState(false);
   const inAppBrowser = isInAppBrowser();
 
   if (!isOpen || !plan) return null;
+
+  const resetAndClose = () => {
+    setUpiOrder(null);
+    setUtrInput('');
+    setShowUtrForm(false);
+    setUtrSubmitted(false);
+    onClose();
+  };
 
   const { price: displayPrice, durationDays: displayDurationDays } = calcDurationPricing(
     plan.price,
@@ -84,6 +98,19 @@ export default function PaymentModal({
       }
 
       const orderData = await orderResponse.json();
+
+      if (!orderData.paymentSessionId) {
+        // Gateway unavailable — fall back to direct UPI collection.
+        const qrDataUrl = await QRCode.toDataURL(orderData.upiLink, { width: 240, margin: 1 });
+        setUpiOrder({
+          orderId: orderData.orderId,
+          upiLink: orderData.upiLink,
+          amount: orderData.amount,
+          qrDataUrl,
+        });
+        setLoading(false);
+        return;
+      }
 
       const cashfree = await load({
         mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
@@ -116,6 +143,116 @@ export default function PaymentModal({
       setLoading(false);
     }
   };
+
+  const handleSubmitUtr = async () => {
+    if (!upiOrder || !utrInput.trim()) return;
+    setSubmittingUtr(true);
+    try {
+      const res = await fetch(`/api/recharge/${upiOrder.orderId}/submit-utr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ utr: utrInput.trim() }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to submit');
+      }
+      setUtrSubmitted(true);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to submit. Please try again.');
+    } finally {
+      setSubmittingUtr(false);
+    }
+  };
+
+  if (upiOrder) {
+    if (utrSubmitted) {
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto text-center">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <svg className="w-7 h-7 sm:w-8 sm:h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-2">Payment Submitted!</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-6">
+              Aapka payment detail humein mil gaya hai. Verify hote hi aapka recharge activate ho jayega.
+            </p>
+            <button
+              onClick={() => { resetAndClose(); window.location.href = '/dashboard'; }}
+              className="btn-primary w-full text-sm sm:text-base"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy">Pay via UPI</h2>
+            <button onClick={resetAndClose} className="text-gray-400 hover:text-gray-600 p-1" disabled={submittingUtr}>
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <p className="text-center font-bold text-xl sm:text-2xl text-accent-red mb-4">
+            {formatCurrency(upiOrder.amount)}
+          </p>
+
+          <div className="flex justify-center mb-4">
+            <img src={upiOrder.qrDataUrl} alt="UPI QR Code" className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg border" />
+          </div>
+
+          {!inAppBrowser && (
+            <a
+              href={upiOrder.upiLink}
+              className="btn-primary w-full text-center block mb-4 text-sm sm:text-base"
+            >
+              Pay via UPI App
+            </a>
+          )}
+
+          <p className="text-xs sm:text-sm text-gray-500 text-center mb-4">
+            QR scan karke ya UPI app se payment karein, phir neeche confirm karein.
+          </p>
+
+          {!showUtrForm ? (
+            <button
+              onClick={() => setShowUtrForm(true)}
+              className="btn-primary w-full text-sm sm:text-base"
+            >
+              Maine Payment Kar Diya
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={utrInput}
+                onChange={(e) => setUtrInput(e.target.value)}
+                placeholder="UPI Transaction ID / UTR Number"
+                className="w-full border rounded-lg px-3 py-2.5 text-sm sm:text-base"
+                disabled={submittingUtr}
+              />
+              <button
+                onClick={handleSubmitUtr}
+                disabled={submittingUtr || !utrInput.trim()}
+                className="btn-primary w-full disabled:opacity-50 text-sm sm:text-base"
+              >
+                {submittingUtr ? 'Submitting...' : 'Confirm Payment'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (showSuccess && orderDetails) {
     return (

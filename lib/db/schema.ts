@@ -78,6 +78,7 @@ export const recharges = pgTable('recharges', {
   cashfree_order_id: text('cashfree_order_id'),
   cashfree_payment_id: text('cashfree_payment_id'),
   cashfree_signature: text('cashfree_signature'),
+  upi_reference: text('upi_reference'), // customer-submitted UTR/transaction ref for manual UPI verification
   paid_at: timestamp('paid_at'),
   activated_at: timestamp('activated_at'),
   activated_by: text('activated_by'),

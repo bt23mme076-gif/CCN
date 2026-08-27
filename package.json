@@ -13,6 +13,7 @@
     "db:studio": "drizzle-kit studio",
     "migrate:cashfree": "tsx run-migration-direct.ts",
     "add-royal-hd": "tsx add-royal-hd.ts",
+    "add-upi-reference-column": "tsx add-upi-reference-column.ts",
     "add-test-plan": "tsx add-test-plan.ts",
     "hide-test-plan": "tsx hide-test-plan.ts",
     "change-admin-password": "tsx change-admin-password.ts",
