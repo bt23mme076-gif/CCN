@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       duration_days: months > 1 ? finalDurationDays : null,
       amount: finalPrice,
       status: 'pending',
-      cashfree_order_id: cfResult?.cashfreeOrderId,
+      cashfree_order_id: cfResult?.cashfreeOrderId ?? null,
     });
 
     const upiLink = buildUpiLink(finalPrice, `${customer[0].name} - ${displayPlanName}`);
