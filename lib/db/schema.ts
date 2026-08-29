@@ -179,6 +179,7 @@ export const accessoryOrders = pgTable('accessory_orders', {
   cashfree_order_id: text('cashfree_order_id'),
   cashfree_payment_id: text('cashfree_payment_id'),
   cashfree_signature: text('cashfree_signature'),
+  upi_reference: text('upi_reference'),
   paid_at: timestamp('paid_at'),
   delivered_at: timestamp('delivered_at'),
   delivered_by: text('delivered_by'),

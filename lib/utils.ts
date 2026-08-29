@@ -66,3 +66,22 @@ export function formatDisplayEndDate(expiresAt: Date | string | null): string {
   return formatDateDMY(displayDate);
 }
 
+export function isInAppBrowser(): boolean {
+  if (typeof window === 'undefined') return false;
+  // The CCN Android app spoofs its User-Agent to look like real Chrome, so
+  // UA sniffing alone can't detect it — check for the JS interface the app
+  // injects (addJavascriptInterface) first, which is reliable regardless of UA.
+  if ((window as any).Android) return true;
+  const ua = navigator.userAgent;
+  return /wv\b/.test(ua) ||
+    /FB_IAB|FBAN|Instagram|Snapchat|Twitter|Line|MicroMessenger/.test(ua) ||
+    (ua.includes('Android') && !ua.includes('Chrome/'));
+}
+
+export function openInExternalBrowser(): void {
+  if (typeof window === 'undefined') return;
+  const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+  const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+  window.open(intentUrl, '_blank');
+}
+

@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plans, recharges, customers, customerPriceOverrides, customerPlanDiscounts, operators } from '@/lib/db/schema';
+import { plans, recharges, customers, customerPriceOverrides, customerPlanDiscounts } from '@/lib/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { resolveConnection } from '@/lib/connections';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
-import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
 import { buildUpiLink } from '@/lib/payments/upi';
 
 export const dynamic = 'force-dynamic';
@@ -91,11 +90,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Resolve operator for split payments
-    const operator = customer[0].operator_id
-      ? await db.select().from(operators).where(eq(operators.id, customer[0].operator_id)).limit(1).then(r => r[0] ?? null)
-      : null;
-
     // Clean up stale unpaid attempts for the same plan/connection.
     await db
       .update(recharges)
@@ -111,19 +105,6 @@ export async function POST(request: NextRequest) {
 
     const rechargeId = generateOrderId();
 
-    let cfResult: { cashfreeOrderId: string; paymentSessionId: string } | null = null;
-    try {
-      cfResult = await createCashfreeOrder({
-        orderId: rechargeId,
-        amountPaise: finalPrice,
-        customerId: targetCustomerId,
-        customerPhone: customer[0].mobile,
-        customerName: customer[0].name,
-        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?order_id=${rechargeId}`,
-        operator,
-      });
-    } catch { /* fallback to direct UPI link while gateway verification is pending */ }
-
     await db.insert(recharges).values({
       id: rechargeId,
       operator_id: customer[0].operator_id,
@@ -134,15 +115,12 @@ export async function POST(request: NextRequest) {
       duration_days: months > 1 ? finalDurationDays : null,
       amount: finalPrice,
       status: 'pending',
-      cashfree_order_id: cfResult?.cashfreeOrderId ?? null,
     });
 
     const upiLink = buildUpiLink(finalPrice, `${customer[0].name} - ${displayPlanName}`);
 
     return NextResponse.json({
       orderId: rechargeId,
-      cashfreeOrderId: cfResult?.cashfreeOrderId ?? null,
-      paymentSessionId: cfResult?.paymentSessionId ?? null,
       upiLink,
       amount: finalPrice,
       currency: 'INR',

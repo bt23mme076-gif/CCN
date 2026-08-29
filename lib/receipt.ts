@@ -8,8 +8,7 @@ export interface ReceiptData {
     paid_at?: string | Date | null;
     activated_at?: string | Date | null;
     expires_at?: string | Date | null;
-    cashfree_order_id?: string | null;
-    cashfree_payment_id?: string | null;
+    upi_reference?: string | null;
   };
   customer: {
     name: string;
@@ -232,8 +231,8 @@ export function generateReceiptHTML(data: ReceiptData): string {
   <div class="footer-cols">
     <div class="left-col">
       <div class="payment-mode">
-        <strong>PAYMENT MODE:</strong> Website / Cashfree<br>
-        ${recharge.cashfree_order_id ? `<span style="color:#555">Ref: ${recharge.cashfree_order_id}</span>` : ''}
+        <strong>PAYMENT MODE:</strong> UPI<br>
+        ${recharge.upi_reference ? `<span style="color:#555">UTR: ${recharge.upi_reference}</span>` : ''}
       </div>
     </div>
 

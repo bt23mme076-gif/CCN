@@ -1,11 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import QRCode from 'qrcode';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, isInAppBrowser, openInExternalBrowser } from '@/lib/utils';
 import { calcDurationPricing } from '@/lib/planDuration';
-import { load } from '@cashfreepayments/cashfree-js';
-
+import UpiPaymentModal from '@/components/UpiPaymentModal';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -24,26 +22,6 @@ interface PaymentModalProps {
   connectionId?: string;
 }
 
-function isInAppBrowser() {
-  if (typeof window === 'undefined') return false;
-  // The CCN Android app spoofs its User-Agent to look like real Chrome, so
-  // UA sniffing alone can't detect it — check for the JS interface the app
-  // injects (addJavascriptInterface) first, which is reliable regardless of UA.
-  if ((window as any).Android) return true;
-  const ua = navigator.userAgent;
-  return /wv\b/.test(ua) ||
-    /FB_IAB|FBAN|Instagram|Snapchat|Twitter|Line|MicroMessenger/.test(ua) ||
-    (ua.includes('Android') && !ua.includes('Chrome/'));
-}
-
-function openInExternalBrowser() {
-  if (typeof window === 'undefined') return;
-
-  const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-  const intentUrl = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-  window.open(intentUrl, '_blank');
-}
-
 export default function PaymentModal({
   isOpen,
   onClose,
@@ -51,17 +29,10 @@ export default function PaymentModal({
   months = 1,
   discounts = {},
   stbNumber,
-  customerName = '',
-  customerMobile = '',
   connectionId,
 }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<any>(null);
-  const [upiOrder, setUpiOrder] = useState<{ orderId: string; upiLink: string; amount: number; qrDataUrl: string } | null>(null);
-  const [utrInput, setUtrInput] = useState('');
-  const [showUtrForm, setShowUtrForm] = useState(false);
-  const [submittingUtr, setSubmittingUtr] = useState(false);
+  const [upiOrder, setUpiOrder] = useState<{ orderId: string; upiLink: string; amount: number } | null>(null);
   const [utrSubmitted, setUtrSubmitted] = useState(false);
   const inAppBrowser = isInAppBrowser();
 
@@ -69,8 +40,6 @@ export default function PaymentModal({
 
   const resetAndClose = () => {
     setUpiOrder(null);
-    setUtrInput('');
-    setShowUtrForm(false);
     setUtrSubmitted(false);
     onClose();
   };
@@ -98,70 +67,12 @@ export default function PaymentModal({
       }
 
       const orderData = await orderResponse.json();
-
-      if (!orderData.paymentSessionId) {
-        // Gateway unavailable — fall back to direct UPI collection.
-        const qrDataUrl = await QRCode.toDataURL(orderData.upiLink, { width: 240, margin: 1 });
-        setUpiOrder({
-          orderId: orderData.orderId,
-          upiLink: orderData.upiLink,
-          amount: orderData.amount,
-          qrDataUrl,
-        });
-        setLoading(false);
-        return;
-      }
-
-      const cashfree = await load({
-        mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
-      });
-
-      if (!cashfree) {
-        throw new Error('Failed to load Cashfree checkout');
-      }
-
-      const checkoutOptions = {
-        paymentSessionId: orderData.paymentSessionId,
-        redirectTarget: '_self' as const,
-      };
-
-      cashfree.checkout(checkoutOptions).then((result: any) => {
-        if (result?.error) {
-          console.error('Cashfree checkout error:', result.error);
-          alert('Payment failed. Please try again.');
-          setLoading(false);
-          return;
-        }
-
-        if (result?.redirect) {
-          console.log('Payment will be redirected');
-        }
-      });
+      setUpiOrder({ orderId: orderData.orderId, upiLink: orderData.upiLink, amount: orderData.amount });
     } catch (error) {
       console.error('Payment error:', error);
       alert(error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.');
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitUtr = async () => {
-    if (!upiOrder || !utrInput.trim()) return;
-    setSubmittingUtr(true);
-    try {
-      const res = await fetch(`/api/recharge/${upiOrder.orderId}/submit-utr`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ utr: utrInput.trim() }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Failed to submit');
-      }
-      setUtrSubmitted(true);
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to submit. Please try again.');
     } finally {
-      setSubmittingUtr(false);
+      setLoading(false);
     }
   };
 
@@ -177,10 +88,14 @@ export default function PaymentModal({
             </div>
             <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-2">Payment Submitted!</h2>
             <p className="text-sm sm:text-base text-gray-600 mb-6">
-              Aapka payment detail humein mil gaya hai. Verify hote hi aapka recharge activate ho jayega.
+              We've received your payment details. Your recharge will be activated once verified.
             </p>
             <button
-              onClick={() => { resetAndClose(); window.location.href = '/dashboard'; }}
+              onClick={() => {
+                const orderId = upiOrder.orderId;
+                resetAndClose();
+                window.location.href = `/dashboard?order_id=${orderId}`;
+              }}
               className="btn-primary w-full text-sm sm:text-base"
             >
               Go to Dashboard
@@ -191,126 +106,13 @@ export default function PaymentModal({
     }
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-4 sm:mb-6">
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy">Pay via UPI</h2>
-            <button onClick={resetAndClose} className="text-gray-400 hover:text-gray-600 p-1" disabled={submittingUtr}>
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <p className="text-center font-bold text-xl sm:text-2xl text-accent-red mb-4">
-            {formatCurrency(upiOrder.amount)}
-          </p>
-
-          <div className="flex justify-center mb-4">
-            <img src={upiOrder.qrDataUrl} alt="UPI QR Code" className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg border" />
-          </div>
-
-          {!inAppBrowser && (
-            <a
-              href={upiOrder.upiLink}
-              className="btn-primary w-full text-center block mb-4 text-sm sm:text-base"
-            >
-              Pay via UPI App
-            </a>
-          )}
-
-          <p className="text-xs sm:text-sm text-gray-500 text-center mb-4">
-            QR scan karke ya UPI app se payment karein, phir neeche confirm karein.
-          </p>
-
-          {!showUtrForm ? (
-            <button
-              onClick={() => setShowUtrForm(true)}
-              className="btn-primary w-full text-sm sm:text-base"
-            >
-              Maine Payment Kar Diya
-            </button>
-          ) : (
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={utrInput}
-                onChange={(e) => setUtrInput(e.target.value)}
-                placeholder="UPI Transaction ID / UTR Number"
-                className="w-full border rounded-lg px-3 py-2.5 text-sm sm:text-base"
-                disabled={submittingUtr}
-              />
-              <button
-                onClick={handleSubmitUtr}
-                disabled={submittingUtr || !utrInput.trim()}
-                className="btn-primary w-full disabled:opacity-50 text-sm sm:text-base"
-              >
-                {submittingUtr ? 'Submitting...' : 'Confirm Payment'}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (showSuccess && orderDetails) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-          <div className="text-center">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <svg
-                className="w-7 h-7 sm:w-8 sm:h-8 text-success"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-2">
-              Payment Successful!
-            </h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-              Your recharge will be activated shortly by our operator
-            </p>
-
-            <div className="bg-gray-1 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-left">
-              <div className="flex justify-between mb-2 text-sm sm:text-base">
-                <span className="text-gray-600">Order ID:</span>
-                <span className="font-medium text-xs sm:text-sm break-all ml-2">{orderDetails.orderId}</span>
-              </div>
-              <div className="flex justify-between mb-2 text-sm sm:text-base">
-                <span className="text-gray-600">Plan:</span>
-                <span className="font-medium">{orderDetails.planName}</span>
-              </div>
-              <div className="flex justify-between text-sm sm:text-base">
-                <span className="text-gray-600">Amount Paid:</span>
-                <span className="font-medium text-success">
-                  {formatCurrency(orderDetails.amount)}
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setShowSuccess(false);
-                onClose();
-                window.location.href = '/dashboard';
-              }}
-              className="btn-primary w-full text-sm sm:text-base"
-            >
-              Go to Dashboard
-            </button>
-          </div>
-        </div>
-      </div>
+      <UpiPaymentModal
+        upiLink={upiOrder.upiLink}
+        amount={upiOrder.amount}
+        submitUtrUrl={`/api/recharge/${upiOrder.orderId}/submit-utr`}
+        onSubmitted={() => setUtrSubmitted(true)}
+        onCancel={resetAndClose}
+      />
     );
   }
 
@@ -380,7 +182,7 @@ export default function PaymentModal({
           disabled={loading}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
-          {inAppBrowser ? 'Open in Chrome to Pay' : loading ? 'Processing...' : 'Pay with Cashfree'}
+          {inAppBrowser ? 'Open in Chrome to Pay' : loading ? 'Processing...' : 'Pay via UPI'}
         </button>
       </div>
     </div>

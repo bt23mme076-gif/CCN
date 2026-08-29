@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
-import { load } from '@cashfreepayments/cashfree-js';
+import UpiPaymentModal from '@/components/UpiPaymentModal';
 
 interface Plan {
   id: string;
@@ -18,7 +18,7 @@ interface QuickRechargeModalProps {
   onClose: () => void;
 }
 
-type Step = 'stb' | 'confirm' | 'plan' | 'paying';
+type Step = 'stb' | 'confirm' | 'plan';
 
 function getInitials(name: string) {
   return name
@@ -40,6 +40,7 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(false);
   const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
+  const [payOrder, setPayOrder] = useState<{ orderId: string; upiLink: string; amount: number } | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -50,6 +51,7 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
       setShowInvalidDialog(false);
       setMatch(null);
       setPlans([]);
+      setPayOrder(null);
     }
   }, [isOpen]);
 
@@ -61,6 +63,18 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
   }, [showInvalidDialog]);
 
   if (!isOpen) return null;
+
+  if (payOrder) {
+    return (
+      <UpiPaymentModal
+        upiLink={payOrder.upiLink}
+        amount={payOrder.amount}
+        submitUtrUrl={`/api/guest/${payOrder.orderId}/submit-utr`}
+        onSubmitted={() => { window.location.href = `/recharge-status?order_id=${payOrder.orderId}`; }}
+        onCancel={() => { setPayOrder(null); setPayingPlanId(null); }}
+      />
+    );
+  }
 
   const handleCheckStb = async () => {
     if (!identifier.trim()) return;
@@ -116,34 +130,18 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
       const orderData = await orderRes.json();
       if (!orderRes.ok) {
         setError(orderData.error || 'Failed to start payment');
-        setPayingPlanId(null);
         return;
       }
 
-      const cashfree = await load({
-        mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
-      });
-      if (!cashfree) throw new Error('Failed to load Cashfree checkout');
-
-      setStep('paying');
-      cashfree.checkout({
-        paymentSessionId: orderData.paymentSessionId,
-        redirectTarget: '_self' as const,
-      }).then((result: any) => {
-        if (result?.error) {
-          console.error('Cashfree checkout error:', result.error);
-          setError('Payment failed. Please try again.');
-          setStep('plan');
-          setPayingPlanId(null);
-        }
-      });
+      setPayOrder({ orderId: orderData.orderId, upiLink: orderData.upiLink, amount: orderData.amount });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start payment');
+    } finally {
       setPayingPlanId(null);
     }
   };
 
-  const stepIndex = step === 'stb' ? 0 : step === 'confirm' ? 1 : step === 'plan' ? 2 : 3;
+  const stepIndex = step === 'stb' ? 0 : step === 'confirm' ? 1 : 2;
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -341,12 +339,6 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
             </div>
           )}
 
-          {step === 'paying' && (
-            <div className="text-center py-10">
-              <div className="w-12 h-12 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-sm text-blue-200/80">Redirecting to payment...</p>
-            </div>
-          )}
         </div>
       </div>
     </div>

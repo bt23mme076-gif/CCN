@@ -14,7 +14,7 @@ function isInNativeApp(): boolean {
 }
 
 interface RechargeItem {
-  recharge: { id: string; plan_name: string; amount: number; status: string; created_at: string; cashfree_order_id: string | null; };
+  recharge: { id: string; plan_name: string; amount: number; status: string; created_at: string; };
   customer: { id: string; name: string; mobile: string; stb_number?: string; area?: string; };
 }
 
@@ -28,8 +28,7 @@ interface CustomerDetailRecharge {
     paid_at: string | null;
     activated_at: string | null;
     expires_at: string | null;
-    cashfree_order_id: string | null;
-    cashfree_payment_id: string | null;
+    upi_reference: string | null;
   };
   plan: { id: string; name: string; channels: string[]; duration_days: number } | null;
 }
@@ -533,9 +532,8 @@ export default function AllRechargesPage() {
                             <p>Expiry: <span className="text-gray-100">{recharge.expires_at ? formatDateTime(new Date(recharge.expires_at)) : '—'}</span></p>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-300">
-                            <p>Cashfree Order: <span className="text-gray-100 break-all">{recharge.cashfree_order_id || '—'}</span></p>
-                            <p>Cashfree Payment: <span className="text-gray-100 break-all">{recharge.cashfree_payment_id || '—'}</span></p>
+                          <div className="text-sm text-gray-300">
+                            <p>UPI Reference: <span className="text-gray-100 break-all">{recharge.upi_reference || '—'}</span></p>
                           </div>
 
                           <div>

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { recharges, customers, operators } from '@/lib/db/schema';
+import { recharges, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
-import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
 import { buildUpiLink } from '@/lib/payments/upi';
 
 export const dynamic = 'force-dynamic';
@@ -29,10 +28,6 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ error: 'No outstanding balance' }, { status: 400 });
     }
 
-    const operator = c.operator_id
-      ? await db.select().from(operators).where(eq(operators.id, c.operator_id)).limit(1).then(r => r[0] ?? null)
-      : null;
-
     const orderId = generateOrderId();
     const amountInPaise = c.outstanding_balance * 100;
 
@@ -47,23 +42,9 @@ export async function POST(_request: NextRequest) {
       status: 'pending',
     });
 
-    let paymentSessionId: string | null = null;
-    try {
-      const cfResult = await createCashfreeOrder({
-        orderId,
-        amountPaise: amountInPaise,
-        customerId: user.customerId,
-        customerPhone: '+91' + c.mobile,
-        customerName: c.name,
-        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?order_id=${orderId}&type=due`,
-        operator,
-      });
-      paymentSessionId = cfResult.paymentSessionId;
-    } catch { /* fallback to UPI link */ }
-
     const upiLink = buildUpiLink(amountInPaise, `${c.name} - Due Payment`);
 
-    return NextResponse.json({ orderId, upiLink, amount: amountInPaise, paymentSessionId });
+    return NextResponse.json({ orderId, upiLink, amount: amountInPaise });
   } catch (error) {
     console.error('Due order error:', error);
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });

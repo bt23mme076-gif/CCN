@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { accessories, accessoryOrders, customers, operators } from '@/lib/db/schema';
+import { accessories, accessoryOrders, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
-import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
+import { buildUpiLink } from '@/lib/payments/upi';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,26 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const operator = customer[0].operator_id
-      ? await db.select().from(operators).where(eq(operators.id, customer[0].operator_id)).limit(1).then(r => r[0] ?? null)
-      : null;
-
     const orderId = generateOrderId();
-
-    let cfResult;
-    try {
-      cfResult = await createCashfreeOrder({
-        orderId,
-        amountPaise: price,
-        customerId: user.customerId,
-        customerPhone: customer[0].mobile,
-        customerName: customer[0].name,
-        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/buy?order_id=${orderId}&type=accessory`,
-        operator,
-      });
-    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 503 });
-    }
 
     await db.insert(accessoryOrders).values({
       id: orderId,
@@ -78,13 +59,13 @@ export async function POST(request: NextRequest) {
       accessory_name: accessory[0].name,
       amount: price,
       status: 'pending',
-      cashfree_order_id: cfResult.cashfreeOrderId,
     });
+
+    const upiLink = buildUpiLink(price, `${customer[0].name} - ${accessory[0].name}`);
 
     return NextResponse.json({
       orderId,
-      cashfreeOrderId: cfResult.cashfreeOrderId,
-      paymentSessionId: cfResult.paymentSessionId,
+      upiLink,
       amount: price,
       currency: 'INR',
     });

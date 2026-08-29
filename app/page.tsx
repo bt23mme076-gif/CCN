@@ -13,7 +13,7 @@ import ContactSection from '@/components/ContactSection';
 import AlacartePaymentModal from '@/components/AlacartePaymentModal';
 import SponsorSlideshow from '@/components/SponsorSlideshow';
 import QuickRechargeModal from '@/components/QuickRechargeModal';
-import { openCashfreeCheckout } from '@/lib/cashfreeCheckout';
+import UpiPaymentModal from '@/components/UpiPaymentModal';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
 import { getChannelLogo, getChannelColor } from '@/lib/channelLogos';
@@ -150,6 +150,7 @@ export default function HomePage() {
   const [fastLoading, setFastLoading] = useState(false);
   const [fastPaymentFailed, setFastPaymentFailed] = useState(false);
   const [dueLoading, setDueLoading] = useState(false);
+  const [quickPayOrder, setQuickPayOrder] = useState<{ orderId: string; upiLink: string; amount: number; type: 'fast' | 'due' } | null>(null);
 
   const handleFastRecharge = async () => {
     if (!customer) { router.push('/login'); return; }
@@ -163,12 +164,7 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
-
-      if (data.paymentSessionId) {
-        await openCashfreeCheckout(data.paymentSessionId);
-      } else {
-        window.location.href = data.upiLink;
-      }
+      setQuickPayOrder({ orderId: data.orderId, upiLink: data.upiLink, amount: data.amount, type: 'fast' });
     } catch {
       alert('Failed to initiate payment. Please try again.');
     } finally {
@@ -183,11 +179,7 @@ export default function HomePage() {
       const res = await fetch('/api/recharge/create-due-order', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
-      if (data.paymentSessionId) {
-        await openCashfreeCheckout(data.paymentSessionId);
-      } else {
-        window.location.href = data.upiLink;
-      }
+      setQuickPayOrder({ orderId: data.orderId, upiLink: data.upiLink, amount: data.amount, type: 'due' });
     } catch {
       alert('Failed to initiate payment. Please try again.');
     } finally {
@@ -970,7 +962,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="font-display text-xl font-bold text-white mb-3">Secure Payments</h3>
                 <p className="text-sm text-gray-400 leading-relaxed mb-4">
-                  All transactions secured with Cashfree — UPI, cards, net banking & more.
+                  Pay directly via UPI — no card details or bank credentials ever leave your phone.
                 </p>
                 <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#48cae4' }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
@@ -1048,6 +1040,20 @@ export default function HomePage() {
         isOpen={showQuickRecharge}
         onClose={() => setShowQuickRecharge(false)}
       />
+
+      {quickPayOrder && (
+        <UpiPaymentModal
+          upiLink={quickPayOrder.upiLink}
+          amount={quickPayOrder.amount}
+          submitUtrUrl={`/api/recharge/${quickPayOrder.orderId}/submit-utr`}
+          onSubmitted={() => {
+            const { orderId, type } = quickPayOrder;
+            setQuickPayOrder(null);
+            window.location.href = `/dashboard?order_id=${orderId}&type=${type}`;
+          }}
+          onCancel={() => setQuickPayOrder(null)}
+        />
+      )}
 
       {customer && (
         <PaymentModal

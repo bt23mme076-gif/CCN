@@ -25,7 +25,6 @@ interface Recharge {
   created_at: string;
   activated_at: string | null;
   expires_at: string | null;
-  cashfree_order_id: string | null;
 }
 
 export default function DashboardPage() {
@@ -86,53 +85,35 @@ export default function DashboardPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('order_id');
     const type = urlParams.get('type');
-    const isFast = type === 'fast';
     const isDue = type === 'due';
 
     if (!orderId) return;
 
     try {
+      // Payment is already marked 'paid' server-side at UTR-submission time —
+      // just look it up rather than re-verifying with a gateway.
+      const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
+      const cidParam = cid && cid !== 'primary' ? `?cid=${cid}` : '';
+      const rechargesRes = await fetch(`/api/recharge/history${cidParam}`, { cache: 'no-store' });
+      const rechargesData = await rechargesRes.json();
+      const all: Recharge[] = rechargesData.recharges || [];
+      const match = all.find((r) => r.id === orderId);
+
       if (isDue) {
-        const verifyResponse = await fetch('/api/recharge/verify-due-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId }),
-        });
-        const verifyData = await verifyResponse.json();
-        if (verifyData.success) {
+        if (match?.status === 'paid') {
           alert('Due amount paid successfully! You can now recharge.');
         }
-      } else {
-        const verifyResponse = await fetch('/api/recharge/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId }),
-        });
-        const verifyData = await verifyResponse.json();
-
-        if (verifyData.success) {
-          const cid = typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null;
-          const cidParam = cid && cid !== 'primary' ? `?cid=${cid}` : '';
-          const rechargesRes = await fetch(`/api/recharge/history${cidParam}`, { cache: 'no-store' });
-          const rechargesData = await rechargesRes.json();
-          const all: Recharge[] = rechargesData.recharges || [];
-          const paid = all.find((r) => r.status === 'paid');
-          const existingActive = all.find(
-            (r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date() && !r.plan_name.toUpperCase().startsWith('ALA CARTE')
-          );
-          if (paid) {
-            setJustPaidRecharge(paid);
-            setPaymentHasActivePlan(!!existingActive);
-            setPaymentActivePlanExpiry(existingActive?.expires_at ?? null);
-            setShowActivationScreen(true);
-          }
-        } else {
-          if (isFast) router.push('/');
-        }
+      } else if (match?.status === 'paid') {
+        const existingActive = all.find(
+          (r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at) > new Date() && !r.plan_name.toUpperCase().startsWith('ALA CARTE')
+        );
+        setJustPaidRecharge(match);
+        setPaymentHasActivePlan(!!existingActive);
+        setPaymentActivePlanExpiry(existingActive?.expires_at ?? null);
+        setShowActivationScreen(true);
       }
-    } catch {
-      if (isFast) router.push('/');
-    } finally {
+    } catch { /* ignore, dashboard will still load normally */ }
+    finally {
       window.history.replaceState({}, '', '/dashboard');
       setTimeout(() => fetchData(), 1000);
     }

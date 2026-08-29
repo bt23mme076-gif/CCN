@@ -48,9 +48,10 @@ export default function TermsPage() {
           <div>
             <h2 className="font-display text-lg font-bold text-brand-navy mb-2">3. Payments</h2>
             <p>
-              All online payments are processed securely through our payment gateway partner,
-              Cashfree Payments. We do not store your card, UPI, or net-banking credentials. Once
-              payment is confirmed, your recharge is queued for activation by our operations team.
+              Payments are collected directly via UPI to our verified business UPI ID. We do not
+              collect or store your card, UPI PIN, or net-banking credentials. After paying, you
+              submit your UPI transaction reference (UTR) for verification; once confirmed, your
+              recharge is queued for activation by our operations team.
             </p>
           </div>
 

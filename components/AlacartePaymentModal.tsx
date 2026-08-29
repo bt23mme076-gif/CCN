@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
-import { load } from '@cashfreepayments/cashfree-js';
+import UpiPaymentModal from '@/components/UpiPaymentModal';
 
 interface AlacartePaymentModalProps {
   isOpen: boolean;
@@ -23,21 +23,23 @@ export default function AlacartePaymentModal({
   channelCount,
   totalPrice,
   stbNumber,
-  customerName = '',
-  customerMobile = '',
   onSuccess,
 }: AlacartePaymentModalProps) {
   const [loading, setLoading] = useState(false);
+  const [upiOrder, setUpiOrder] = useState<{ orderId: string; upiLink: string; amount: number } | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<any>(null);
 
   if (!isOpen || selectedChannelIds.length === 0) return null;
+
+  const resetAndClose = () => {
+    setUpiOrder(null);
+    onClose();
+  };
 
   const handlePayment = async () => {
     try {
       setLoading(true);
 
-      // Create a-la-carte order
       const orderResponse = await fetch('/api/recharge/create-alacarte-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,127 +52,69 @@ export default function AlacartePaymentModal({
       }
 
       const orderData = await orderResponse.json();
-
-      // Initialize Cashfree SDK
-      const cashfree = await load({
-        mode: process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
-      });
-
-      // Create checkout options
-      const checkoutOptions = {
-        paymentSessionId: orderData.paymentSessionId,
-        returnUrl: `${window.location.origin}/dashboard?order_id=${orderData.orderId}`,
-      };
-
-      // Open Cashfree checkout
-      cashfree.checkout(checkoutOptions).then(async (result: any) => {
-        if (result.error) {
-          console.error('Payment error:', result.error);
-          alert('Payment failed. Please try again.');
-          setLoading(false);
-          return;
-        }
-
-        if (result.redirect) {
-          console.log('Payment will be redirected');
-        }
-
-        if (result.paymentDetails) {
-          // Verify payment
-          try {
-            const verifyResponse = await fetch('/api/recharge/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                orderId: orderData.orderId,
-              }),
-            });
-
-            const verifyData = await verifyResponse.json();
-
-            if (verifyData.success) {
-              setOrderDetails({
-                orderId: orderData.orderId,
-                planName: `A LA CARTE (${channelCount} Channels)`,
-                amount: totalPrice,
-              });
-              setShowSuccess(true);
-              onSuccess();
-            } else {
-              alert('Payment verification failed. Please contact support.');
-            }
-          } catch (error) {
-            console.error('Verification error:', error);
-            alert('Payment verification failed. Please contact support.');
-          } finally {
-            setLoading(false);
-          }
-        }
-      });
+      setUpiOrder({ orderId: orderData.orderId, upiLink: orderData.upiLink, amount: orderData.amount });
     } catch (error: any) {
       console.error('Payment error:', error);
       alert(error.message || 'Failed to initiate payment. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
 
-  if (showSuccess && orderDetails) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-          <div className="text-center">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <svg
-                className="w-7 h-7 sm:w-8 sm:h-8 text-success"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+  if (upiOrder) {
+    if (showSuccess) {
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-7 h-7 sm:w-8 sm:h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-2">Payment Submitted!</h2>
+              <p className="text-sm sm:text-base text-gray-600 mb-6">
+                We've received your payment details. Your a-la-carte subscription will be activated once verified.
+              </p>
+              <div className="bg-gray-1 rounded-lg p-3 sm:p-4 mb-6 text-left">
+                <div className="flex justify-between mb-2 text-sm sm:text-base">
+                  <span className="text-gray-600">Order ID:</span>
+                  <span className="font-medium text-xs sm:text-sm break-all ml-2">{upiOrder.orderId}</span>
+                </div>
+                <div className="flex justify-between mb-2 text-sm sm:text-base">
+                  <span className="text-gray-600">Channels:</span>
+                  <span className="font-medium">{channelCount} Channels</span>
+                </div>
+                <div className="flex justify-between text-sm sm:text-base">
+                  <span className="text-gray-600">Amount:</span>
+                  <span className="font-medium text-success">{formatCurrency(upiOrder.amount)}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const orderId = upiOrder.orderId;
+                  resetAndClose();
+                  onSuccess();
+                  window.location.href = `/dashboard?order_id=${orderId}`;
+                }}
+                className="btn-primary w-full text-sm sm:text-base"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
+                Go to Dashboard
+              </button>
             </div>
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-2">
-              Payment Successful!
-            </h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-              Your recharge will be activated shortly by our operator
-            </p>
-
-            <div className="bg-gray-1 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-left">
-              <div className="flex justify-between mb-2 text-sm sm:text-base">
-                <span className="text-gray-600">Order ID:</span>
-                <span className="font-medium text-xs sm:text-sm break-all ml-2">{orderDetails.orderId}</span>
-              </div>
-              <div className="flex justify-between mb-2 text-sm sm:text-base">
-                <span className="text-gray-600">Channels:</span>
-                <span className="font-medium">{orderDetails.planName}</span>
-              </div>
-              <div className="flex justify-between text-sm sm:text-base">
-                <span className="text-gray-600">Amount Paid:</span>
-                <span className="font-medium text-success">
-                  {formatCurrency(orderDetails.amount)}
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setShowSuccess(false);
-                onClose();
-                window.location.href = '/dashboard';
-              }}
-              className="btn-primary w-full text-sm sm:text-base"
-            >
-              Go to Dashboard
-            </button>
           </div>
         </div>
-      </div>
+      );
+    }
+
+    return (
+      <UpiPaymentModal
+        upiLink={upiOrder.upiLink}
+        amount={upiOrder.amount}
+        submitUtrUrl={`/api/recharge/${upiOrder.orderId}/submit-utr`}
+        onSubmitted={() => setShowSuccess(true)}
+        onCancel={resetAndClose}
+      />
     );
   }
 
@@ -230,7 +174,7 @@ export default function AlacartePaymentModal({
           disabled={loading}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
-          {loading ? 'Processing...' : 'Pay with Cashfree'}
+          {loading ? 'Processing...' : 'Pay via UPI'}
         </button>
       </div>
     </div>

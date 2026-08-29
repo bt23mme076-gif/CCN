@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plans, recharges, customers, channels as channelsTable, operators } from '@/lib/db/schema';
+import { plans, recharges, customers, channels as channelsTable } from '@/lib/db/schema';
 import { eq, inArray, and } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
-import { createCashfreeOrder } from '@/lib/payments/cashfreeOrder';
+import { buildUpiLink } from '@/lib/payments/upi';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,11 +110,6 @@ export async function POST(request: NextRequest) {
     // E.g., if total is 286 paise (2.86 Rs), we charge 300 paise (3.00 Rs)
     const roundedAmountPaise = Math.ceil(totalAmountPaise / 100) * 100;
 
-    // Resolve operator for split payments
-    const operator = customer[0].operator_id
-      ? await db.select().from(operators).where(eq(operators.id, customer[0].operator_id)).limit(1).then(r => r[0] ?? null)
-      : null;
-
     // Create a dynamic plan record scoped to this operator
     const dynamicPlanId = `plan_alacarte_${randomBytes(8).toString('hex')}`;
     await db.insert(plans).values({
@@ -130,21 +125,6 @@ export async function POST(request: NextRequest) {
 
     const rechargeId = generateOrderId();
 
-    let cfResult;
-    try {
-      cfResult = await createCashfreeOrder({
-        orderId: rechargeId,
-        amountPaise: roundedAmountPaise,
-        customerId: user.customerId,
-        customerPhone: customer[0].mobile,
-        customerName: customer[0].name,
-        returnUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?order_id=${rechargeId}`,
-        operator,
-      });
-    } catch (err) {
-      return NextResponse.json({ error: (err as Error).message }, { status: 503 });
-    }
-
     await db.insert(recharges).values({
       id: rechargeId,
       operator_id: customer[0].operator_id,
@@ -153,13 +133,13 @@ export async function POST(request: NextRequest) {
       plan_name: `ALA CARTE: ${selectedChannelNames.join(', ')}`,
       amount: roundedAmountPaise,
       status: 'pending',
-      cashfree_order_id: cfResult.cashfreeOrderId,
     });
+
+    const upiLink = buildUpiLink(roundedAmountPaise, `${customer[0].name} - A La Carte`);
 
     return NextResponse.json({
       orderId: rechargeId,
-      cashfreeOrderId: cfResult.cashfreeOrderId,
-      paymentSessionId: cfResult.paymentSessionId,
+      upiLink,
       amount: roundedAmountPaise,
       currency: 'INR',
       planName: 'ALA CARTE',

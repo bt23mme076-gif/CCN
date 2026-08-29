@@ -6,6 +6,7 @@ import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
 import { findCustomerByStbOrMobile } from '@/lib/guestLookup';
+import { buildUpiLink } from '@/lib/payments/upi';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,10 +69,6 @@ export async function POST(request: NextRequest) {
     );
     const displayPlanName = months > 1 ? `${plan[0].name} (${months} Months)` : plan[0].name;
 
-    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
-      return NextResponse.json({ error: 'Payment gateway not configured. Please contact administrator.' }, { status: 503 });
-    }
-
     // Clean up stale unpaid attempts for the same plan/connection
     await db
       .update(recharges)
@@ -87,51 +84,6 @@ export async function POST(request: NextRequest) {
 
     const rechargeId = generateOrderId();
 
-    const cashfreeApiUrl = process.env.CASHFREE_ENV === 'production'
-      ? 'https://api.cashfree.com/pg/orders'
-      : 'https://sandbox.cashfree.com/pg/orders';
-
-    const orderData = {
-      order_id: rechargeId,
-      order_amount: (finalPrice / 100).toFixed(2),
-      order_currency: 'INR',
-      customer_details: {
-        customer_id: match.customerId,
-        customer_phone: match.mobile,
-        customer_name: match.name,
-      },
-      order_meta: {
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/recharge-status?order_id=${rechargeId}`,
-      },
-    };
-
-    const cashfreeResponse = await fetch(cashfreeApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-client-id': process.env.CASHFREE_APP_ID,
-        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-        'x-api-version': '2023-08-01',
-      },
-      body: JSON.stringify(orderData),
-    });
-
-    const responseText = await cashfreeResponse.text();
-
-    if (!cashfreeResponse.ok) {
-      let errorData;
-      try { errorData = JSON.parse(responseText); } catch { errorData = { message: responseText }; }
-      console.error('Cashfree API error:', errorData);
-      return NextResponse.json({ error: `Payment gateway error: ${errorData.message || 'Unknown error'}` }, { status: 503 });
-    }
-
-    const cashfreeOrder = JSON.parse(responseText);
-
-    if (!cashfreeOrder.payment_session_id) {
-      console.error('Missing payment_session_id in Cashfree response:', cashfreeOrder);
-      return NextResponse.json({ error: 'Payment gateway error: Missing payment session ID' }, { status: 503 });
-    }
-
     await db.insert(recharges).values({
       id: rechargeId,
       customer_id: match.customerId,
@@ -141,13 +93,13 @@ export async function POST(request: NextRequest) {
       duration_days: months > 1 ? finalDurationDays : null,
       amount: finalPrice,
       status: 'pending',
-      cashfree_order_id: cashfreeOrder.order_id || rechargeId,
     });
+
+    const upiLink = buildUpiLink(finalPrice, `${match.name} - ${displayPlanName}`);
 
     return NextResponse.json({
       orderId: rechargeId,
-      cashfreeOrderId: cashfreeOrder.order_id,
-      paymentSessionId: cashfreeOrder.payment_session_id,
+      upiLink,
       amount: finalPrice,
       currency: 'INR',
     });

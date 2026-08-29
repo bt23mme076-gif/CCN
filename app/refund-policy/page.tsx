@@ -32,8 +32,8 @@ export default function RefundPolicyPage() {
             <p>
               If an amount was deducted from your bank account/UPI but your recharge was not
               activated or reflected on your dashboard, or if you were charged more than once for the
-              same recharge, please contact us immediately with your payment reference/order ID. We
-              will verify the transaction with our payment gateway partner, Cashfree Payments, and
+              same recharge, please contact us immediately with your UPI transaction reference
+              (UTR) and order ID. We will verify the transaction against our bank statement and
               refund any confirmed duplicate or failed-but-deducted amount to your original payment
               method.
             </p>

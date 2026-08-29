@@ -7,7 +7,7 @@ import StatusBadge from '@/components/StatusBadge';
 
 interface Stats { pendingCount: number; todayRevenue: number; monthRevenue: number; totalRevenue: number; totalCustomers: number; }
 interface PendingRecharge {
-  recharge: { id: string; plan_name: string; amount: number; status: string; paid_at: string | null; created_at: string; cashfree_order_id: string | null; upi_reference: string | null; };
+  recharge: { id: string; plan_name: string; amount: number; status: string; paid_at: string | null; created_at: string; upi_reference: string | null; };
   customer: { name: string; mobile: string; stb_number: string; area: string; };
 }
 

@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 
-type Phase = 'verifying' | 'waiting' | 'activated' | 'failed';
+type Phase = 'waiting' | 'activated' | 'failed';
 
 const REDIRECT_SECONDS = 5;
 
@@ -14,42 +14,10 @@ function RechargeStatusInner() {
   const router = useRouter();
   const orderId = searchParams.get('order_id');
 
-  const [phase, setPhase] = useState<Phase>('verifying');
+  const [phase, setPhase] = useState<Phase>(orderId ? 'waiting' : 'failed');
   const [order, setOrder] = useState<{ plan_name: string; amount: number; expires_at: string | null } | null>(null);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [cancelled, setCancelled] = useState(false);
+  const [errorMsg] = useState(orderId ? '' : 'No order found.');
   const [redirectIn, setRedirectIn] = useState(REDIRECT_SECONDS);
-
-  useEffect(() => {
-    if (!orderId) {
-      setPhase('failed');
-      setErrorMsg('No order found.');
-      return;
-    }
-
-    const verify = async () => {
-      try {
-        const res = await fetch('/api/guest/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          setPhase('failed');
-          setCancelled(!!data.cancelled);
-          setErrorMsg(data.cancelled ? 'Payment was cancelled.' : (data.error || 'Payment could not be verified.'));
-          return;
-        }
-        setPhase('waiting');
-      } catch {
-        setPhase('failed');
-        setErrorMsg('Unable to verify payment. Please contact support if amount was deducted.');
-      }
-    };
-
-    verify();
-  }, [orderId]);
 
   useEffect(() => {
     if (phase !== 'waiting' || !orderId) return;
@@ -88,14 +56,6 @@ function RechargeStatusInner() {
       style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' }}>
       <div className="w-full max-w-sm flex flex-col items-center gap-6 text-center">
 
-        {phase === 'verifying' && (
-          <>
-            <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-            <h1 className="text-2xl font-bold text-white">Verifying Payment...</h1>
-            <p className="text-blue-200 text-sm">Please wait, this will only take a moment.</p>
-          </>
-        )}
-
         {phase === 'waiting' && (
           <>
             <div className="w-16 h-16 border-4 border-white/20 border-t-yellow-400 rounded-full animate-spin" />
@@ -133,7 +93,7 @@ function RechargeStatusInner() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-white">{cancelled ? 'Payment Cancelled' : 'Something Went Wrong'}</h1>
+            <h1 className="text-2xl font-bold text-white">Something Went Wrong</h1>
             <p className="text-red-200 text-sm">{errorMsg}</p>
             <p className="text-gray-400 text-xs">Redirecting to home in {redirectIn}s...</p>
             <Link href="/" className="text-blue-300 text-sm underline">Go now</Link>
