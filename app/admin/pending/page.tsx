@@ -7,7 +7,7 @@ import StatusBadge from '@/components/StatusBadge';
 
 interface Stats { pendingCount: number; todayRevenue: number; monthRevenue: number; totalRevenue: number; totalCustomers: number; }
 interface PendingRecharge {
-  recharge: { id: string; plan_name: string; amount: number; status: string; paid_at: string | null; created_at: string; upi_reference: string | null; };
+  recharge: { id: string; plan_name: string; amount: number; status: string; paid_at: string | null; created_at: string; upi_reference: string | null; due_amount_paise: number | null; };
   customer: { name: string; mobile: string; stb_number: string; area: string; };
 }
 
@@ -356,6 +356,11 @@ export default function PendingActivationsPage() {
                     {recharge.upi_reference && (
                       <p className="text-xs mt-1" style={{ color: '#34d399' }}>
                         UPI UTR: {recharge.upi_reference}
+                      </p>
+                    )}
+                    {!!recharge.due_amount_paise && recharge.due_amount_paise > 0 && (
+                      <p className="text-xs mt-1" style={{ color: '#fbbf24' }}>
+                        Includes due: {formatCurrency(recharge.due_amount_paise)}
                       </p>
                     )}
                   </div>

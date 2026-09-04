@@ -5,6 +5,7 @@ import { recharges, customers } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { sendPushToAdmin } from '@/lib/push';
+import { clearDue } from '@/lib/payments/clearDue';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,8 @@ export async function POST(
       .update(recharges)
       .set({ status: 'paid', upi_reference: utr, paid_at: new Date() })
       .where(eq(recharges.id, id));
+
+    await clearDue(user.customerId, recharge[0].due_amount_paise);
 
     const customer = await db.select().from(customers).where(eq(customers.id, user.customerId)).limit(1);
     if (customer.length > 0) {

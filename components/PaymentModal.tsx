@@ -20,6 +20,7 @@ interface PaymentModalProps {
   customerName?: string;
   customerMobile?: string;
   connectionId?: string;
+  dueAmount?: number; // customer's current outstanding due, in rupees — bundled into this same payment if present
 }
 
 export default function PaymentModal({
@@ -30,6 +31,7 @@ export default function PaymentModal({
   discounts = {},
   stbNumber,
   connectionId,
+  dueAmount = 0,
 }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
   const [upiOrder, setUpiOrder] = useState<{ orderId: string; upiLink: string; amount: number } | null>(null);
@@ -171,10 +173,25 @@ export default function PaymentModal({
             <span className="text-gray-600">STB Number:</span>
             <span className="font-medium break-all">{stbNumber}</span>
           </div>
-          <div className="flex justify-between text-base sm:text-lg font-bold pt-3 sm:pt-4 border-t">
+          {dueAmount > 0 && (
+            <>
+              <div className="flex justify-between text-sm sm:text-base pt-3 sm:pt-4 border-t">
+                <span className="text-gray-600">Plan Amount:</span>
+                <span className="font-medium">{formatCurrency(displayPrice)}</span>
+              </div>
+              <div className="flex justify-between text-sm sm:text-base">
+                <span className="text-gray-600">Outstanding Due:</span>
+                <span className="font-medium text-accent-red">{formatCurrency(dueAmount * 100)}</span>
+              </div>
+            </>
+          )}
+          <div className={`flex justify-between text-base sm:text-lg font-bold pt-3 sm:pt-4 ${dueAmount > 0 ? '' : 'border-t'}`}>
             <span>Total Amount:</span>
-            <span className="text-accent-red">{formatCurrency(displayPrice)}</span>
+            <span className="text-accent-red">{formatCurrency(displayPrice + dueAmount * 100)}</span>
           </div>
+          {dueAmount > 0 && (
+            <p className="text-xs text-gray-500 -mt-2">Due amount is included in this payment — dono ek hi transaction mein clear ho jayenge.</p>
+          )}
         </div>
 
         <button

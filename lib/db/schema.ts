@@ -74,6 +74,7 @@ export const recharges = pgTable('recharges', {
   plan_name: text('plan_name').notNull(),
   duration_days: integer('duration_days'), // overrides plan's default duration when a multi-month recharge was bought
   amount: integer('amount').notNull(), // in paise
+  due_amount_paise: integer('due_amount_paise').default(0), // portion of `amount` that was the customer's pre-existing due, combined into this same payment
   status: text('status').notNull(), // 'pending' | 'paid' | 'activated' | 'failed'
   cashfree_order_id: text('cashfree_order_id'),
   cashfree_payment_id: text('cashfree_payment_id'),

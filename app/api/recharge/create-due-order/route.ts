@@ -39,6 +39,7 @@ export async function POST(_request: NextRequest) {
       plan_id: null,
       plan_name: 'Due Payment',
       amount: amountInPaise,
+      due_amount_paise: amountInPaise,
       status: 'pending',
     });
 

@@ -83,12 +83,10 @@ export async function POST(request: NextRequest) {
     );
     const displayPlanName = months > 1 ? `${plan[0].name} (${months} Months)` : plan[0].name;
 
-    if (customer[0].outstanding_balance > 0) {
-      return NextResponse.json(
-        { error: `Recharge blocked. Please clear your outstanding due of ₹${customer[0].outstanding_balance} first.` },
-        { status: 403 }
-      );
-    }
+    // Bundle any pre-existing due into this same payment instead of forcing
+    // a separate transaction — customer pays plan + due together in one go.
+    const dueAmountPaise = customer[0].outstanding_balance > 0 ? customer[0].outstanding_balance * 100 : 0;
+    const totalAmount = finalPrice + dueAmountPaise;
 
     // Clean up stale unpaid attempts for the same plan/connection.
     await db
@@ -113,16 +111,19 @@ export async function POST(request: NextRequest) {
       plan_id: plan[0].id,
       plan_name: displayPlanName,
       duration_days: months > 1 ? finalDurationDays : null,
-      amount: finalPrice,
+      amount: totalAmount,
+      due_amount_paise: dueAmountPaise,
       status: 'pending',
     });
 
-    const upiLink = buildUpiLink(finalPrice, `${customer[0].name} - ${displayPlanName}`);
+    const upiLink = buildUpiLink(totalAmount, `${customer[0].name} - ${displayPlanName}`);
 
     return NextResponse.json({
       orderId: rechargeId,
       upiLink,
-      amount: finalPrice,
+      amount: totalAmount,
+      planAmount: finalPrice,
+      dueAmount: dueAmountPaise,
       currency: 'INR',
     });
   } catch (error) {

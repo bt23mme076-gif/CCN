@@ -280,83 +280,6 @@ export default function BuyHistoryPage() {
     );
   }
 
-  if (customer && customer.outstanding_balance > 0) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <nav className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
-          <div className="w-full px-4 sm:px-6">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-                <div className="relative">
-                  <div className="absolute inset-0 rounded-lg blur-sm opacity-60 group-hover:opacity-90 transition-opacity" style={{ background: 'linear-gradient(135deg, #e94560, #f5a623)' }} />
-                  <Image src="/logo.jpg" alt="CCN Cable" width={40} height={40} className="relative h-10 w-10 rounded-lg object-cover border border-white/20" />
-                </div>
-                <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">Chandni Cable Network</span>
-              </Link>
-              <div className="relative">
-                <button onClick={() => setShowNavMenu((p) => !p)}
-                  className="flex flex-col gap-1.5 justify-center items-center w-9 h-9 rounded-lg transition-colors hover:bg-white/10"
-                  style={{ border: '1px solid rgba(255,255,255,0.2)' }}>
-                  <span className="block w-4 h-0.5 bg-white rounded-full" />
-                  <span className="block w-4 h-0.5 bg-white rounded-full" />
-                  <span className="block w-4 h-0.5 bg-white rounded-full" />
-                </button>
-                {showNavMenu && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowNavMenu(false)} />
-                    <div className="absolute right-0 top-11 z-50 w-52 rounded-xl shadow-2xl py-1 overflow-hidden" style={{ background: '#1a1740', border: '1px solid rgba(255,255,255,0.12)' }}>
-                      <Link href="/" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>🏠</span> Home</Link>
-                      <Link href="/dashboard" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>📊</span> Dashboard</Link>
-                      <Link href="/dashboard/buy" onClick={() => setShowNavMenu(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"><span>💳</span> Buy & History</Link>
-                      <button onClick={() => { setShowNavMenu(false); setRetrackDone(false); setRetrackStb(customer?.stb_number || ''); setRetrackEdited(false); setShowRetrackPopup(true); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors w-full text-left"><span>📺</span> Request Retrack</button>
-                      {connections.length > 1 && (
-                        <>
-                          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
-                          <div className="px-4 py-1.5">
-                            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#7c6fa0' }}>My Connections</p>
-                          </div>
-                          {connections.map((conn) => (
-                            <button key={conn.id} onClick={() => switchConnection(conn.id)}
-                              className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-white/10 transition-colors"
-                              style={{ color: activeConnectionId === conn.id ? '#fff' : '#93c5fd' }}>
-                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conn.isActive ? 'bg-green-400' : 'bg-red-400'}`} />
-                              <span className="flex-1 truncate">{conn.stb_number} · {conn.label || conn.stb_number}</span>
-                              {activeConnectionId === conn.id && <span className="text-green-400 text-xs">✓</span>}
-                            </button>
-                          ))}
-                        </>
-                      )}
-                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }} className="my-1" />
-                      <button onClick={() => { setShowNavMenu(false); handleLogout(); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-white hover:bg-red-500/20 transition-colors w-full text-left"><span>🚪</span> Logout</button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </nav>
-        <div className="flex-1 flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md text-center">
-            <div className="text-6xl mb-4">🔒</div>
-            <h2 className="font-display text-2xl font-bold text-brand-navy mb-2">Recharge Blocked</h2>
-            <p className="text-gray-600 mb-6 text-sm">
-              You have an outstanding due on your account. Please clear your dues to continue recharging.
-            </p>
-            <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-6 mb-6">
-              <p className="text-sm text-red-600 font-medium mb-1">Outstanding Due</p>
-              <p className="text-4xl font-black text-red-600">₹{customer.outstanding_balance}</p>
-              <p className="text-xs text-red-400 mt-1">Pay this amount to your cable operator to unlock recharge</p>
-            </div>
-            <p className="text-sm text-gray-500">
-              Contact <span className="font-semibold text-brand-navy">Chandni Cable Network</span> to pay your dues and unlock your account.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -434,6 +357,25 @@ export default function BuyHistoryPage() {
             Purchase new plans or view your complete recharge history
           </p>
         </div>
+
+        {/* Outstanding Due Notice — no longer blocks recharge; due gets added to the next plan payment automatically */}
+        {customer && customer.outstanding_balance > 0 && (
+          <div className="card bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-red-900 mb-1">Outstanding Due: ₹{customer.outstanding_balance}</h3>
+                <p className="text-sm text-red-800">
+                  Yeh amount aapke next plan ke payment mein automatically add ho jayega — ek hi transaction mein due + recharge dono clear ho jayenge.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Next Expiry Alert */}
         {nextExpiringPlan && (
@@ -869,6 +811,7 @@ export default function BuyHistoryPage() {
         stbNumber={customer?.stb_number || ''}
         customerName={customer?.name || ''}
         customerMobile={customer?.mobile || ''}
+        dueAmount={customer?.outstanding_balance || 0}
       />
 
       <AccessoryPaymentModal
