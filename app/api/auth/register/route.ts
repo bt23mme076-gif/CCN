@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { signToken, setAuthCookie } from '@/lib/auth';
+import { getCurrentOperator } from '@/lib/db/tenant';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -39,10 +40,13 @@ export async function POST(request: NextRequest) {
     // Hash PIN
     const pinHash = await bcrypt.hash(validatedData.pin, 10);
 
+    const operator = await getCurrentOperator();
+
     // Create customer
     const customerId = `cust_${randomBytes(8).toString('hex')}`;
     await db.insert(customers).values({
       id: customerId,
+      operator_id: operator?.id ?? null,
       name: validatedData.name,
       mobile: validatedData.mobile,
       stb_number: validatedData.stb_number,

@@ -14,6 +14,7 @@
     "add-royal-hd": "tsx add-royal-hd.ts",
     "add-upi-reference-column": "tsx add-upi-reference-column.ts",
     "add-due-amount-paise-column": "tsx add-due-amount-paise-column.ts",
+    "backfill-orphan-customer-operator": "tsx backfill-orphan-customer-operator.ts",
     "add-accessory-upi-reference-column": "tsx add-accessory-upi-reference-column.ts",
     "add-test-plan": "tsx add-test-plan.ts",
     "hide-test-plan": "tsx hide-test-plan.ts",
