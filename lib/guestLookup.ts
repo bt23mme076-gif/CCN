@@ -9,6 +9,7 @@ export interface GuestCustomerMatch {
   area: string;
   mobile: string;
   outstanding_balance: number;
+  operator_id: string | null;
 }
 
 export async function findCustomerByStb(stbNumber: string): Promise<GuestCustomerMatch | null> {
@@ -25,6 +26,7 @@ export async function findCustomerByStb(stbNumber: string): Promise<GuestCustome
       area: c.area,
       mobile: c.mobile,
       outstanding_balance: c.outstanding_balance,
+      operator_id: c.operator_id,
     };
   }
 
@@ -39,6 +41,7 @@ export async function findCustomerByStb(stbNumber: string): Promise<GuestCustome
       area: conn[0].area,
       mobile: cust[0].mobile,
       outstanding_balance: cust[0].outstanding_balance,
+      operator_id: cust[0].operator_id,
     };
   }
 
@@ -60,6 +63,7 @@ export async function findCustomerByMobile(mobile: string): Promise<GuestCustome
     area: c.area,
     mobile: c.mobile,
     outstanding_balance: c.outstanding_balance,
+    operator_id: c.operator_id,
   };
 }
 

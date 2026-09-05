@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
 
     await db.insert(recharges).values({
       id: rechargeId,
+      operator_id: match.operator_id,
       customer_id: match.customerId,
       connection_id: match.connectionId,
       plan_id: plan[0].id,
