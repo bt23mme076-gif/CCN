@@ -14,3 +14,22 @@ export function buildUpiLink(amountInPaise: number, note: string): string {
   });
   return `upi://pay?${params.toString()}`;
 }
+
+// App-specific UPI intent schemes. Tapping these opens the app straight to a
+// prefilled payment screen (payee, amount and note) — the user only enters
+// their UPI PIN. Android honours all of them; on iOS only Google Pay and
+// PhonePe register their scheme, and bare `upi://` does nothing.
+export const UPI_APP_SCHEMES = {
+  gpay: 'tez://upi/pay',
+  phonepe: 'phonepe://pay',
+  paytm: 'paytmmp://pay',
+  any: 'upi://pay',
+} as const;
+
+export type UpiApp = keyof typeof UPI_APP_SCHEMES;
+
+/** Rewrites a `upi://pay?...` link to open a specific UPI app. */
+export function toUpiAppLink(upiLink: string, app: UpiApp): string {
+  const query = upiLink.split('?')[1] ?? '';
+  return `${UPI_APP_SCHEMES[app]}?${query}`;
+}

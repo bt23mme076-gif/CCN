@@ -33,7 +33,12 @@ export function middleware(request: NextRequest) {
 
   // Admin APIs throw on missing auth, which their catch blocks turn into a 500.
   // Reject cookie-less requests here so logged-out callers get a 401 instead.
-  if (pathname.startsWith('/api/admin/') && !request.cookies.get('auth_token')?.value) {
+  // (login itself must be allowed through — it's how the cookie gets set)
+  if (
+    pathname.startsWith('/api/admin/') &&
+    pathname !== '/api/admin/login' &&
+    !request.cookies.get('auth_token')?.value
+  ) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
