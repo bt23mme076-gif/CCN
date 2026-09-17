@@ -66,6 +66,11 @@ export default function UpiPaymentModal({
           {formatCurrency(amount)}
         </p>
 
+        <div className="flex items-start gap-2 mb-2">
+          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-brand-navy text-white text-xs font-bold flex items-center justify-center mt-0.5">1</span>
+          <p className="text-sm font-medium text-brand-navy">Neeche diye QR code ko apne UPI app (GPay/PhonePe/Paytm) se scan karke payment karein</p>
+        </div>
+
         <div className="flex justify-center mb-4">
           {qrDataUrl ? (
             <img src={qrDataUrl} alt="UPI QR Code" className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg border" />
@@ -80,15 +85,16 @@ export default function UpiPaymentModal({
           <a
             href={qrDataUrl}
             download="upi-qr-code.png"
-            className="btn-primary w-full text-center block mb-4 text-sm sm:text-base"
+            className="w-full text-center block mb-4 text-xs sm:text-sm text-brand-navy underline"
           >
             Download QR Code
           </a>
         )}
 
-        <p className="text-xs sm:text-sm text-gray-500 text-center mb-4">
-          Scan the QR code using your UPI app and confirm the payment.
-        </p>
+        <div className="flex items-start gap-2 mb-4 pt-3 border-t">
+          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-brand-navy text-white text-xs font-bold flex items-center justify-center mt-0.5">2</span>
+          <p className="text-sm font-medium text-brand-navy">Payment complete hone ke baad, yahan wapas aakar neeche "Confirm Payment" button dabayein</p>
+        </div>
 
         {error && <p className="text-sm text-accent-red text-center mb-3">{error}</p>}
 
@@ -99,6 +105,10 @@ export default function UpiPaymentModal({
         >
           {submitting ? 'Submitting...' : 'Confirm Payment'}
         </button>
+
+        <p className="text-xs text-gray-400 text-center mt-3">
+          Sirf payment karne ke baad hi "Confirm Payment" dabayein — recharge admin verify karne ke baad activate hoga.
+        </p>
       </div>
     </div>
   );
