@@ -8,7 +8,7 @@ export async function GET() {
     const op = await getCurrentOperator();
     if (!op) {
       return NextResponse.json({
-        name: 'CCN Networks',
+        name: 'Chandni Cable Network',
         logo_url: null,
         primary_color: '#6366f1',
         tagline: null,
@@ -24,6 +24,6 @@ export async function GET() {
       support_phone: op.support_phone,
     });
   } catch {
-    return NextResponse.json({ name: 'CCN Networks', logo_url: null, primary_color: '#6366f1', tagline: null, support_phone: null });
+    return NextResponse.json({ name: 'Chandni Cable Network', logo_url: null, primary_color: '#6366f1', tagline: null, support_phone: null });
   }
 }

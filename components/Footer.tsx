@@ -1,6 +1,10 @@
+'use client';
+
 import Link from 'next/link';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 export default function Footer() {
+  const branding = useOperatorBranding();
   return (
     <footer className="bg-brand-navy text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -8,7 +12,7 @@ export default function Footer() {
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
             <h3 className="font-display text-xl sm:text-2xl font-bold mb-4">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-accent-cyan to-white">Chandni Cable Network</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-accent-cyan to-white">{branding.name}</span>
             </h3>
             <p className="text-gray-300 text-sm mb-4 max-w-md">
               Your trusted cable TV service provider. Recharge online with instant activation and enjoy uninterrupted entertainment.
@@ -107,7 +111,7 @@ export default function Footer() {
         <div className="pt-8 border-t border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} Chandni Cable Network. All rights reserved.
+              © {new Date().getFullYear()} {branding.name}. All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link

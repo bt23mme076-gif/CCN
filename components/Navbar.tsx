@@ -6,9 +6,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import BulletinBar from './BulletinBar';
 import { useTranslation } from '@/lib/useTranslation';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const branding = useOperatorBranding();
   const router = useRouter();
   const isAuthPage = pathname === '/login' || pathname === '/register';
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -132,16 +134,16 @@ export default function Navbar() {
                   style={{ background: 'linear-gradient(135deg, #e94560, #f5a623)' }}
                 />
                 <Image
-                  src="/logo.jpg"
-                  alt="CCN Cable"
+                  src={branding.logo_url || '/logo.jpg'}
+                  alt={branding.name}
                   width={40}
                   height={40}
                   className="relative h-10 w-10 rounded-lg object-cover border border-white/20"
                 />
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="font-display text-sm sm:text-base font-extrabold tracking-wide text-white">
-                  CHANDNI CABLE NETWORK
+                <span className="font-display text-sm sm:text-base font-extrabold tracking-wide text-white uppercase">
+                  {branding.name}
                 </span>
               </div>
             </Link>

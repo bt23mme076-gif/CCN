@@ -11,6 +11,7 @@ import AccessoryCard from '@/components/AccessoryCard';
 import StatusBadge from '@/components/StatusBadge';
 import { formatCurrency, formatDateTime, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 interface Plan {
   id: string;
@@ -108,6 +109,7 @@ function formatFriendlyDate(date: Date) {
 export default function BuyHistoryPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const branding = useOperatorBranding();
   const [activeTab, setActiveTab] = useState<'buy' | 'accessories' | 'history'>('history');
   const [historyType, setHistoryType] = useState<'recharges' | 'accessories'>('recharges');
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -241,9 +243,9 @@ export default function BuyHistoryPage() {
     try {
       const res = await fetch(receiptUrl);
       const blob = await res.blob();
-      const file = new File([blob], `CCN-Receipt-${recharge.id.slice(0, 8)}.html`, { type: 'text/html' });
+      const file = new File([blob], `${recharge.id.slice(0, 8)}-Receipt.html`, { type: 'text/html' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ title: 'Chandni Cable Network Receipt', files: [file] });
+        await navigator.share({ title: `${branding.name} Receipt`, files: [file] });
         return;
       }
     } catch { /* fall through */ }
@@ -290,9 +292,9 @@ export default function BuyHistoryPage() {
             <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
               <div className="relative">
                 <div className="absolute inset-0 rounded-lg blur-sm opacity-60 group-hover:opacity-90 transition-opacity" style={{ background: 'linear-gradient(135deg, #e94560, #f5a623)' }} />
-                <Image src="/logo.jpg" alt="CCN Cable" width={40} height={40} className="relative h-10 w-10 rounded-lg object-cover border border-white/20" />
+                <Image src={branding.logo_url || '/logo.jpg'} alt={branding.name} width={40} height={40} className="relative h-10 w-10 rounded-lg object-cover border border-white/20" />
               </div>
-              <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white">Chandni Cable Network</span>
+              <span className="font-display text-lg sm:text-xl font-extrabold tracking-wide text-white uppercase">{branding.name}</span>
             </Link>
             <div className="flex items-center gap-3">
               <span className="text-sm hidden sm:flex items-center gap-1.5" style={{ color: '#93c5fd' }}>
