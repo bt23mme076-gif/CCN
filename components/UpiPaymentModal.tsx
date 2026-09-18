@@ -19,7 +19,7 @@ export default function UpiPaymentModal({
   submitUtrUrl,
   onSubmitted,
   onCancel,
-  title = 'Pay via UPI',
+  title = 'Pay via Scan & Confirm',
 }: UpiPaymentModalProps) {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -62,18 +62,15 @@ export default function UpiPaymentModal({
           </button>
         </div>
 
-        <p className="text-center font-bold text-xl sm:text-2xl text-accent-red mb-4">
-          {formatCurrency(amount)}
+        <p className="text-center font-bold text-lg sm:text-xl text-brand-navy mb-4">
+          Amount: {formatCurrency(amount)}
         </p>
-
-        <div className="flex items-start gap-2 mb-2">
-          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-brand-navy text-white text-xs font-bold flex items-center justify-center mt-0.5">1</span>
-          <p className="text-sm font-medium text-brand-navy">Neeche diye QR code ko apne UPI app (GPay/PhonePe/Paytm) se scan karke payment karein</p>
-        </div>
 
         <div className="flex justify-center mb-4">
           {qrDataUrl ? (
-            <img src={qrDataUrl} alt="UPI QR Code" className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg border" />
+            <div className="p-3 bg-white rounded-2xl shadow-md border">
+              <img src={qrDataUrl} alt="UPI QR Code" className="w-48 h-48 sm:w-56 sm:h-56" />
+            </div>
           ) : (
             <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg border flex items-center justify-center text-gray-400 text-sm">
               Loading QR…
@@ -85,16 +82,22 @@ export default function UpiPaymentModal({
           <a
             href={qrDataUrl}
             download="upi-qr-code.png"
-            className="w-full text-center block mb-4 text-xs sm:text-sm text-brand-navy underline"
+            className="btn-secondary w-full text-center block mb-4 text-sm sm:text-base"
           >
             Download QR Code
           </a>
         )}
 
-        <div className="flex items-start gap-2 mb-4 pt-3 border-t">
-          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-brand-navy text-white text-xs font-bold flex items-center justify-center mt-0.5">2</span>
-          <p className="text-sm font-medium text-brand-navy">Payment complete hone ke baad, yahan wapas aakar neeche "Confirm Payment" button dabayein</p>
+        <div className="text-sm text-gray-700 space-y-1.5 mb-4">
+          <p><span className="font-bold text-brand-navy">Step 1:</span> Open any UPI app on your phone.</p>
+          <p><span className="font-bold text-brand-navy">Step 2:</span> Scan this QR code to initiate payment of {formatCurrency(amount)}.</p>
+          <p><span className="font-bold text-brand-navy">Step 3:</span> Complete the payment in your UPI app.</p>
+          <p><span className="font-bold text-brand-navy">Step 4:</span> Return here and tap &apos;Confirm Payment&apos; to verify and finalize your plan activation.</p>
         </div>
+
+        <p className="text-sm text-gray-700 mb-4">
+          <span className="font-bold text-brand-navy">Important:</span> Ensure your UPI app transaction is successful before confirming here.
+        </p>
 
         {error && <p className="text-sm text-accent-red text-center mb-3">{error}</p>}
 
@@ -105,10 +108,6 @@ export default function UpiPaymentModal({
         >
           {submitting ? 'Submitting...' : 'Confirm Payment'}
         </button>
-
-        <p className="text-xs text-gray-400 text-center mt-3">
-          Sirf payment karne ke baad hi "Confirm Payment" dabayein — recharge admin verify karne ke baad activate hoga.
-        </p>
       </div>
     </div>
   );
