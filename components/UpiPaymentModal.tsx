@@ -24,10 +24,23 @@ export default function UpiPaymentModal({
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const upiId = new URLSearchParams(upiLink.split('?')[1] ?? '').get('pa') ?? '';
 
   useEffect(() => {
     QRCode.toDataURL(upiLink, { width: 240, margin: 1 }).then(setQrDataUrl).catch(() => {});
   }, [upiLink]);
+
+  const handleCopyUpiId = async () => {
+    try {
+      await navigator.clipboard.writeText(upiId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable — nothing we can do silently.
+    }
+  };
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -78,11 +91,27 @@ export default function UpiPaymentModal({
           )}
         </div>
 
+        {upiId && (
+          <div className="flex items-center justify-between gap-2 mb-3 px-3 py-2.5 rounded-lg border bg-gray-50">
+            <div className="min-w-0">
+              <p className="text-xs text-gray-500">UPI ID</p>
+              <p className="text-sm font-medium text-brand-navy truncate">{upiId}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopyUpiId}
+              className="flex-shrink-0 text-xs sm:text-sm font-medium text-brand-navy border border-brand-navy rounded-lg px-3 py-1.5 hover:bg-brand-navy hover:text-white transition-colors"
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        )}
+
         {qrDataUrl && (
           <a
             href={qrDataUrl}
             download="upi-qr-code.png"
-            className="btn-secondary w-full text-center block mb-4 text-sm sm:text-base"
+            className="btn-outline w-full text-center block mb-4 text-sm sm:text-base"
           >
             Download QR Code
           </a>
