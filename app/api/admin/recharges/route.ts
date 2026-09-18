@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
-import { eq, desc, or, ilike, inArray, and } from 'drizzle-orm';
+import { eq, desc, or, ilike, inArray, and, isNull } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,19 +22,20 @@ export async function GET(request: NextRequest) {
       })
       .from(recharges)
       .leftJoin(customers, eq(recharges.customer_id, customers.id))
-      .where(eq(recharges.operator_id, admin.operatorId))
+      .where(and(eq(recharges.operator_id, admin.operatorId), isNull(recharges.deleted_at)))
       .orderBy(desc(recharges.created_at))
       .$dynamic();
 
     if (status) {
       const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
-      query = query.where(and(eq(recharges.operator_id, admin.operatorId), statuses.length === 1 ? eq(recharges.status, statuses[0]) : inArray(recharges.status, statuses)));
+      query = query.where(and(eq(recharges.operator_id, admin.operatorId), isNull(recharges.deleted_at), statuses.length === 1 ? eq(recharges.status, statuses[0]) : inArray(recharges.status, statuses)));
     }
 
     if (search) {
       query = query.where(
         and(
           eq(recharges.operator_id, admin.operatorId),
+          isNull(recharges.deleted_at),
           or(
             ilike(customers.name, `%${search}%`),
             ilike(customers.mobile, `%${search}%`)

@@ -14,10 +14,10 @@ export async function GET(request: NextRequest) {
     let condition;
     if (!cid || cid === 'primary') {
       // Primary STB: recharges where connection_id is null
-      condition = and(eq(recharges.customer_id, user.customerId), isNull(recharges.connection_id));
+      condition = and(eq(recharges.customer_id, user.customerId), isNull(recharges.connection_id), isNull(recharges.deleted_at));
     } else {
       // Additional connection: recharges for that connection_id
-      condition = and(eq(recharges.customer_id, user.customerId), eq(recharges.connection_id, cid));
+      condition = and(eq(recharges.customer_id, user.customerId), eq(recharges.connection_id, cid), isNull(recharges.deleted_at));
     }
 
     const customerRecharges = await db

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { recharges, plans } from '@/lib/db/schema';
+import { recharges } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
@@ -28,19 +28,9 @@ export async function DELETE(
       );
     }
 
-    const rechargeData = recharge[0];
-
-    // All statuses can be deleted by admin
-
-    const planId = rechargeData.plan_id;
-
-    // 4. Delete the recharge record
-    await db.delete(recharges).where(eq(recharges.id, rechargeId));
-
-    // 5. Clean up the dynamic ala carte plan if applicable
-    if (planId && planId.startsWith('plan_alacarte_')) {
-      await db.delete(plans).where(eq(plans.id, planId));
-    }
+    // Soft delete — recoverable by a super admin until they choose to purge
+    // it permanently. Plans are left alone; nothing else to clean up.
+    await db.update(recharges).set({ deleted_at: new Date() }).where(eq(recharges.id, rechargeId));
 
     return NextResponse.json({ success: true, message: 'Recharge attempt deleted successfully' });
   } catch (error) {

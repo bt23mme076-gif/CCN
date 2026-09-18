@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { customers, recharges } from '@/lib/db/schema';
-import { eq, desc, or, ilike, sql, and } from 'drizzle-orm';
+import { eq, desc, or, ilike, sql, and, isNull } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       })
       .from(customers)
       .leftJoin(recharges, eq(customers.id, recharges.customer_id))
-      .where(eq(customers.operator_id, admin.operatorId))
+      .where(and(eq(customers.operator_id, admin.operatorId), isNull(customers.deleted_at)))
       .groupBy(customers.id)
       .orderBy(desc(customers.created_at))
       .$dynamic();
@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
       query = query.where(
         and(
           eq(customers.operator_id, admin.operatorId),
+          isNull(customers.deleted_at),
           or(
             ilike(customers.name, `%${search}%`),
             ilike(customers.mobile, `%${search}%`),

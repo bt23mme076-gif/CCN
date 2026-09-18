@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { customers } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { signToken, setAuthCookie } from '@/lib/auth';
 import { z } from 'zod';
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const customer = await db
       .select()
       .from(customers)
-      .where(eq(customers.mobile, validatedData.mobile))
+      .where(and(eq(customers.mobile, validatedData.mobile), isNull(customers.deleted_at)))
       .limit(1);
 
     if (customer.length === 0) {

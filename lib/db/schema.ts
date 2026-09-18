@@ -38,6 +38,7 @@ export const customers = pgTable('customers', {
   fast_recharge_enabled: boolean('fast_recharge_enabled').default(false).notNull(),
   fast_recharge_amount: integer('fast_recharge_amount').default(0).notNull(), // in paise
   created_at: timestamp('created_at').defaultNow().notNull(),
+  deleted_at: timestamp('deleted_at'), // soft-delete: set by admin "delete", cleared/purged only by super admin
 });
 
 export const plans = pgTable('plans', {
@@ -85,6 +86,7 @@ export const recharges = pgTable('recharges', {
   activated_by: text('activated_by'),
   expires_at: timestamp('expires_at'),
   created_at: timestamp('created_at').defaultNow().notNull(),
+  deleted_at: timestamp('deleted_at'), // soft-delete: set by admin "delete", cleared/purged only by super admin
 }, (table) => ({
   customerIdx: index('recharges_customer_id_idx').on(table.customer_id),
   statusIdx: index('recharges_status_idx').on(table.status),

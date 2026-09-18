@@ -90,15 +90,16 @@ export async function DELETE(
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
 
-    // Delete all recharges first (foreign key constraint)
-    await db.delete(recharges).where(eq(recharges.customer_id, customerId));
+    // Soft delete — recoverable by a super admin until they choose to purge
+    // it permanently. Cascades to the customer's recharges too, so their
+    // history disappears from admin views along with the account.
+    const now = new Date();
+    await db.update(recharges).set({ deleted_at: now }).where(eq(recharges.customer_id, customerId));
+    await db.update(customers).set({ deleted_at: now }).where(eq(customers.id, customerId));
 
-    // Delete the customer
-    await db.delete(customers).where(eq(customers.id, customerId));
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Customer and all associated recharges deleted successfully' 
+    return NextResponse.json({
+      success: true,
+      message: 'Customer and all associated recharges deleted successfully'
     });
   } catch (error) {
     console.error('Delete customer error:', error);

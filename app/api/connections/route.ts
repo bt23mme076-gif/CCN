@@ -25,7 +25,7 @@ export async function GET() {
       const latest = await db
         .select({ status: recharges.status, expires_at: recharges.expires_at })
         .from(recharges)
-        .where(and(condition, eq(recharges.status, 'activated')))
+        .where(and(condition, eq(recharges.status, 'activated'), isNull(recharges.deleted_at)))
         .orderBy(desc(recharges.expires_at))
         .limit(1);
 
