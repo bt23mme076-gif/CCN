@@ -114,7 +114,6 @@ export default function PlansPage() {
   }
 
   const displayPlans = plans.filter(p => p.price !== 100);
-  const testPlans = plans.filter(p => p.price === 100);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-x-hidden"
@@ -161,24 +160,6 @@ export default function PlansPage() {
 
           {plans && plans.length > 0 ? (
             <>
-              {/* Test Plan */}
-              {testPlans.length > 0 && (
-                <div className="max-w-md mx-auto w-full mb-10">
-                  <div className="rounded-2xl p-5"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(99,102,241,0.3)' }}>
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                      <span className="text-green-400 text-sm font-bold">✓ Test Payment Gateway</span>
-                    </div>
-                    {testPlans.map((plan) => (
-                      <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
-                    ))}
-                    <p className="text-center text-xs text-gray-400 mt-3">
-                      Try our payment system with just ₹1 • Perfect for testing
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {/* Regular Plans */}
               <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-8 md:gap-6 w-full">
                 {displayPlans.map((plan, index) => (
