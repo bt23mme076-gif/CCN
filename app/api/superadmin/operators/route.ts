@@ -58,21 +58,27 @@ export async function POST(request: NextRequest) {
     const adminId = generateOrderId();
     const passwordHash = await bcrypt.hash(body.admin_password, 10);
 
-    await db.insert(operators).values({
-      id: operatorId,
-      name: body.name,
-      business_name: body.business_name,
-      subdomain: body.subdomain,
-      commission_percent: body.commission_percent,
-      kyc_status: 'pending',
-      status: 'active',
-    });
+    // Both inserts succeed or neither does — otherwise a failed admin insert
+    // (e.g. duplicate username within this operator) leaves an orphaned
+    // operator row with no way to log into it, permanently squatting the
+    // subdomain.
+    await db.transaction(async (tx) => {
+      await tx.insert(operators).values({
+        id: operatorId,
+        name: body.name,
+        business_name: body.business_name,
+        subdomain: body.subdomain,
+        commission_percent: body.commission_percent,
+        kyc_status: 'pending',
+        status: 'active',
+      });
 
-    await db.insert(admins).values({
-      id: adminId,
-      operator_id: operatorId,
-      username: body.admin_username,
-      password_hash: passwordHash,
+      await tx.insert(admins).values({
+        id: adminId,
+        operator_id: operatorId,
+        username: body.admin_username,
+        password_hash: passwordHash,
+      });
     });
 
     return NextResponse.json({ success: true, operatorId }, { status: 201 });

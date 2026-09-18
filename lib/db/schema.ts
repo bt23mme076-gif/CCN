@@ -95,10 +95,14 @@ export const recharges = pgTable('recharges', {
 export const admins = pgTable('admins', {
   id: text('id').primaryKey(),
   operator_id: text('operator_id').references(() => operators.id),
-  username: text('username').notNull().unique(),
+  username: text('username').notNull(),
   password_hash: text('password_hash').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  // Usernames only need to be unique within an operator, not platform-wide —
+  // every operator should be able to have an admin called "admin".
+  operatorUsernameIdx: uniqueIndex('admins_operator_username_idx').on(table.operator_id, table.username),
+}));
 
 export const announcements = pgTable('announcements', {
   id: text('id').primaryKey(),

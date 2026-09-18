@@ -15,6 +15,7 @@
     "add-upi-reference-column": "tsx add-upi-reference-column.ts",
     "add-due-amount-paise-column": "tsx add-due-amount-paise-column.ts",
     "add-deleted-at-columns": "tsx add-deleted-at-columns.ts",
+    "fix-admin-username-uniqueness": "tsx fix-admin-username-uniqueness.ts",
     "backfill-orphan-customer-operator": "tsx backfill-orphan-customer-operator.ts",
     "add-accessory-upi-reference-column": "tsx add-accessory-upi-reference-column.ts",
     "add-test-plan": "tsx add-test-plan.ts",
