@@ -4,7 +4,21 @@ import { eq } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { cache } from 'react';
 
-export type Operator = typeof operators.$inferSelect;
+// Deliberately NOT `typeof operators.$inferSelect` — see the comment on
+// getOperatorBySubdomain below for why this stays a fixed, explicit shape.
+export interface Operator {
+  id: string;
+  name: string;
+  business_name: string;
+  subdomain: string;
+  commission_percent: number;
+  kyc_status: string;
+  status: string;
+  logo_url: string | null;
+  primary_color: string | null;
+  tagline: string | null;
+  support_phone: string | null;
+}
 
 // Mirrors middleware.ts's extractSubdomain — kept in sync manually since
 // this file needs its own copy (see below for why).
@@ -16,9 +30,29 @@ function extractSubdomain(hostname: string): string {
 }
 
 // Cached per-request: React cache() deduplicates within one render pass.
+//
+// Selects an explicit column list rather than `select()` (all columns) on
+// purpose: this runs on every single page load across the whole site
+// (layout.tsx, manifest.ts, login pages included), so if it ever selects a
+// column that was added to the schema but not yet migrated on the live DB,
+// the entire site goes down — including the page needed to run the
+// migration. That exact outage already happened once. Add new fields here
+// deliberately, only after confirming the migration has run.
 export const getOperatorBySubdomain = cache(async (subdomain: string): Promise<Operator | null> => {
   const rows = await db
-    .select()
+    .select({
+      id: operators.id,
+      name: operators.name,
+      business_name: operators.business_name,
+      subdomain: operators.subdomain,
+      commission_percent: operators.commission_percent,
+      kyc_status: operators.kyc_status,
+      status: operators.status,
+      logo_url: operators.logo_url,
+      primary_color: operators.primary_color,
+      tagline: operators.tagline,
+      support_phone: operators.support_phone,
+    })
     .from(operators)
     .where(eq(operators.subdomain, subdomain))
     .limit(1);
