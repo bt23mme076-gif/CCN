@@ -4,6 +4,7 @@ import { customers } from '@/lib/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { signToken, setAuthCookie } from '@/lib/auth';
+import { getCurrentOperator } from '@/lib/db/tenant';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -18,11 +19,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = loginSchema.parse(body);
 
+    // Scope to the operator this subdomain belongs to — otherwise a
+    // customer registered under one operator could log in on any other
+    // operator's site with the same mobile+PIN.
+    const operator = await getCurrentOperator();
+
     // Find customer
     const customer = await db
       .select()
       .from(customers)
-      .where(and(eq(customers.mobile, validatedData.mobile), isNull(customers.deleted_at)))
+      .where(
+        and(
+          eq(customers.mobile, validatedData.mobile),
+          isNull(customers.deleted_at),
+          operator ? eq(customers.operator_id, operator.id) : undefined
+        )
+      )
       .limit(1);
 
     if (customer.length === 0) {
