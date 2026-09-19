@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { getCurrentOperator } from "@/lib/db/tenant";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Chandni Cable Network",
-  description: "Fast, secure, and hassle-free cable recharge with instant activation",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const op = await getCurrentOperator();
+  return {
+    title: op?.name ?? "Chandni Cable Network",
+    description: "Fast, secure, and hassle-free cable recharge with instant activation",
+  };
+}
 
 export default function RootLayout({
   children,

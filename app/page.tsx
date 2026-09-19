@@ -16,6 +16,7 @@ import QuickRechargeModal from '@/components/QuickRechargeModal';
 import UpiPaymentModal from '@/components/UpiPaymentModal';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 import { getChannelLogo, getChannelColor } from '@/lib/channelLogos';
 
 
@@ -49,6 +50,7 @@ interface Accessory {
 export default function HomePage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const branding = useOperatorBranding();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [accessoriesList, setAccessoriesList] = useState<Accessory[]>([]);
@@ -898,7 +900,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14">
             <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-3">
-              Why Choose Chandni Cable Network?
+              Why Choose {branding.name}?
             </h2>
             <p className="text-gray-500 text-base max-w-xl mx-auto">
               We make cable TV recharge simple, fast, and reliable

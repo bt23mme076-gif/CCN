@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 interface ExpiringItem {
   rechargeId: string;
@@ -33,10 +34,10 @@ function WaIcon({ size }: { size: string }) {
   );
 }
 
-function openWhatsApp(name: string, mobile: string, planName: string, expiresAt: string, business = false) {
+function openWhatsApp(name: string, mobile: string, planName: string, expiresAt: string, business = false, businessName = 'Chandni Cable Network') {
   const expiryMinus1 = new Date(new Date(expiresAt).getTime() - 24 * 60 * 60 * 1000);
   const date = expiryMinus1.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-  const msg = `Hello ${name}, your Chandni Cable Network cable TV plan *${planName}* is expiring on *${date}*. Please recharge soon to avoid any interruption in service. Visit our website or call us for quick recharge!`;
+  const msg = `Hello ${name}, your ${businessName} cable TV plan *${planName}* is expiring on *${date}*. Please recharge soon to avoid any interruption in service. Visit our website or call us for quick recharge!`;
   const phone = mobile.replace(/\D/g, '').replace(/^0/, '');
   const fullPhone = phone.startsWith('91') ? phone : '91' + phone;
   const encoded = encodeURIComponent(msg);
@@ -50,6 +51,7 @@ function openWhatsApp(name: string, mobile: string, planName: string, expiresAt:
 }
 
 export default function ExpiringPage() {
+  const branding = useOperatorBranding();
   const [items, setItems] = useState<ExpiringItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -124,12 +126,12 @@ export default function ExpiringPage() {
                       </td>
                       <td>
                         <div className="flex items-center gap-2">
-                          <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt)}
+                          <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt, false, branding.name)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105"
                             style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)' }}>
                             <WaIcon size="w-3 h-3" /> WA
                           </button>
-                          <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt, true)}
+                          <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt, true, branding.name)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105"
                             style={{ background: 'linear-gradient(135deg, #075e54, #128c7e)' }}>
                             <WaIcon size="w-3 h-3" /> Business
@@ -167,12 +169,12 @@ export default function ExpiringPage() {
                     </span></p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt)}
+                    <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt, false, branding.name)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold text-white"
                       style={{ background: 'linear-gradient(135deg, #25d366, #128c7e)' }}>
                       <WaIcon size="w-4 h-4" /> WhatsApp
                     </button>
-                    <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt, true)}
+                    <button onClick={() => openWhatsApp(item.customerName, item.customerMobile, item.planName, item.expiresAt, true, branding.name)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold text-white"
                       style={{ background: 'linear-gradient(135deg, #075e54, #128c7e)' }}>
                       <WaIcon size="w-4 h-4" /> Business

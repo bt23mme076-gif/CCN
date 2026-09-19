@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
 import Navbar from '@/components/Navbar';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 interface Plan {
   id: string;
@@ -27,6 +28,7 @@ interface Customer {
 
 export default function PlansPage() {
   const router = useRouter();
+  const branding = useOperatorBranding();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
@@ -105,7 +107,7 @@ export default function PlansPage() {
               <p className="text-xs text-red-300/70 mt-1">Pay this amount to your cable operator to unlock recharge</p>
             </div>
             <p className="text-sm text-gray-400">
-              Contact <span className="font-semibold text-white">Chandni Cable Network</span> to pay your dues and unlock your account.
+              Contact <span className="font-semibold text-white">{branding.name}</span> to pay your dues and unlock your account.
             </p>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import StatusBadge from '@/components/StatusBadge';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 // The Android app spoofs its User-Agent to look like real Chrome (see
 // MainActivity.java), so UA sniffing can't reliably detect it. The app also
@@ -49,6 +50,7 @@ const cardStyle = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgb
 const inputStyle = { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' };
 
 export default function AllRechargesPage() {
+  const branding = useOperatorBranding();
   const [recharges, setRecharges] = useState<RechargeItem[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -190,7 +192,7 @@ export default function AllRechargesPage() {
     const msg =
       `Hello ${customerName} 😊\n\n` +
       `✅ *Thank you for doing business with us!*\n\n` +
-      `📋 *Chandni Cable Network - Payment Receipt*\n` +
+      `📋 *${branding.name} - Payment Receipt*\n` +
       `━━━━━━━━━━━━━━━━━━━\n` +
       `👤 Customer: ${customerName}\n` +
       `📱 Mobile: ${mobile}\n` +
@@ -202,7 +204,7 @@ export default function AllRechargesPage() {
       (expiresAt ? `⏳ Valid Till: ${new Date(expiresAt).toLocaleDateString('en-IN')}\n` : '') +
       `━━━━━━━━━━━━━━━━━━━\n\n` +
       `🧾 View/Download your Bill:\n${shareUrl}\n\n` +
-      `_Chandni Cable Network — Your Trusted Cable Provider_ 🙏`;
+      `_${branding.name} — Your Trusted Cable Provider_ 🙏`;
 
     const ua = navigator.userAgent;
     const isAndroidWebView = isInNativeApp() || /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
@@ -222,7 +224,7 @@ export default function AllRechargesPage() {
     // (or any other app) — the bill link is already in the text.
     if (navigator.share) {
       try {
-        await navigator.share({ title: `CCN Receipt — ${customerName}`, text: msg });
+        await navigator.share({ title: `${branding.name} Receipt — ${customerName}`, text: msg });
         setSharing(null);
         return;
       } catch (err) {

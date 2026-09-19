@@ -3,10 +3,12 @@
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const branding = useOperatorBranding();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -109,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)' }}>
               <span className="text-white text-sm font-bold">C</span>
             </div>
-            <span className="font-display text-lg font-bold text-white">CCN Admin</span>
+            <span className="font-display text-lg font-bold text-white">{branding.name} Admin</span>
           </div>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors">
@@ -161,7 +163,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <span className="text-white font-bold text-lg">C</span>
               </div>
               <div>
-                <h1 className="font-display text-xl font-bold text-white leading-tight">CCN Admin</h1>
+                <h1 className="font-display text-xl font-bold text-white leading-tight">{branding.name} Admin</h1>
                 <p className="text-[10px] text-purple-400 uppercase tracking-widest">Control Panel</p>
               </div>
             </div>

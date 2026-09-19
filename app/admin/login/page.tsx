@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const branding = useOperatorBranding();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -70,7 +72,7 @@ export default function AdminLoginPage() {
               <span className="text-white text-2xl font-bold">C</span>
             </div>
             <h1 className="font-display text-3xl font-bold text-white mb-1">Admin Panel</h1>
-            <p className="text-gray-400 text-sm">CCN Cable Network Control</p>
+            <p className="text-gray-400 text-sm">{branding.name} Control</p>
           </div>
 
           {error && (
