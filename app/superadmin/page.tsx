@@ -27,6 +27,22 @@ export default function SuperAdminDashboard() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [migrating, setMigrating] = useState(false);
+  const [migrationLog, setMigrationLog] = useState<string[] | null>(null);
+
+  const runMigrations = async () => {
+    setMigrating(true);
+    setMigrationLog(null);
+    try {
+      const res = await fetch('/api/superadmin/run-migrations', { method: 'POST' });
+      const data = await res.json();
+      setMigrationLog(data.log ?? [data.error ?? 'Unknown error']);
+    } catch {
+      setMigrationLog(['Request failed']);
+    } finally {
+      setMigrating(false);
+    }
+  };
 
   const load = () =>
     fetch('/api/superadmin/operators').then(r => r.json()).then(setOperators);
@@ -75,6 +91,11 @@ export default function SuperAdminDashboard() {
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
             🗑 Trash
           </Link>
+          <button onClick={runMigrations} disabled={migrating}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #0891b2, #06b6d4)' }}>
+            {migrating ? 'Running…' : '⚙ Run Migrations'}
+          </button>
           <button onClick={() => { setShowForm(true); setFormError(''); }}
             className="px-4 py-2 rounded-lg text-sm font-semibold text-white"
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
@@ -88,6 +109,17 @@ export default function SuperAdminDashboard() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
+        {migrationLog && (
+          <div className="rounded-xl p-4 mb-6 text-sm" style={card}>
+            <p className="text-gray-300 font-semibold mb-2">Migration result:</p>
+            <ul className="space-y-1">
+              {migrationLog.map((line, i) => (
+                <li key={i} className="text-gray-400">• {line}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
