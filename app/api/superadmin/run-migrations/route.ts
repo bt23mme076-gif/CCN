@@ -43,9 +43,6 @@ export async function POST() {
     `;
     log.push('admin username uniqueness: scoped to operator');
 
-    await migrationClient`ALTER TABLE operators ADD COLUMN IF NOT EXISTS upi_vpa TEXT;`;
-    log.push('operators.upi_vpa column: ok');
-
     const orphaned = await migrationClient`
       SELECT o.id, o.subdomain FROM operators o
       LEFT JOIN admins a ON a.operator_id = o.id

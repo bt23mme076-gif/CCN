@@ -14,7 +14,6 @@ interface Operator {
   commission_percent: number;
   customer_count: number;
   created_at: string;
-  upi_vpa: string | null;
 }
 
 const card = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' };
@@ -33,7 +32,7 @@ export default function SuperAdminDashboard() {
   const [migrationLog, setMigrationLog] = useState<string[] | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingOperator, setEditingOperator] = useState<Operator | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', business_name: '', commission_percent: 10, kyc_status: 'pending', status: 'active', upi_vpa: '' });
+  const [editForm, setEditForm] = useState({ name: '', business_name: '', commission_percent: 10, kyc_status: 'pending', status: 'active' });
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState('');
 
@@ -45,7 +44,6 @@ export default function SuperAdminDashboard() {
       commission_percent: op.commission_percent,
       kyc_status: op.kyc_status,
       status: op.status,
-      upi_vpa: op.upi_vpa ?? '',
     });
     setEditError('');
   };
@@ -363,14 +361,6 @@ export default function SuperAdminDashboard() {
                   onChange={e => setEditForm(f => ({ ...f, commission_percent: Number(e.target.value) }))}
                   className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
                   style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }} />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">UPI ID (customer payments go here)</label>
-                <input type="text" placeholder="operatorname@upi" value={editForm.upi_vpa}
-                  onChange={e => setEditForm(f => ({ ...f, upi_vpa: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }} />
-                <p className="text-xs text-gray-500 mt-1">Leave blank to use CCN&apos;s default UPI ID</p>
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">KYC Status</label>

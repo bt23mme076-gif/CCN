@@ -23,7 +23,6 @@ const updateSchema = z.object({
   commission_percent: z.number().int().min(0).max(50).optional(),
   kyc_status: z.enum(['pending', 'approved', 'rejected']).optional(),
   status: z.enum(['active', 'pending', 'suspended']).optional(),
-  upi_vpa: z.string().trim().max(100).nullable().optional(),
 });
 
 export async function PATCH(
