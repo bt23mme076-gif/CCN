@@ -1,12 +1,20 @@
 'use client';
 
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
+
 export default function ContactSection() {
+  const branding = useOperatorBranding();
+  const supportPhone = branding.support_phone || '9399974696';
+  const rawDigits = supportPhone.replace(/\D/g, '');
+  const phoneDigits = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
+  const displayPhone = rawDigits.length === 10 ? `+91 ${rawDigits.slice(0, 5)} ${rawDigits.slice(5)}` : supportPhone;
+
   const contacts = [
     {
-      href: 'https://wa.me/919399974696?text=Hi%2C%20I%20need%20help%20with%20my%20cable%20connection',
+      href: `https://wa.me/${phoneDigits}?text=Hi%2C%20I%20need%20help%20with%20my%20cable%20connection`,
       label: 'WhatsApp Chat',
       sub: 'Instant replies on WhatsApp',
-      value: '+91 93999 74696',
+      value: displayPhone,
       gradient: 'from-green-500 to-emerald-600',
       glow: 'hover:shadow-green-200',
       ring: 'hover:ring-green-400',
@@ -18,10 +26,10 @@ export default function ContactSection() {
       ),
     },
     {
-      href: 'tel:+919399974696',
+      href: `tel:+${phoneDigits}`,
       label: 'Call Us',
       sub: 'Speak directly with our team',
-      value: '+91 93999 74696',
+      value: displayPhone,
       gradient: 'from-blue-500 to-blue-700',
       glow: 'hover:shadow-blue-200',
       ring: 'hover:ring-blue-400',

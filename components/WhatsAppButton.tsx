@@ -1,13 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 export default function WhatsAppButton() {
   const [isHovered, setIsHovered] = useState(false);
+  const branding = useOperatorBranding();
+  const rawDigits = (branding.support_phone || '9399974696').replace(/\D/g, '');
+  const phoneDigits = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
 
   return (
     <a
-      href="https://wa.me/919399974696?text=Hi%2C%20I%20need%20help%20with%20my%20cable%20connection"
+      href={`https://wa.me/${phoneDigits}?text=Hi%2C%20I%20need%20help%20with%20my%20cable%20connection`}
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 z-50 group"
