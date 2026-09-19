@@ -37,6 +37,7 @@ export default function SuperAdminDashboard() {
       const res = await fetch('/api/superadmin/run-migrations', { method: 'POST' });
       const data = await res.json();
       setMigrationLog(data.log ?? [data.error ?? 'Unknown error']);
+      await load();
     } catch {
       setMigrationLog(['Request failed']);
     } finally {
