@@ -29,6 +29,26 @@ export default function SuperAdminDashboard() {
   const [formError, setFormError] = useState('');
   const [migrating, setMigrating] = useState(false);
   const [migrationLog, setMigrationLog] = useState<string[] | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const deleteOperator = async (id: string, customerCount: number) => {
+    if (customerCount > 0) {
+      alert(`Cannot delete — this operator still has ${customerCount} customer(s). Remove them first.`);
+      return;
+    }
+    if (!confirm(`Permanently delete operator "${id}" and its admin login? This cannot be undone.`)) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/superadmin/operators/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error ?? 'Failed to delete'); return; }
+      await load();
+    } catch {
+      alert('Failed to delete');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const runMigrations = async () => {
     setMigrating(true);
@@ -177,10 +197,17 @@ export default function SuperAdminDashboard() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <a href={`https://${op.subdomain}.${baseHost}/admin`} target="_blank" rel="noreferrer"
-                      className="text-xs text-indigo-400 hover:text-indigo-300">
-                      Open panel →
-                    </a>
+                    <div className="flex items-center gap-3">
+                      <a href={`https://${op.subdomain}.${baseHost}/admin`} target="_blank" rel="noreferrer"
+                        className="text-xs text-indigo-400 hover:text-indigo-300">
+                        Open panel →
+                      </a>
+                      <button onClick={() => deleteOperator(op.id, op.customer_count)}
+                        disabled={deletingId === op.id}
+                        className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50">
+                        {deletingId === op.id ? 'Deleting…' : 'Delete'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
