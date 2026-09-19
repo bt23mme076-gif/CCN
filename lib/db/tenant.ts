@@ -34,7 +34,10 @@ export const getOperatorBySubdomain = cache(async (subdomain: string): Promise<O
 // operator on every subdomain.
 export async function getCurrentOperator(): Promise<Operator | null> {
   const h = await headers();
-  const subdomain = extractSubdomain(h.get('host') ?? '');
+  // x-forwarded-host carries the original hostname on some proxy setups
+  // (Vercel behind Cloudflare) where `host` gets normalized to the
+  // deployment's own domain instead of the request's real one.
+  const subdomain = extractSubdomain(h.get('x-forwarded-host') ?? h.get('host') ?? '');
   return getOperatorBySubdomain(subdomain);
 }
 
