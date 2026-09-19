@@ -7,6 +7,7 @@ import Link from 'next/link';
 interface Operator {
   id: string;
   name: string;
+  business_name: string;
   subdomain: string;
   status: string;
   kyc_status: string;
@@ -30,6 +31,42 @@ export default function SuperAdminDashboard() {
   const [migrating, setMigrating] = useState(false);
   const [migrationLog, setMigrationLog] = useState<string[] | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingOperator, setEditingOperator] = useState<Operator | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', business_name: '', commission_percent: 10, kyc_status: 'pending', status: 'active' });
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  const openEdit = (op: Operator) => {
+    setEditingOperator(op);
+    setEditForm({
+      name: op.name,
+      business_name: op.business_name,
+      commission_percent: op.commission_percent,
+      kyc_status: op.kyc_status,
+      status: op.status,
+    });
+    setEditError('');
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOperator) return;
+    setEditError('');
+    setEditSubmitting(true);
+    try {
+      const res = await fetch(`/api/superadmin/operators/${editingOperator.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+      const data = await res.json();
+      if (!res.ok) { setEditError(data.error ?? 'Failed'); return; }
+      setEditingOperator(null);
+      load();
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
 
   const deleteOperator = async (id: string, customerCount: number) => {
     if (customerCount > 0) {
@@ -202,6 +239,10 @@ export default function SuperAdminDashboard() {
                         className="text-xs text-indigo-400 hover:text-indigo-300">
                         Open panel →
                       </a>
+                      <button onClick={() => openEdit(op)}
+                        className="text-xs text-gray-300 hover:text-white">
+                        Edit
+                      </button>
                       <button onClick={() => deleteOperator(op.id, op.customer_count)}
                         disabled={deletingId === op.id}
                         className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50">
@@ -275,6 +316,85 @@ export default function SuperAdminDashboard() {
                   className="flex-1 py-2 rounded-lg text-sm font-semibold text-white"
                   style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', opacity: submitting ? 0.7 : 1 }}>
                   {submitting ? 'Creating...' : 'Create Operator'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit operator modal */}
+      {editingOperator && (
+        <div className="fixed inset-0 flex items-center justify-center px-4 z-50"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
+          <div className="w-full max-w-md rounded-2xl p-6" style={card}>
+            <h2 className="text-lg font-bold text-white mb-1">Edit Operator</h2>
+            <p className="text-xs text-gray-500 mb-4">{editingOperator.id}</p>
+
+            {editError && (
+              <div className="mb-4 px-3 py-2 rounded-lg text-sm text-red-300"
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                {editError}
+              </div>
+            )}
+
+            <form onSubmit={handleEditSave} className="space-y-3">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Operator Name</label>
+                <input type="text" value={editForm.name}
+                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  required />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Business Name</label>
+                <input type="text" value={editForm.business_name}
+                  onChange={e => setEditForm(f => ({ ...f, business_name: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  required />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">CCN Commission %</label>
+                <input type="number" min={0} max={50} value={editForm.commission_percent}
+                  onChange={e => setEditForm(f => ({ ...f, commission_percent: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }} />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">KYC Status</label>
+                <select value={editForm.kyc_status}
+                  onChange={e => setEditForm(f => ({ ...f, kyc_status: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <option value="pending">pending</option>
+                  <option value="approved">approved</option>
+                  <option value="rejected">rejected</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Status</label>
+                <select value={editForm.status}
+                  onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <option value="active">active</option>
+                  <option value="pending">pending</option>
+                  <option value="suspended">suspended</option>
+                </select>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setEditingOperator(null)}
+                  className="flex-1 py-2 rounded-lg text-sm text-gray-400"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={editSubmitting}
+                  className="flex-1 py-2 rounded-lg text-sm font-semibold text-white"
+                  style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', opacity: editSubmitting ? 0.7 : 1 }}>
+                  {editSubmitting ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>
