@@ -22,6 +22,7 @@ export const operators = pgTable('operators', {
   primary_color: text('primary_color').default('#6366f1'), // hex color for buttons/accents
   tagline: text('tagline'),
   support_phone: text('support_phone'),
+  upi_vpa: text('upi_vpa'), // this operator's own UPI ID — customer payments go here, not CCN's
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 

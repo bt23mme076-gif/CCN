@@ -3,11 +3,19 @@
 const UPI_VPA = process.env.UPI_VPA || 'Q055481811@ybl';
 const UPI_PAYEE_NAME = process.env.UPI_PAYEE_NAME || 'Chandni Cable Network';
 
-export function buildUpiLink(amountInPaise: number, note: string): string {
+// operatorOverride lets each operator collect into their own UPI ID instead
+// of CCN's — otherwise every tenant's customers would end up paying into
+// the same account. Falls back to the platform default (env/CCN's own VPA)
+// when an operator hasn't set one yet.
+export function buildUpiLink(
+  amountInPaise: number,
+  note: string,
+  operatorOverride?: { upi_vpa?: string | null; business_name?: string | null } | null
+): string {
   const amountInRupees = (amountInPaise / 100).toFixed(2);
   const params = new URLSearchParams({
-    pa: UPI_VPA,
-    pn: UPI_PAYEE_NAME,
+    pa: operatorOverride?.upi_vpa || UPI_VPA,
+    pn: operatorOverride?.business_name || UPI_PAYEE_NAME,
     am: amountInRupees,
     cu: 'INR',
     tn: note.slice(0, 50),

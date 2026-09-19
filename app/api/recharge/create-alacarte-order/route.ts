@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { plans, recharges, customers, channels as channelsTable } from '@/lib/db/schema';
+import { plans, recharges, customers, channels as channelsTable, operators } from '@/lib/db/schema';
 import { eq, inArray, and } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
@@ -135,7 +135,10 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
-    const upiLink = buildUpiLink(roundedAmountPaise, `${customer[0].name} - A La Carte`);
+    const operator = customer[0].operator_id
+      ? await db.select().from(operators).where(eq(operators.id, customer[0].operator_id)).limit(1).then(r => r[0] ?? null)
+      : null;
+    const upiLink = buildUpiLink(roundedAmountPaise, `${customer[0].name} - A La Carte`, operator);
 
     return NextResponse.json({
       orderId: rechargeId,
