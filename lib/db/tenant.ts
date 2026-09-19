@@ -6,6 +6,15 @@ import { cache } from 'react';
 
 export type Operator = typeof operators.$inferSelect;
 
+// Mirrors middleware.ts's extractSubdomain — kept in sync manually since
+// this file needs its own copy (see below for why).
+function extractSubdomain(hostname: string): string {
+  const host = hostname.split(':')[0]; // strip port
+  const parts = host.split('.');
+  if (parts.length <= 2) return process.env.DEFAULT_OPERATOR_SUBDOMAIN ?? 'ccn';
+  return parts[0];
+}
+
 // Cached per-request: React cache() deduplicates within one render pass.
 export const getOperatorBySubdomain = cache(async (subdomain: string): Promise<Operator | null> => {
   const rows = await db
@@ -17,9 +26,15 @@ export const getOperatorBySubdomain = cache(async (subdomain: string): Promise<O
 });
 
 // Call this inside any server component or API route to get the current operator.
+//
+// Reads the Host header directly rather than the `x-operator-subdomain`
+// header middleware.ts injects — that pattern only reliably reaches Server
+// Components via next/headers, not Route Handlers, so API routes (like
+// /api/operator/branding) were silently falling back to the default
+// operator on every subdomain.
 export async function getCurrentOperator(): Promise<Operator | null> {
   const h = await headers();
-  const subdomain = h.get('x-operator-subdomain') ?? 'ccn';
+  const subdomain = extractSubdomain(h.get('host') ?? '');
   return getOperatorBySubdomain(subdomain);
 }
 
