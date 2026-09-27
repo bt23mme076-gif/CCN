@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { operators, admins, customers } from '@/lib/db/schema';
+import {
+  operators, admins, customers, plans, recharges, announcements,
+  accessories, advertisements, channels, accessoryOrders,
+  settlements, refunds, employees, expenses,
+} from '@/lib/db/schema';
 import { eq, count } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
@@ -69,8 +73,35 @@ export async function DELETE(
     );
   }
 
-  await db.delete(admins).where(eq(admins.operator_id, id));
-  await db.delete(operators).where(eq(operators.id, id));
+  try {
+    // Every table that references operators.id has to be cleared first —
+    // Postgres blocks the operator delete otherwise (FK constraint), and
+    // child-of-child rows (e.g. accessory_orders -> accessories,
+    // expenses -> employees, refunds -> recharges) have to go before their
+    // parent for the same reason.
+    await db.transaction(async (tx) => {
+      await tx.delete(refunds).where(eq(refunds.operator_id, id));
+      await tx.delete(settlements).where(eq(settlements.operator_id, id));
+      await tx.delete(accessoryOrders).where(eq(accessoryOrders.operator_id, id));
+      // customerPriceOverrides/customerPlanDiscounts/retrackRequests/
+      // pushSubscriptions all cascade automatically (onDelete: 'cascade' on
+      // their customer_id/plan_id FKs) once customers/plans below are gone.
+      await tx.delete(recharges).where(eq(recharges.operator_id, id));
+      await tx.delete(plans).where(eq(plans.operator_id, id));
+      await tx.delete(announcements).where(eq(announcements.operator_id, id));
+      await tx.delete(accessories).where(eq(accessories.operator_id, id));
+      await tx.delete(advertisements).where(eq(advertisements.operator_id, id));
+      await tx.delete(channels).where(eq(channels.operator_id, id));
+      await tx.delete(expenses).where(eq(expenses.operator_id, id));
+      await tx.delete(employees).where(eq(employees.operator_id, id));
+      await tx.delete(admins).where(eq(admins.operator_id, id));
+      await tx.delete(customers).where(eq(customers.operator_id, id));
+      await tx.delete(operators).where(eq(operators.id, id));
+    });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Delete operator error:', error);
+    return NextResponse.json({ error: `Failed to delete: ${(error as Error).message}` }, { status: 500 });
+  }
 }
