@@ -342,6 +342,30 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* GTPL Manual Retune Notice — STB numbers starting with 3 are on GTPL,
+            which doesn't always auto-push the channel list after a recharge. */}
+        {customer && customer.stb_number.startsWith('3') && (
+          <div className="mb-6 rounded-2xl overflow-hidden"
+            style={{ boxShadow: '0 4px 24px rgba(37,99,235,0.3)' }}>
+            <div className="flex items-center gap-4 px-5 py-4"
+              style={{ background: 'linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-white text-sm sm:text-base leading-tight">
+                  Recharge ke baad bhi channel change nahi hue?
+                </p>
+                <p className="text-xs text-blue-100 mt-0.5">
+                  Kabhi-kabhi GTPL channels khud-ba-khud update nahi hote — apne TV/STB remote se manually channel change ya rescan kar lein.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Customer Info */}
         <div className="card mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
