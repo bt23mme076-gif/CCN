@@ -8,6 +8,7 @@ interface ActivationWaitingProps {
   amount: number;
   hasActivePlan?: boolean;
   activePlanExpiry?: string | Date | null;
+  isGtpl?: boolean;
   onActivated: () => void;
 }
 
@@ -43,7 +44,7 @@ function clearStartTime(rechargeId: string) {
   try { localStorage.removeItem(`${STORAGE_KEY}_${rechargeId}`); } catch { /* ignore */ }
 }
 
-export default function ActivationWaiting({ rechargeId, planName, amount, hasActivePlan, activePlanExpiry, onActivated }: ActivationWaitingProps) {
+export default function ActivationWaiting({ rechargeId, planName, amount, hasActivePlan, activePlanExpiry, isGtpl, onActivated }: ActivationWaitingProps) {
   const [activated, setActivated] = useState(false);
   const [msgIndex, setMsgIndex] = useState(0);
   const [displayed, setDisplayed] = useState('');
@@ -103,10 +104,10 @@ export default function ActivationWaiting({ rechargeId, planName, amount, hasAct
       if (recharge?.status === 'activated') {
         clearStartTime(rechargeId);
         setActivated(true);
-        setTimeout(() => onActivated(), 3000);
+        setTimeout(() => onActivated(), isGtpl ? 9000 : 3000);
       }
     } catch { /* ignore */ }
-  }, [rechargeId, onActivated]);
+  }, [rechargeId, onActivated, isGtpl]);
 
   useEffect(() => {
     checkStatus();
@@ -145,7 +146,16 @@ export default function ActivationWaiting({ rechargeId, planName, amount, hasAct
           <p className="text-green-300 text-lg mb-2">
             <span className="font-bold text-white">{planName}</span> is now active 🎉
           </p>
-          <p className="text-blue-300 text-sm">Redirecting to dashboard...</p>
+          {isGtpl && (
+            <div className="max-w-xs mx-auto mt-4 mb-2 rounded-xl p-4 text-left"
+              style={{ background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(96,165,250,0.4)' }}>
+              <p className="text-blue-200 text-sm font-semibold mb-1">📡 Channel change nahi hua?</p>
+              <p className="text-blue-300/90 text-xs leading-relaxed">
+                Kabhi-kabhi GTPL channels khud-ba-khud update nahi hote — apne TV/STB remote se manually channel change ya rescan kar lein.
+              </p>
+            </div>
+          )}
+          <p className="text-blue-300 text-sm mt-2">Redirecting to dashboard...</p>
         </div>
       </div>
     );
