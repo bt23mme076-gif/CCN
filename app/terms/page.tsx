@@ -56,7 +56,19 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">4. Activation</h2>
+            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">4. GST Non-Enrollment Declaration</h2>
+            <p>
+              Chandni Cable Network's aggregate annual turnover is below the threshold prescribed
+              under the Central Goods and Services Tax Act, 2017 for mandatory GST registration.
+              Accordingly, we are not currently registered under GST, do not hold a GSTIN, and do
+              not collect or charge GST on any plan, recharge, or service offered through this
+              website. Should our turnover exceed the applicable threshold in the future, we will
+              obtain GST registration and update this declaration accordingly.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">5. Activation</h2>
             <p>
               Recharges are typically activated shortly after successful payment. Activation may be
               delayed in rare cases due to technical or operational reasons; in such cases, please
@@ -65,14 +77,14 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">5. Cancellations &amp; Refunds</h2>
+            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">6. Cancellations &amp; Refunds</h2>
             <p>
               Please see our <Link href="/refund-policy" className="text-accent-blue underline">Refund &amp; Cancellation Policy</Link> for details.
             </p>
           </div>
 
           <div>
-            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">6. Service Availability</h2>
+            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">7. Service Availability</h2>
             <p>
               While we aim to provide uninterrupted service, occasional interruptions may occur due
               to technical, weather, or infrastructure-related issues beyond our control. We are not
@@ -81,7 +93,7 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">7. Changes to These Terms</h2>
+            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">8. Changes to These Terms</h2>
             <p>
               We may update these Terms from time to time. Continued use of our services after any
               changes constitutes acceptance of the updated Terms.
@@ -89,12 +101,12 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">8. Governing Law</h2>
+            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">9. Governing Law</h2>
             <p>All disputes are subject to the jurisdiction of courts in Chaurai, Madhya Pradesh.</p>
           </div>
 
           <div>
-            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">9. Contact Us</h2>
+            <h2 className="font-display text-lg font-bold text-brand-navy mb-2">10. Contact Us</h2>
             <p>
               Chandni Cable Network<br />
               Main, Chaurai, Madhya Pradesh, 480115<br />
