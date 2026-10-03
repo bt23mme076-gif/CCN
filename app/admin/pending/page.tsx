@@ -74,12 +74,20 @@ export default function PendingActivationsPage() {
     } catch { /* AudioContext unavailable — speech alone still fires */ }
   };
 
+  const describeActivity = (r: PendingRecharge) => {
+    const name = r.customer.name;
+    const amount = formatCurrency(r.recharge.amount);
+    if (r.recharge.status === 'paid') return `Payment received from ${name}, ${amount}. Please activate.`;
+    if (r.recharge.status === 'pending') return `${name} has started a payment of ${amount}.`;
+    return `${name}'s order, ${amount}, is now ${r.recharge.status}.`;
+  };
+
   const announcePending = (items: PendingRecharge[]) => {
     if (!voiceAlertsOn || typeof window === 'undefined' || !window.speechSynthesis || items.length === 0) return;
     beep();
     const text = items.length === 1
-      ? `New payment received from ${items[0].customer.name}, ${formatCurrency(items[0].recharge.amount)}. Please activate.`
-      : `${items.length} new payments received. Please activate.`;
+      ? describeActivity(items[0])
+      : `${items.length} new activity on pending orders. Please check.`;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-IN';
     window.speechSynthesis.speak(utterance);
@@ -105,16 +113,19 @@ export default function PendingActivationsPage() {
         const d = await res.json();
         const fresh: PendingRecharge[] = d.recharges || [];
         if (seenStatusRef.current) {
-          const newlyPaid = fresh.filter((r) => {
+          // Any activity — a brand-new order (customer just started paying)
+          // or an existing one's status changing (e.g. pending → paid) —
+          // triggers the alert, not just the paid transition specifically.
+          const changed = fresh.filter((r) => {
             const prevStatus = seenStatusRef.current!.get(r.recharge.id);
-            return r.recharge.status === 'paid' && prevStatus !== 'paid';
+            return prevStatus === undefined || prevStatus !== r.recharge.status;
           });
-          if (newlyPaid.length > 0) announcePending(newlyPaid);
+          if (changed.length > 0) announcePending(changed);
         }
         seenStatusRef.current = new Map(fresh.map((r) => [r.recharge.id, r.recharge.status]));
         setRecharges(fresh);
       } catch { /* keep showing last known list, retry next tick */ }
-    }, 15000);
+    }, 7000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voiceAlertsOn]);
