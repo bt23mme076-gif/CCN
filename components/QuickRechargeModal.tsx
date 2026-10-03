@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import UpiPaymentModal from '@/components/UpiPaymentModal';
+import { launchPayu, PayuLaunchParams } from '@/lib/payments/payuClient';
 
 interface Plan {
   id: string;
@@ -130,6 +131,11 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
       const orderData = await orderRes.json();
       if (!orderRes.ok) {
         setError(orderData.error || 'Failed to start payment');
+        return;
+      }
+
+      if (orderData.payu) {
+        await launchPayu(orderData.payu as PayuLaunchParams, () => setPayingPlanId(null));
         return;
       }
 

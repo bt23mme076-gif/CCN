@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
 import { findCustomerByStbOrMobile } from '@/lib/guestLookup';
 import { buildUpiLink } from '@/lib/payments/upi';
+import { buildPayuTxnParams, isPayuConfigured } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,11 +99,28 @@ export async function POST(request: NextRequest) {
 
     const upiLink = buildUpiLink(finalPrice, `${match.name} - ${displayPlanName}`);
 
+    const origin = request.nextUrl.origin;
+    const payu = isPayuConfigured()
+      ? buildPayuTxnParams({
+          txnid: rechargeId,
+          amountPaise: finalPrice,
+          productinfo: displayPlanName,
+          firstname: match.name,
+          email: `${match.mobile}@ccn.atyant.in`,
+          phone: match.mobile,
+          udf1: 'recharges',
+          udf2: 'guest',
+          surl: `${origin}/api/payu/callback`,
+          furl: `${origin}/api/payu/callback`,
+        })
+      : null;
+
     return NextResponse.json({
       orderId: rechargeId,
       upiLink,
       amount: finalPrice,
       currency: 'INR',
+      payu,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

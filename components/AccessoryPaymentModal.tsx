@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
 import UpiPaymentModal from '@/components/UpiPaymentModal';
+import { launchPayu, PayuLaunchParams } from '@/lib/payments/payuClient';
 
 interface Accessory {
   id: string;
@@ -55,6 +56,12 @@ export default function AccessoryPaymentModal({
       }
 
       const orderData = await orderResponse.json();
+
+      if (orderData.payu) {
+        await launchPayu(orderData.payu as PayuLaunchParams, () => setLoading(false));
+        return;
+      }
+
       setUpiOrder({ orderId: orderData.orderId, upiLink: orderData.upiLink, amount: orderData.amount });
     } catch (error) {
       console.error('Payment error:', error);

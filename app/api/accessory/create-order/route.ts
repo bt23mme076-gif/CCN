@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { buildUpiLink } from '@/lib/payments/upi';
+import { buildPayuTxnParams, isPayuConfigured } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,11 +64,27 @@ export async function POST(request: NextRequest) {
 
     const upiLink = buildUpiLink(price, `${customer[0].name} - ${accessory[0].name}`);
 
+    const origin = request.nextUrl.origin;
+    const payu = isPayuConfigured()
+      ? buildPayuTxnParams({
+          txnid: orderId,
+          amountPaise: price,
+          productinfo: accessory[0].name,
+          firstname: customer[0].name,
+          email: `${customer[0].mobile}@ccn.atyant.in`,
+          phone: customer[0].mobile,
+          udf1: 'accessory',
+          surl: `${origin}/api/payu/callback`,
+          furl: `${origin}/api/payu/callback`,
+        })
+      : null;
+
     return NextResponse.json({
       orderId,
       upiLink,
       amount: price,
       currency: 'INR',
+      payu,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

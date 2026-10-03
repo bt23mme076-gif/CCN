@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { resolveConnection } from '@/lib/connections';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
 import { buildUpiLink } from '@/lib/payments/upi';
+import { buildPayuTxnParams, isPayuConfigured } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
 
@@ -118,6 +119,21 @@ export async function POST(request: NextRequest) {
 
     const upiLink = buildUpiLink(totalAmount, `${customer[0].name} - ${displayPlanName}`);
 
+    const origin = request.nextUrl.origin;
+    const payu = isPayuConfigured()
+      ? buildPayuTxnParams({
+          txnid: rechargeId,
+          amountPaise: totalAmount,
+          productinfo: displayPlanName,
+          firstname: customer[0].name,
+          email: `${customer[0].mobile}@ccn.atyant.in`,
+          phone: customer[0].mobile,
+          udf1: 'recharges',
+          surl: `${origin}/api/payu/callback`,
+          furl: `${origin}/api/payu/callback`,
+        })
+      : null;
+
     return NextResponse.json({
       orderId: rechargeId,
       upiLink,
@@ -125,6 +141,7 @@ export async function POST(request: NextRequest) {
       planAmount: finalPrice,
       dueAmount: dueAmountPaise,
       currency: 'INR',
+      payu,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

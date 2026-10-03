@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import UpiPaymentModal from '@/components/UpiPaymentModal';
+import { launchPayu, PayuLaunchParams } from '@/lib/payments/payuClient';
 
 interface AlacartePaymentModalProps {
   isOpen: boolean;
@@ -52,6 +53,12 @@ export default function AlacartePaymentModal({
       }
 
       const orderData = await orderResponse.json();
+
+      if (orderData.payu) {
+        await launchPayu(orderData.payu as PayuLaunchParams, () => setLoading(false));
+        return;
+      }
+
       setUpiOrder({ orderId: orderData.orderId, upiLink: orderData.upiLink, amount: orderData.amount });
     } catch (error: any) {
       console.error('Payment error:', error);

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { formatCurrency, isInAppBrowser, openInExternalBrowser } from '@/lib/utils';
 import { calcDurationPricing } from '@/lib/planDuration';
 import UpiPaymentModal from '@/components/UpiPaymentModal';
+import { launchPayu, PayuLaunchParams } from '@/lib/payments/payuClient';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -35,14 +36,12 @@ export default function PaymentModal({
 }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
   const [upiOrder, setUpiOrder] = useState<{ orderId: string; upiLink: string; amount: number } | null>(null);
-  const [utrSubmitted, setUtrSubmitted] = useState(false);
   const inAppBrowser = isInAppBrowser();
 
   if (!isOpen || !plan) return null;
 
   const resetAndClose = () => {
     setUpiOrder(null);
-    setUtrSubmitted(false);
     onClose();
   };
 
@@ -69,6 +68,12 @@ export default function PaymentModal({
       }
 
       const orderData = await orderResponse.json();
+
+      if (orderData.payu) {
+        await launchPayu(orderData.payu as PayuLaunchParams, () => setLoading(false));
+        return;
+      }
+
       setUpiOrder({ orderId: orderData.orderId, upiLink: orderData.upiLink, amount: orderData.amount });
     } catch (error) {
       console.error('Payment error:', error);
@@ -79,40 +84,16 @@ export default function PaymentModal({
   };
 
   if (upiOrder) {
-    if (utrSubmitted) {
-      return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto text-center">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <svg className="w-7 h-7 sm:w-8 sm:h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-2">Payment Submitted!</h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-6">
-              We've received your payment details. Your recharge will be activated once verified.
-            </p>
-            <button
-              onClick={() => {
-                const orderId = upiOrder.orderId;
-                resetAndClose();
-                window.location.href = `/dashboard?order_id=${orderId}`;
-              }}
-              className="btn-primary w-full text-sm sm:text-base"
-            >
-              Go to Dashboard
-            </button>
-          </div>
-        </div>
-      );
-    }
-
     return (
       <UpiPaymentModal
         upiLink={upiOrder.upiLink}
         amount={upiOrder.amount}
         submitUtrUrl={`/api/recharge/${upiOrder.orderId}/submit-utr`}
-        onSubmitted={() => setUtrSubmitted(true)}
+        onSubmitted={() => {
+          const orderId = upiOrder.orderId;
+          resetAndClose();
+          window.location.href = `/dashboard?order_id=${orderId}`;
+        }}
         onCancel={resetAndClose}
       />
     );

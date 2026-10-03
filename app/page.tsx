@@ -14,6 +14,7 @@ import AlacartePaymentModal from '@/components/AlacartePaymentModal';
 import SponsorSlideshow from '@/components/SponsorSlideshow';
 import QuickRechargeModal from '@/components/QuickRechargeModal';
 import UpiPaymentModal from '@/components/UpiPaymentModal';
+import { launchPayu, PayuLaunchParams } from '@/lib/payments/payuClient';
 import { formatCurrency } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
 import { useOperatorBranding } from '@/lib/useOperatorBranding';
@@ -166,6 +167,10 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
+      if (data.payu) {
+        await launchPayu(data.payu as PayuLaunchParams, () => setFastLoading(false));
+        return;
+      }
       setQuickPayOrder({ orderId: data.orderId, upiLink: data.upiLink, amount: data.amount, type: 'fast' });
     } catch {
       alert('Failed to initiate payment. Please try again.');
@@ -181,6 +186,10 @@ export default function HomePage() {
       const res = await fetch('/api/recharge/create-due-order', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
+      if (data.payu) {
+        await launchPayu(data.payu as PayuLaunchParams, () => setDueLoading(false));
+        return;
+      }
       setQuickPayOrder({ orderId: data.orderId, upiLink: data.upiLink, amount: data.amount, type: 'due' });
     } catch {
       alert('Failed to initiate payment. Please try again.');

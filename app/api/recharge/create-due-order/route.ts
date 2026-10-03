@@ -5,10 +5,11 @@ import { recharges, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { buildUpiLink } from '@/lib/payments/upi';
+import { buildPayuTxnParams, isPayuConfigured } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const user = await requireCustomerAuth();
 
@@ -45,7 +46,22 @@ export async function POST(_request: NextRequest) {
 
     const upiLink = buildUpiLink(amountInPaise, `${c.name} - Due Payment`);
 
-    return NextResponse.json({ orderId, upiLink, amount: amountInPaise });
+    const origin = request.nextUrl.origin;
+    const payu = isPayuConfigured()
+      ? buildPayuTxnParams({
+          txnid: orderId,
+          amountPaise: amountInPaise,
+          productinfo: 'Due Payment',
+          firstname: c.name,
+          email: `${c.mobile}@ccn.atyant.in`,
+          phone: c.mobile,
+          udf1: 'recharges',
+          surl: `${origin}/api/payu/callback`,
+          furl: `${origin}/api/payu/callback`,
+        })
+      : null;
+
+    return NextResponse.json({ orderId, upiLink, amount: amountInPaise, payu });
   } catch (error) {
     console.error('Due order error:', error);
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });

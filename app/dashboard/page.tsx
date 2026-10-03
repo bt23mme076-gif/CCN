@@ -113,6 +113,8 @@ export default function DashboardPage() {
         setPaymentHasActivePlan(!!existingActive);
         setPaymentActivePlanExpiry(existingActive?.expires_at ?? null);
         setShowActivationScreen(true);
+      } else if (match?.status === 'failed') {
+        setPaymentError('Payment failed ya cancel ho gaya. Please try again.');
       }
     } catch { /* ignore, dashboard will still load normally */ }
     finally {

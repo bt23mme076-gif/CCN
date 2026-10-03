@@ -30,6 +30,8 @@ function RechargeStatusInner() {
           setOrder(data);
           if (data.status === 'activated') {
             setPhase('activated');
+          } else if (data.status === 'failed') {
+            setPhase('failed');
           }
         }
       } catch { /* ignore, retry next tick */ }

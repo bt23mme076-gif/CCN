@@ -7,6 +7,7 @@ import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import { buildUpiLink } from '@/lib/payments/upi';
+import { buildPayuTxnParams, isPayuConfigured } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,12 +138,28 @@ export async function POST(request: NextRequest) {
 
     const upiLink = buildUpiLink(roundedAmountPaise, `${customer[0].name} - A La Carte`);
 
+    const origin = request.nextUrl.origin;
+    const payu = isPayuConfigured()
+      ? buildPayuTxnParams({
+          txnid: rechargeId,
+          amountPaise: roundedAmountPaise,
+          productinfo: 'A La Carte',
+          firstname: customer[0].name,
+          email: `${customer[0].mobile}@ccn.atyant.in`,
+          phone: customer[0].mobile,
+          udf1: 'recharges',
+          surl: `${origin}/api/payu/callback`,
+          furl: `${origin}/api/payu/callback`,
+        })
+      : null;
+
     return NextResponse.json({
       orderId: rechargeId,
       upiLink,
       amount: roundedAmountPaise,
       currency: 'INR',
       planName: 'ALA CARTE',
+      payu,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
