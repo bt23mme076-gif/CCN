@@ -44,7 +44,71 @@ export default function PendingActivationsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const pendingListRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { fetchData(); }, []);
+  const [voiceAlertsOn, setVoiceAlertsOn] = useState(false);
+  const seenIdsRef = useRef<Set<string> | null>(null); // null until the first fetch, so we never announce the initial load
+
+  useEffect(() => {
+    setVoiceAlertsOn(localStorage.getItem('ccn_voice_alerts') === 'on');
+  }, []);
+
+  const beep = () => {
+    try {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new Ctx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch { /* AudioContext unavailable — speech alone still fires */ }
+  };
+
+  const announcePending = (items: PendingRecharge[]) => {
+    if (!voiceAlertsOn || typeof window === 'undefined' || !window.speechSynthesis || items.length === 0) return;
+    beep();
+    const text = items.length === 1
+      ? `New payment received from ${items[0].customer.name}, ${formatCurrency(items[0].recharge.amount)}. Please activate.`
+      : `${items.length} new payments received. Please activate.`;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-IN';
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleVoiceAlerts = () => {
+    const next = !voiceAlertsOn;
+    setVoiceAlertsOn(next);
+    localStorage.setItem('ccn_voice_alerts', next ? 'on' : 'off');
+    if (next) {
+      // Speech synthesis needs a user gesture to unlock on some mobile
+      // browsers — this click doubles as that unlock, with an audible test.
+      beep();
+      window.speechSynthesis?.speak(new SpeechSynthesisUtterance('Voice alerts on.'));
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/admin/recharges?status=paid,pending');
+        const d = await res.json();
+        const fresh: PendingRecharge[] = d.recharges || [];
+        if (seenIdsRef.current) {
+          const newOnes = fresh.filter((r) => !seenIdsRef.current!.has(r.recharge.id));
+          if (newOnes.length > 0) announcePending(newOnes);
+        }
+        seenIdsRef.current = new Set(fresh.map((r) => r.recharge.id));
+        setRecharges(fresh);
+      } catch { /* keep showing last known list, retry next tick */ }
+    }, 15000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceAlertsOn]);
 
   const handleCardClick = async (key: 'pending' | DetailKey) => {
     if (key === 'pending') {
@@ -203,6 +267,15 @@ export default function PendingActivationsPage() {
             {stats.pendingCount} pending
           </span>
         )}
+        <button onClick={toggleVoiceAlerts}
+          className="px-3 py-1.5 rounded-full text-xs font-semibold w-fit flex items-center gap-1.5 transition-colors"
+          style={{
+            background: voiceAlertsOn ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.05)',
+            color: voiceAlertsOn ? '#34d399' : '#9ca3af',
+            border: `1px solid ${voiceAlertsOn ? 'rgba(52,211,153,0.35)' : 'rgba(255,255,255,0.1)'}`,
+          }}>
+          {voiceAlertsOn ? '🔊 Voice Alerts ON' : '🔇 Voice Alerts OFF'}
+        </button>
       </div>
 
       {/* Stats */}
