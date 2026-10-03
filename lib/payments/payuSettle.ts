@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm';
 import { verifyPayuResponseHash } from '@/lib/payments/payu';
 import { sendPushToAdmin } from '@/lib/push';
 import { clearDue } from '@/lib/payments/clearDue';
+import { sendPaymentAlertEmail } from '@/lib/email';
 
 // Applies a hash-verified PayU result to its order. Shared by the browser
 // callback (surl/furl) and the server-to-server webhook, which can both
@@ -37,6 +38,16 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
           body: `${customer[0].name} ne ₹${(order.amount / 100).toFixed(0)} ka ${order.accessory_name} PayU se pay kiya. Deliver karein.`,
           url: '/admin/deliveries',
         });
+        await sendPaymentAlertEmail({
+          item: order.accessory_name,
+          amountPaise: order.amount,
+          orderId: order.id,
+          payuId: reference,
+          customerId: customer[0].id,
+          customerName: customer[0].name,
+          mobile: customer[0].mobile,
+          stbNumber: customer[0].stb_number,
+        });
       }
     }
     return true;
@@ -59,6 +70,16 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
         title: '💳 Payment Received — Verify & Activate',
         body: `${customer[0].name} ne ₹${(recharge.amount / 100).toFixed(0)} ka ${recharge.plan_name} PayU se pay kiya. Activate karein.`,
         url: '/admin/pending',
+      });
+      await sendPaymentAlertEmail({
+        item: recharge.plan_name,
+        amountPaise: recharge.amount,
+        orderId: recharge.id,
+        payuId: reference,
+        customerId: customer[0].id,
+        customerName: customer[0].name,
+        mobile: customer[0].mobile,
+        stbNumber: customer[0].stb_number,
       });
     }
   }
