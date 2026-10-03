@@ -144,6 +144,11 @@ export default function SuperAdminDashboard() {
           <p className="text-xs text-gray-400">Operator Management</p>
         </div>
         <div className="flex gap-3">
+          <Link href="/superadmin/settings"
+            className="px-4 py-2 rounded-lg text-sm text-gray-400 flex items-center"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            💳 Payments
+          </Link>
           <Link href="/superadmin/trash"
             className="px-4 py-2 rounded-lg text-sm text-gray-400 flex items-center"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>

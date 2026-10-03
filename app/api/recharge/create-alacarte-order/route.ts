@@ -7,7 +7,7 @@ import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import { buildUpiLink } from '@/lib/payments/upi';
-import { buildPayuTxnParams, isPayuConfigured } from '@/lib/payments/payu';
+import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
 
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     const upiLink = buildUpiLink(roundedAmountPaise, `${customer[0].name} - A La Carte`);
 
     const origin = request.nextUrl.origin;
-    const payu = isPayuConfigured()
+    const payu = await isPayuEnabled()
       ? buildPayuTxnParams({
           txnid: rechargeId,
           amountPaise: roundedAmountPaise,

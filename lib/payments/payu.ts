@@ -1,10 +1,29 @@
 import crypto from 'crypto';
+import { db } from '@/lib/db';
+import { appSettings } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 const PAYU_KEY = process.env.PAYU_MERCHANT_KEY || '';
 const PAYU_SALT = process.env.PAYU_SALT || '';
 
 export function isPayuConfigured(): boolean {
   return Boolean(PAYU_KEY && PAYU_SALT);
+}
+
+// Checked by every create-order route before offering PayU. Lets a super
+// admin flip PayU off from the dashboard (e.g. if PayU suspends/breaks the
+// account) without touching env vars or redeploying — every flow falls
+// straight back to the manual UPI+UTR path. Missing row/column (not yet
+// migrated) defaults to enabled so this can't accidentally break checkout.
+export async function isPayuEnabled(): Promise<boolean> {
+  if (!isPayuConfigured()) return false;
+  try {
+    const row = await db.select({ payu_enabled: appSettings.payu_enabled }).from(appSettings).where(eq(appSettings.id, 'global')).limit(1);
+    if (row.length === 0) return true;
+    return row[0].payu_enabled;
+  } catch {
+    return true;
+  }
 }
 
 function sha512(input: string): string {

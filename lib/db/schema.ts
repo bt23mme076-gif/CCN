@@ -297,6 +297,14 @@ export const employees = pgTable('employees', {
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Single-row global config, editable from the superadmin panel. Row id is
+// always 'global' — there's only ever one.
+export const appSettings = pgTable('app_settings', {
+  id: text('id').primaryKey().default('global'),
+  payu_enabled: boolean('payu_enabled').notNull().default(true), // kill-switch: false forces every flow back to manual UPI+UTR
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export const expenses = pgTable('expenses', {
   id: text('id').primaryKey(),
   operator_id: text('operator_id').references(() => operators.id),

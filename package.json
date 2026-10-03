@@ -29,6 +29,7 @@
     "create-super-admin": "tsx create-super-admin.ts",
     "add-settlements-refunds-tables": "tsx add-settlements-refunds-tables.ts",
     "add-operator-branding-columns": "tsx add-operator-branding-columns.ts",
+    "add-app-settings-table": "tsx add-app-settings-table.ts",
     "delete-super-admin": "tsx delete-super-admin.ts"
   },
   "dependencies": {

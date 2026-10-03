@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { resolveConnection } from '@/lib/connections';
 import { buildUpiLink } from '@/lib/payments/upi';
-import { buildPayuTxnParams, isPayuConfigured } from '@/lib/payments/payu';
+import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const upiLink = buildUpiLink(c.fast_recharge_amount, `${c.name} - Fast Recharge`);
 
     const origin = request.nextUrl.origin;
-    const payu = isPayuConfigured()
+    const payu = await isPayuEnabled()
       ? buildPayuTxnParams({
           txnid: rechargeId,
           amountPaise: c.fast_recharge_amount,

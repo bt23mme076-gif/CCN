@@ -54,6 +54,19 @@ export async function POST() {
     }
     if (orphaned.length === 0) log.push('no orphaned operators found');
 
+    await migrationClient`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        id TEXT PRIMARY KEY DEFAULT 'global',
+        payu_enabled BOOLEAN NOT NULL DEFAULT true,
+        updated_at TIMESTAMP NOT NULL DEFAULT now()
+      );
+    `;
+    await migrationClient`
+      INSERT INTO app_settings (id, payu_enabled) VALUES ('global', true)
+      ON CONFLICT (id) DO NOTHING;
+    `;
+    log.push('app_settings table: ok');
+
     return NextResponse.json({ success: true, log });
   } catch (error) {
     console.error('Run migrations error:', error);

@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
 import { findCustomerByStbOrMobile } from '@/lib/guestLookup';
 import { buildUpiLink } from '@/lib/payments/upi';
-import { buildPayuTxnParams, isPayuConfigured } from '@/lib/payments/payu';
+import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     const upiLink = buildUpiLink(finalPrice, `${match.name} - ${displayPlanName}`);
 
     const origin = request.nextUrl.origin;
-    const payu = isPayuConfigured()
+    const payu = await isPayuEnabled()
       ? buildPayuTxnParams({
           txnid: rechargeId,
           amountPaise: finalPrice,
