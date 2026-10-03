@@ -180,7 +180,7 @@ export default function PaymentModal({
           disabled={loading}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
-          {inAppBrowser ? 'Open in Chrome to Pay' : loading ? 'Processing...' : 'Pay via UPI'}
+          {inAppBrowser ? 'Open in Chrome to Pay' : loading ? 'Processing...' : 'Pay Now'}
         </button>
       </div>
     </div>

@@ -88,6 +88,17 @@ export default function DashboardPage() {
     const orderId = urlParams.get('order_id');
     const type = urlParams.get('type');
     const isDue = type === 'due';
+    const payment = urlParams.get('payment');
+
+    if (payment) {
+      alert(
+        payment === 'failed'
+          ? 'Payment failed or was cancelled. If money was deducted, it will be refunded by your bank — please try again.'
+          : 'Payment successful! Your operator will deliver the accessory soon.'
+      );
+      window.history.replaceState({}, '', '/dashboard');
+      return;
+    }
 
     if (!orderId) return;
 

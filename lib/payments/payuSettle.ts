@@ -64,3 +64,22 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
   }
   return true;
 }
+
+// Where to send the customer after a PayU result — shared by the browser
+// callback and the bolt.js confirm endpoint so both land on the same screen.
+// /dashboard?order_id= shows the "activation in progress" timer for a paid
+// recharge; /recharge-status does the same for the no-login guest flow.
+export async function payuReturnPath(fields: Record<string, string>, valid: boolean): Promise<string> {
+  const { txnid = '', udf1, udf2, status } = fields;
+  const id = encodeURIComponent(txnid);
+  const failed = !valid || status !== 'success';
+
+  if (udf2 === 'guest') {
+    return failed ? `/recharge-status?order_id=${id}&payment=failed` : `/recharge-status?order_id=${id}`;
+  }
+  if (failed) return '/dashboard?payment=failed';
+  if (udf1 === 'accessory') return '/dashboard?payment=success&type=accessory';
+
+  const [recharge] = await db.select({ plan_name: recharges.plan_name }).from(recharges).where(eq(recharges.id, txnid)).limit(1);
+  return recharge?.plan_name === 'Due Payment' ? `/dashboard?order_id=${id}&type=due` : `/dashboard?order_id=${id}`;
+}

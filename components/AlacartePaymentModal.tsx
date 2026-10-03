@@ -181,7 +181,7 @@ export default function AlacartePaymentModal({
           disabled={loading}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
-          {loading ? 'Processing...' : 'Pay via UPI'}
+          {loading ? 'Processing...' : 'Pay Now'}
         </button>
       </div>
     </div>

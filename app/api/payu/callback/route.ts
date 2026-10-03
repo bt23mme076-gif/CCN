@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { settlePayuResult } from '@/lib/payments/payuSettle';
+import { settlePayuResult, payuReturnPath } from '@/lib/payments/payuSettle';
 
 export const dynamic = 'force-dynamic';
 
 // PayU posts here for both success (surl) and failure (furl) — same endpoint,
 // differentiated by the `status` field. This is the authoritative, hash-verified
-// confirmation; any client-side responseHandler in bolt.js is just UI, not state.
+// confirmation for redirect-based payments (bolt.js overlay results go via
+// /api/payu/confirm instead).
 export async function POST(request: NextRequest) {
   const origin = request.nextUrl.origin;
   const redirectTo = (path: string) => NextResponse.redirect(`${origin}${path}`, { status: 303 });
@@ -18,14 +19,6 @@ export async function POST(request: NextRequest) {
     return redirectTo('/');
   }
 
-  const { txnid, udf1, udf2 } = fields;
-  const isGuest = udf2 === 'guest';
-
   const valid = await settlePayuResult(fields);
-  if (!valid) {
-    return redirectTo(isGuest ? `/recharge-status?order_id=${txnid || ''}` : '/dashboard');
-  }
-
-  if (udf1 === 'accessory') return redirectTo(`/dashboard?order_id=${txnid}`);
-  return redirectTo(isGuest ? `/recharge-status?order_id=${txnid}` : `/dashboard?order_id=${txnid}`);
+  return redirectTo(await payuReturnPath(fields, valid));
 }

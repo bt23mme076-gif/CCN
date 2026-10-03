@@ -16,7 +16,7 @@ export interface PayuLaunchParams {
 }
 
 interface BoltResponse {
-  response?: { txnStatus?: string };
+  response?: { txnStatus?: string } & Record<string, unknown>;
 }
 
 declare global {
@@ -52,17 +52,35 @@ function loadBoltScript(): Promise<void> {
   return scriptPromise;
 }
 
-// Launches the PayU Checkout Plus overlay on the same page. The actual
-// payment confirmation happens server-side (surl/furl POST to
-// /api/payu/callback, which redirects the browser onward) — onFallback is
-// only called if the overlay itself fails to load/launch or the user closes
-// it without a server redirect happening, so the caller can reset its UI.
+// Launches the PayU Checkout Plus overlay on the same page. When the payment
+// finishes inside the overlay, bolt.js hands the signed result to
+// responseHandler instead of redirecting — we post it to /api/payu/confirm,
+// which hash-verifies it, marks the order and tells us where to send the
+// customer (dashboard activation timer / recharge-status). onFallback resets
+// the caller's UI when the overlay fails to load or the customer closes it.
 export async function launchPayu(params: PayuLaunchParams, onFallback: () => void): Promise<void> {
   try {
     await loadBoltScript();
     if (!window.bolt) throw new Error('PayU checkout unavailable');
     window.bolt.launch(params, {
-      responseHandler: () => onFallback(),
+      responseHandler: async ({ response }) => {
+        if (!response || response.txnStatus === 'CANCEL') {
+          onFallback();
+          return;
+        }
+        try {
+          const res = await fetch('/api/payu/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(response),
+          });
+          const data = await res.json();
+          window.location.href = data.redirect || '/dashboard';
+        } catch {
+          // The webhook still records the payment; land on the dashboard.
+          window.location.href = '/dashboard';
+        }
+      },
       catchException: () => onFallback(),
     });
   } catch (error) {

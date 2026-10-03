@@ -13,10 +13,11 @@ function RechargeStatusInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get('order_id');
+  const paymentFailed = searchParams.get('payment') === 'failed';
 
-  const [phase, setPhase] = useState<Phase>(orderId ? 'waiting' : 'failed');
+  const [phase, setPhase] = useState<Phase>(orderId && !paymentFailed ? 'waiting' : 'failed');
   const [order, setOrder] = useState<{ plan_name: string; amount: number; expires_at: string | null } | null>(null);
-  const [errorMsg] = useState(orderId ? '' : 'No order found.');
+  const [errorMsg] = useState(!orderId ? 'No order found.' : paymentFailed ? 'Payment failed or was cancelled. Please try again.' : '');
   const [redirectIn, setRedirectIn] = useState(REDIRECT_SECONDS);
 
   useEffect(() => {
