@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { appSettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-const PAYU_KEY = process.env.PAYU_MERCHANT_KEY || '';
+const PAYU_KEY = process.env.PAYU_MERCHANT_KEY || process.env.PAYU_KEY || '';
 const PAYU_SALT = process.env.PAYU_SALT || '';
 
 export function isPayuConfigured(): boolean {
