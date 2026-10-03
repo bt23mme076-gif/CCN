@@ -65,9 +65,13 @@ export async function POST(request: NextRequest) {
       operatorId: operator.id,
     });
 
-    // Create response
+    // Create response. `token` is included in the body (not just the cookie)
+    // so the CCN APK's WebView — which has been observed dropping the
+    // SameSite=None session cookie after a short time — can keep it in
+    // localStorage and send it as an Authorization header fallback instead.
     const response = NextResponse.json({
       success: true,
+      token,
       admin: {
         id: admin[0].id,
         username: admin[0].username,

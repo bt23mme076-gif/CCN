@@ -5,6 +5,30 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
+// The CCN APK's WebView has been observed dropping the auth cookie after a
+// short time (regular browsers are unaffected). As a fallback, every
+// /api/admin/* fetch also carries the token from localStorage as an
+// Authorization header — middleware.ts accepts either. Patched once at
+// module load so every existing `fetch(...)` call across the admin section
+// picks it up without having to be rewritten individually.
+if (typeof window !== 'undefined' && !(window as any).__ccnAdminFetchPatched) {
+  (window as any).__ccnAdminFetchPatched = true;
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    if (url.includes('/api/admin/')) {
+      let token: string | null = null;
+      try { token = localStorage.getItem('ccn_admin_token'); } catch { /* storage unavailable */ }
+      if (token) {
+        const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+        if (!headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
+        init = { ...init, headers };
+      }
+    }
+    return originalFetch(input, init);
+  };
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -71,6 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
+    try { localStorage.removeItem('ccn_admin_token'); } catch { /* storage unavailable */ }
     router.push('/admin/login');
   };
 

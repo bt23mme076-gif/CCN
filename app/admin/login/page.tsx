@@ -24,6 +24,11 @@ export default function AdminLoginPage() {
       });
       const data = await response.json();
       if (response.ok && data.success) {
+        // Backup for the cookie, since some WebViews (the CCN APK included)
+        // have been seen dropping it after a short time.
+        if (data.token) {
+          try { localStorage.setItem('ccn_admin_token', data.token); } catch { /* storage unavailable */ }
+        }
         window.location.href = '/admin/pending';
       } else {
         setError(data.error || 'Login failed');

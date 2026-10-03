@@ -23,6 +23,20 @@ export function middleware(request: NextRequest) {
   const subdomain = extractSubdomain(request.headers.get('host') ?? '');
   requestHeaders.set('x-operator-subdomain', subdomain);
 
+  // The CCN APK's WebView has been observed dropping the auth cookie after a
+  // short time (not seen in regular browsers). As a fallback, the admin
+  // frontend also keeps the token in localStorage and resends it as an
+  // Authorization: Bearer header — accept that here and splice it into the
+  // forwarded Cookie header so every downstream cookies()-based auth check
+  // (route handlers, getCurrentUser(), etc.) sees it exactly as if the
+  // cookie itself had arrived.
+  const bearerToken = request.headers.get('authorization')?.match(/^Bearer (.+)$/)?.[1];
+  if (bearerToken && !request.cookies.get('auth_token')?.value) {
+    const existingCookie = requestHeaders.get('cookie') ?? '';
+    const withAuth = `${existingCookie}${existingCookie ? '; ' : ''}auth_token=${bearerToken}`;
+    requestHeaders.set('cookie', withAuth);
+  }
+
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // Propagate the real client IP from Cloudflare.
@@ -37,7 +51,8 @@ export function middleware(request: NextRequest) {
   if (
     pathname.startsWith('/api/admin/') &&
     pathname !== '/api/admin/login' &&
-    !request.cookies.get('auth_token')?.value
+    !request.cookies.get('auth_token')?.value &&
+    !bearerToken
   ) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
