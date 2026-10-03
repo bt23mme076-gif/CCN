@@ -37,6 +37,7 @@ export async function POST(
         title: '💳 UPI Payment Claimed — Verify & Activate',
         body: `${c.name} ne ₹${(recharge[0].amount / 100).toFixed(0)} ka ${recharge[0].plan_name} UPI se pay kiya (UTR: ${utr}, Quick Recharge). PhonePe Business mein confirm karke activate karein.`,
         url: '/admin/pending',
+        tag: `recharge-${id}`,
       });
     }
 

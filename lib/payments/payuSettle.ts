@@ -37,6 +37,7 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
           title: '📦 Payment Received — Verify & Deliver',
           body: `${customer[0].name} ne ₹${(order.amount / 100).toFixed(0)} ka ${order.accessory_name} PayU se pay kiya. Deliver karein.`,
           url: '/admin/deliveries',
+          tag: `accessory-${order.id}`,
         });
         await sendPaymentAlertEmail({
           item: order.accessory_name,
@@ -70,6 +71,7 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
         title: '💳 Payment Received — Verify & Activate',
         body: `${customer[0].name} ne ₹${(recharge.amount / 100).toFixed(0)} ka ${recharge.plan_name} PayU se pay kiya. Activate karein.`,
         url: '/admin/pending',
+        tag: `recharge-${recharge.id}`,
       });
       await sendPaymentAlertEmail({
         item: recharge.plan_name,

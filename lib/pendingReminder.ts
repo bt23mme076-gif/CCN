@@ -25,6 +25,7 @@ export function startPendingActivationReminder() {
         title: `🔴 ${pending.length} Recharge${pending.length > 1 ? 's' : ''} Waiting!`,
         body: `${oldest.plan_name} — ${waitingMinutes}min se activation ka wait ho raha hai. Turant activate karein!`,
         url: '/admin/pending',
+        tag: 'pending-reminder', // same tag each tick — renotify in sw.js makes it re-vibrate instead of stacking duplicates
       });
     } catch (error) {
       console.error('Pending activation reminder error:', error);

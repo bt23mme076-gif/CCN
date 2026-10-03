@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { pushSubscriptions, adminPushSubscriptions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-export async function sendPushToCustomer(customerId: string, payload: { title: string; body: string; url?: string }) {
+export async function sendPushToCustomer(customerId: string, payload: { title: string; body: string; url?: string; tag?: string }) {
   try {
     const publicKey = process.env.VAPID_PUBLIC_KEY;
     const privateKey = process.env.VAPID_PRIVATE_KEY;
@@ -24,7 +24,7 @@ export async function sendPushToCustomer(customerId: string, payload: { title: s
   }
 }
 
-export async function sendPushToAdmin(payload: { title: string; body: string; url?: string }) {
+export async function sendPushToAdmin(payload: { title: string; body: string; url?: string; tag?: string }) {
   try {
     const publicKey = process.env.VAPID_PUBLIC_KEY;
     const privateKey = process.env.VAPID_PRIVATE_KEY;
