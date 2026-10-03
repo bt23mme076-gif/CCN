@@ -93,6 +93,20 @@ export default function PendingActivationsPage() {
     window.speechSynthesis.speak(utterance);
   };
 
+  // Keeps nagging every poll tick for as long as a paid order sits
+  // unactivated — stops the instant it's activated or cancelled, since
+  // either removes it from the paid/pending list this reads from.
+  const announceReminder = (items: PendingRecharge[]) => {
+    if (!voiceAlertsOn || typeof window === 'undefined' || !window.speechSynthesis || items.length === 0) return;
+    beep();
+    const text = items.length === 1
+      ? `Reminder: payment from ${items[0].customer.name}, ${formatCurrency(items[0].recharge.amount)}, is still waiting. Please activate or cancel.`
+      : `Reminder: ${items.length} payments still waiting. Please activate or cancel.`;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-IN';
+    window.speechSynthesis.speak(utterance);
+  };
+
   const toggleVoiceAlerts = () => {
     const next = !voiceAlertsOn;
     setVoiceAlertsOn(next);
@@ -115,15 +129,20 @@ export default function PendingActivationsPage() {
         if (seenStatusRef.current) {
           // Any activity — a brand-new order (customer just started paying)
           // or an existing one's status changing (e.g. pending → paid) —
-          // triggers the alert, not just the paid transition specifically.
+          // triggers a one-time alert, except 'paid' which the repeating
+          // reminder below covers instead (so it isn't announced twice on
+          // the tick it first appears).
           const changed = fresh.filter((r) => {
             const prevStatus = seenStatusRef.current!.get(r.recharge.id);
-            return prevStatus === undefined || prevStatus !== r.recharge.status;
+            return (prevStatus === undefined || prevStatus !== r.recharge.status) && r.recharge.status !== 'paid';
           });
           if (changed.length > 0) announcePending(changed);
         }
         seenStatusRef.current = new Map(fresh.map((r) => [r.recharge.id, r.recharge.status]));
         setRecharges(fresh);
+
+        const unresolved = fresh.filter((r) => r.recharge.status === 'paid');
+        if (unresolved.length > 0) announceReminder(unresolved);
       } catch { /* keep showing last known list, retry next tick */ }
     }, 7000);
     return () => clearInterval(interval);
