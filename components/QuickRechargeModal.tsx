@@ -131,6 +131,7 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
       const orderData = await orderRes.json();
       if (!orderRes.ok) {
         setError(orderData.error || 'Failed to start payment');
+        setPayingPlanId(null);
         return;
       }
 
@@ -140,9 +141,9 @@ export default function QuickRechargeModal({ isOpen, onClose }: QuickRechargeMod
       }
 
       setPayOrder({ orderId: orderData.orderId, upiLink: orderData.upiLink, amount: orderData.amount });
+      setPayingPlanId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start payment');
-    } finally {
       setPayingPlanId(null);
     }
   };

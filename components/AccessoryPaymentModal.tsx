@@ -63,10 +63,10 @@ export default function AccessoryPaymentModal({
       }
 
       setUpiOrder({ orderId: orderData.orderId, upiLink: orderData.upiLink, amount: orderData.amount });
+      setLoading(false);
     } catch (error) {
       console.error('Payment error:', error);
       alert(error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.');
-    } finally {
       setLoading(false);
     }
   };

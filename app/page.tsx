@@ -166,15 +166,15 @@ export default function HomePage() {
         body: JSON.stringify(cid ? { connectionId: cid } : {}),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
+      if (!res.ok) { alert(data.error || 'Failed to initiate payment'); setFastLoading(false); return; }
       if (data.payu) {
         await launchPayu(data.payu as PayuLaunchParams, () => setFastLoading(false));
         return;
       }
       setQuickPayOrder({ orderId: data.orderId, upiLink: data.upiLink, amount: data.amount, type: 'fast' });
+      setFastLoading(false);
     } catch {
       alert('Failed to initiate payment. Please try again.');
-    } finally {
       setFastLoading(false);
     }
   };
@@ -185,15 +185,15 @@ export default function HomePage() {
     try {
       const res = await fetch('/api/recharge/create-due-order', { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || 'Failed to initiate payment'); return; }
+      if (!res.ok) { alert(data.error || 'Failed to initiate payment'); setDueLoading(false); return; }
       if (data.payu) {
         await launchPayu(data.payu as PayuLaunchParams, () => setDueLoading(false));
         return;
       }
       setQuickPayOrder({ orderId: data.orderId, upiLink: data.upiLink, amount: data.amount, type: 'due' });
+      setDueLoading(false);
     } catch {
       alert('Failed to initiate payment. Please try again.');
-    } finally {
       setDueLoading(false);
     }
   };

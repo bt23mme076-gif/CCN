@@ -69,15 +69,18 @@ export default function PaymentModal({
       const orderData = await orderResponse.json();
 
       if (orderData.payu) {
+        // Stays "Processing…" until the overlay reports back — resetting
+        // loading early would let this card's "Pay Now" button become
+        // clickable again behind the bolt.js overlay.
         await launchPayu(orderData.payu as PayuLaunchParams, () => setLoading(false));
         return;
       }
 
       setUpiOrder({ orderId: orderData.orderId, upiLink: orderData.upiLink, amount: orderData.amount });
+      setLoading(false);
     } catch (error) {
       console.error('Payment error:', error);
       alert(error instanceof Error ? error.message : 'Failed to initiate payment. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
