@@ -45,7 +45,13 @@ export default function PendingActivationsPage() {
   const pendingListRef = useRef<HTMLDivElement>(null);
 
   const [voiceAlertsOn, setVoiceAlertsOn] = useState(false);
-  const seenIdsRef = useRef<Set<string> | null>(null); // null until the first fetch, so we never announce the initial load
+  // id -> last-seen status. null until the first poll, so we never announce
+  // the initial load. Keyed by status (not just id) because a recharge row
+  // is created as 'pending' the moment the customer opens the payment
+  // screen — long before they actually pay — so a plain "new id" check would
+  // mark it seen right away and miss the pending→paid transition that
+  // actually matters.
+  const seenStatusRef = useRef<Map<string, string> | null>(null);
 
   useEffect(() => {
     setVoiceAlertsOn(localStorage.getItem('ccn_voice_alerts') === 'on');
@@ -98,11 +104,14 @@ export default function PendingActivationsPage() {
         const res = await fetch('/api/admin/recharges?status=paid,pending');
         const d = await res.json();
         const fresh: PendingRecharge[] = d.recharges || [];
-        if (seenIdsRef.current) {
-          const newOnes = fresh.filter((r) => !seenIdsRef.current!.has(r.recharge.id));
-          if (newOnes.length > 0) announcePending(newOnes);
+        if (seenStatusRef.current) {
+          const newlyPaid = fresh.filter((r) => {
+            const prevStatus = seenStatusRef.current!.get(r.recharge.id);
+            return r.recharge.status === 'paid' && prevStatus !== 'paid';
+          });
+          if (newlyPaid.length > 0) announcePending(newlyPaid);
         }
-        seenIdsRef.current = new Set(fresh.map((r) => r.recharge.id));
+        seenStatusRef.current = new Map(fresh.map((r) => [r.recharge.id, r.recharge.status]));
         setRecharges(fresh);
       } catch { /* keep showing last known list, retry next tick */ }
     }, 15000);
