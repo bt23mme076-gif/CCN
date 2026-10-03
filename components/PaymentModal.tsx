@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { formatCurrency, isInAppBrowser, openInExternalBrowser } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { calcDurationPricing } from '@/lib/planDuration';
 import UpiPaymentModal from '@/components/UpiPaymentModal';
 import { launchPayu, PayuLaunchParams } from '@/lib/payments/payuClient';
@@ -36,7 +36,6 @@ export default function PaymentModal({
 }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
   const [upiOrder, setUpiOrder] = useState<{ orderId: string; upiLink: string; amount: number } | null>(null);
-  const inAppBrowser = isInAppBrowser();
 
   if (!isOpen || !plan) return null;
 
@@ -127,20 +126,6 @@ export default function PaymentModal({
           </button>
         </div>
 
-        {inAppBrowser && (
-          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-4 text-sm text-yellow-800">
-            <strong>PhonePe/GPay buttons kaam nahi karenge</strong> is browser mein.<br />
-            <button
-              className="underline font-medium mt-1 inline-block"
-              onClick={() => {
-                openInExternalBrowser();
-              }}
-            >
-              Chrome mein kholein →
-            </button>
-          </div>
-        )}
-
         <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
           <div className="flex justify-between text-sm sm:text-base">
             <span className="text-gray-600">Plan:</span>
@@ -176,11 +161,11 @@ export default function PaymentModal({
         </div>
 
         <button
-          onClick={inAppBrowser ? openInExternalBrowser : handlePayment}
+          onClick={handlePayment}
           disabled={loading}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
-          {inAppBrowser ? 'Open in Chrome to Pay' : loading ? 'Processing...' : 'Pay Now'}
+          {loading ? 'Processing...' : 'Pay Now'}
         </button>
       </div>
     </div>
