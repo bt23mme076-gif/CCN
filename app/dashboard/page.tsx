@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import StatusBadge from '@/components/StatusBadge';
+import { portalBg, GlassCard, SectionTitle, StatusPill, DaysRing, accentGradient } from '@/components/PortalUI';
 import ActivationWaiting from '@/components/ActivationWaiting';
 import { formatCurrency, formatDateTime, getDaysRemaining, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
 import { useOperatorBranding } from '@/lib/useOperatorBranding';
@@ -203,7 +203,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={portalBg}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
       </div>
     );
@@ -228,7 +228,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={portalBg}>
       {/* Header */}
       <nav className="sticky top-0 z-30 shadow-lg" style={{
         background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)',
@@ -315,62 +315,52 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         {/* Payment Error Message */}
         {paymentError && (
-          <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <p className="text-sm font-medium flex-1">{paymentError}</p>
-              <button onClick={() => setPaymentError(null)} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+          <div className="mb-5 p-4 rounded-2xl flex items-start gap-3"
+            style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)' }}>
+            <span className="text-red-400 text-lg leading-none">⚠</span>
+            <p className="text-sm font-medium flex-1 text-red-200">{paymentError}</p>
+            <button onClick={() => setPaymentError(null)} className="text-red-300/70 hover:text-white text-lg leading-none">✕</button>
           </div>
         )}
+
+        {/* Greeting + account details */}
+        <div className="mb-5 sm:mb-6">
+          <p className="text-xs uppercase tracking-[0.2em] font-semibold mb-1.5" style={{ color: '#f5d27a' }}>My Account</p>
+          <h1 className="font-display text-2xl sm:text-4xl font-bold text-white mb-4">
+            Namaste, {customer?.name?.split(' ')[0]} 👋
+          </h1>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { k: 'STB', v: customer?.stb_number },
+              { k: 'Mobile', v: customer?.mobile },
+              { k: 'Area', v: customer?.area },
+            ].map(({ k, v }) => (
+              <span key={k} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <span className="text-gray-400 uppercase tracking-wider font-semibold">{k}</span>
+                <span className="text-white font-semibold font-mono">{v}</span>
+              </span>
+            ))}
+          </div>
+        </div>
 
         {/* Outstanding Due Banner */}
         {customer && customer.outstanding_balance > 0 && (
-          <div className="mb-6 rounded-2xl overflow-hidden"
-            style={{ boxShadow: '0 4px 24px rgba(220,38,38,0.35)' }}>
-            <div className="flex items-center gap-4 px-5 py-4"
-              style={{ background: 'linear-gradient(90deg, #dc2626 0%, #b91c1c 100%)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-white text-sm sm:text-base leading-tight">
-                  Outstanding Due: <span className="text-yellow-300">₹{customer.outstanding_balance}</span>
-                </p>
-                <p className="text-xs text-red-100 mt-0.5">
-                  Recharge is blocked. Contact {branding.name} to clear your dues.
-                </p>
-              </div>
+          <div className="mb-5 rounded-2xl p-4 sm:p-5 flex items-center gap-4"
+            style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.22), rgba(127,29,29,0.25))', border: '1px solid rgba(248,113,113,0.35)', boxShadow: '0 8px 30px rgba(220,38,38,0.2)' }}>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.2)' }}>
+              <span className="text-xl">💰</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs uppercase tracking-wider font-semibold text-red-300">Outstanding Due</p>
+              <p className="text-2xl font-extrabold text-white leading-tight">₹{customer.outstanding_balance}</p>
+              <p className="text-xs text-red-200/80 mt-0.5">Ye amount aapke next recharge ke payment mein automatically add ho jayega.</p>
             </div>
           </div>
         )}
-
-        {/* Customer Info */}
-        <div className="card mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-            <div>
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-2">
-                {customer?.name}
-              </h2>
-              <div className="space-y-1 text-sm sm:text-base text-gray-600">
-                <p>Mobile: {customer?.mobile}</p>
-                <p>STB Number: {customer?.stb_number}</p>
-                <p>Area: {customer?.area}</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
 
         {/* Retrack Popup */}
@@ -445,175 +435,142 @@ export default function DashboardPage() {
 
         {/* Pending Activation Notice */}
         {pendingActivation && (
-          <div className="card mb-6 sm:mb-8" style={{
-            background: 'linear-gradient(135deg, #1e1b4b, #312e81)',
-            border: '1px solid rgba(139,92,246,0.3)',
-          }}>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="flex items-start gap-3 flex-1">
-                <div className="w-10 h-10 rounded-full bg-yellow-400/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl animate-pulse">📺</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-white mb-1">Activation In Progress</h3>
-                  <p className="text-sm text-blue-200">
-                    <strong className="text-white">{pendingActivation.plan_name}</strong> ({formatCurrency(pendingActivation.amount)}) — Payment confirmed. Keep your TV on!
-                  </p>
-                </div>
+          <div className="mb-5 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+            style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.14), rgba(99,102,241,0.14))', border: '1px solid rgba(251,191,36,0.3)' }}>
+            <div className="flex items-start gap-3 flex-1">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(251,191,36,0.18)' }}>
+                <span className="text-xl animate-pulse">📺</span>
               </div>
-              <button
-                onClick={() => {
-                  setJustPaidRecharge(pendingActivation);
-                  setShowActivationScreen(true);
-                }}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white whitespace-nowrap"
-                style={{ background: 'linear-gradient(135deg, #e94560, #c0392b)' }}
-              >
-                View Status
-              </button>
+              <div>
+                <p className="text-xs uppercase tracking-wider font-semibold text-amber-300 mb-0.5">Activation In Progress</p>
+                <p className="text-sm text-gray-200">
+                  <strong className="text-white">{pendingActivation.plan_name}</strong> · {formatCurrency(pendingActivation.amount)} — Payment confirmed. Keep your TV on!
+                </p>
+              </div>
             </div>
+            <button
+              onClick={() => {
+                setJustPaidRecharge(pendingActivation);
+                setShowActivationScreen(true);
+              }}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-white whitespace-nowrap"
+              style={{ background: accentGradient, boxShadow: '0 6px 20px rgba(230,57,70,0.35)' }}
+            >
+              View Status
+            </button>
           </div>
         )}
 
-        {/* Active Plan */}
-        <div className="card bg-brand-navy text-white mb-6 sm:mb-8">
-          {activePlan ? (
-            <div>
-              <h3 className="font-display text-lg sm:text-xl font-bold mb-4">Active Plan</h3>
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-6">
-                <div className="flex-1 w-full">
-                  <p className="text-xl sm:text-2xl font-bold mb-4">{activePlan.plan_name}</p>
-                  <div className="grid grid-cols-3 gap-4 text-xs sm:text-sm border-t border-indigo-950 pt-4">
-                    <div>
-                      <p className="text-gray-400 mb-1">Start Date</p>
-                      <p className="font-semibold text-white">
-                        {formatDateDMY(activePlan.activated_at)}
-                      </p>
+        {/* Active Plan — hero card */}
+        <div className="relative mb-5 sm:mb-6 rounded-3xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #1b1846 0%, #24205c 45%, #15133a 100%)',
+            border: '1px solid rgba(245,210,122,0.22)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)',
+          }}>
+          <div className="absolute inset-x-0 top-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, #f5d27a, #e63946, transparent)' }} />
+          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(230,57,70,0.25), transparent 70%)' }} />
+          <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.3), transparent 70%)' }} />
+
+          <div className="relative p-5 sm:p-8">
+            {activePlan ? (() => {
+              const daysLeft = getDaysRemaining(new Date(activePlan.expires_at!));
+              const start = activePlan.activated_at ? new Date(activePlan.activated_at).getTime() : Date.now();
+              const totalDays = Math.max(1, Math.round((new Date(activePlan.expires_at!).getTime() - start) / 86400000));
+              return (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-8">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <StatusPill status="activated" label="Active Plan" />
                     </div>
-                    <div>
-                      <p className="text-gray-400 mb-1">End Date</p>
-                      <p className="font-semibold text-white">
-                        {formatDisplayEndDate(activePlan.expires_at)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 mb-1">Effective Date</p>
-                      <p className="font-semibold text-white">
-                        {formatDateDMY(activePlan.activated_at)}
-                      </p>
+                    <p className="font-display text-2xl sm:text-4xl font-bold text-white mb-5 leading-tight">{activePlan.plan_name}</p>
+                    <div className="grid grid-cols-2 gap-3 max-w-sm">
+                      <div className="rounded-xl px-3.5 py-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <p className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold mb-0.5">Start Date</p>
+                        <p className="font-bold text-white">{formatDateDMY(activePlan.activated_at)}</p>
+                      </div>
+                      <div className="rounded-xl px-3.5 py-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <p className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold mb-0.5">End Date</p>
+                        <p className="font-bold text-white">{formatDisplayEndDate(activePlan.expires_at)}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="text-center sm:text-right flex-shrink-0 self-center sm:self-start">
-                  <div className="text-4xl sm:text-5xl font-bold text-accent-red mb-1">
-                    {getDaysRemaining(new Date(activePlan.expires_at!))}
+                  <div className="self-center">
+                    <DaysRing days={daysLeft} fraction={daysLeft / totalDays} />
                   </div>
-                  <p className="text-sm sm:text-base text-gray-300">days left</p>
                 </div>
+              );
+            })() : (
+              <div className="text-center py-4 sm:py-6">
+                <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-3xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>📡</div>
+                <h3 className="font-display text-2xl sm:text-3xl font-bold text-white mb-2">No Active Plan</h3>
+                <p className="text-sm sm:text-base text-gray-300 max-w-md mx-auto">
+                  Recharge now to continue enjoying your favorite channels
+                </p>
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-6 sm:py-8">
-              <h3 className="font-display text-xl sm:text-2xl font-bold mb-3 sm:mb-4">No Active Plan</h3>
-              <p className="text-sm sm:text-base text-gray-300 mb-4 sm:mb-6 px-4">
-                Recharge now to continue enjoying your favorite channels
-              </p>
-              <Link
-                href="/plans"
-                className="inline-block bg-accent-red text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm sm:text-base"
-              >
-                Recharge Now
+            )}
+
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Link href="/plans"
+                className="text-center px-6 py-3.5 rounded-xl font-bold text-white transition-transform hover:-translate-y-0.5"
+                style={{ background: accentGradient, boxShadow: '0 8px 24px rgba(230,57,70,0.35)' }}>
+                ⚡ Recharge Now
+              </Link>
+              <Link href="/dashboard/buy"
+                className="text-center px-6 py-3.5 rounded-xl font-semibold text-white transition-colors hover:bg-white/10"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}>
+                Buy & History →
               </Link>
             </div>
-          )}
+          </div>
         </div>
 
-        {activePlan && (
-          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/plans"
-              className="btn-primary flex-1 text-center"
-            >
-              Recharge Now
-            </Link>
-            <Link
-              href="/dashboard/buy"
-              className="bg-accent-blue text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex-1 text-center"
-            >
-              View Buy & History
-            </Link>
-          </div>
-        )}
-
-        {!activePlan && (
-          <div className="mb-6 sm:mb-8 text-center">
-            <Link
-              href="/dashboard/buy"
-              className="btn-primary inline-block w-full sm:w-auto"
-            >
-              Browse Plans & History
-            </Link>
-          </div>
-        )}
-
-        {/* Recharge History */}
-        <div className="card">
-          <h3 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-4 sm:mb-6">
-            Recharge History
-          </h3>
+        {/* Recent recharges */}
+        <GlassCard className="p-5 sm:p-6">
+          <SectionTitle
+            action={recharges.length > 0 && (
+              <Link href="/dashboard/buy" className="text-sm font-semibold hover:underline" style={{ color: '#f5d27a' }}>
+                View all →
+              </Link>
+            )}
+          >
+            Recent Recharges
+          </SectionTitle>
 
           {recharges.length === 0 ? (
-            <p className="text-gray-600 text-center py-8 text-sm sm:text-base">No recharge history yet</p>
+            <p className="text-gray-400 text-center py-10 text-sm">No recharge history yet</p>
           ) : (
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm">Plan</th>
-                      <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm hidden md:table-cell">Order ID</th>
-                      <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm">Date</th>
-                      <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm">Amount</th>
-                      <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm">Status</th>
-                      <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 text-xs sm:text-sm">Receipt</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recharges.map((recharge) => (
-                      <tr key={recharge.id} className="border-b last:border-b-0">
-                        <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm">{recharge.plan_name}</td>
-                        <td className="py-3 px-2 sm:px-4 text-xs text-gray-600 hidden md:table-cell">
-                          {recharge.id}
-                        </td>
-                        <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600">
-                          {formatDateTime(new Date(recharge.created_at))}
-                        </td>
-                        <td className="py-3 px-2 sm:px-4 font-medium text-xs sm:text-sm">
-                          {formatCurrency(recharge.amount)}
-                        </td>
-                        <td className="py-3 px-2 sm:px-4">
-                          <StatusBadge status={recharge.status} />
-                        </td>
-                        <td className="py-3 px-2 sm:px-4">
-                          {(recharge.status === 'paid' || recharge.status === 'activated') && (
-                            <a
-                              href={`/api/receipt/${recharge.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-medium text-blue-600 hover:underline whitespace-nowrap"
-                            >
-                              Download
-                            </a>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              {recharges.slice(0, 5).map((recharge) => {
+                const expired = recharge.status === 'activated' && recharge.expires_at && new Date(recharge.expires_at) < new Date();
+                return (
+                  <div key={recharge.id} className="flex items-center gap-3 sm:gap-4 py-3.5 first:pt-0 last:pb-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
+                      style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
+                      📺
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white text-sm sm:text-base truncate">{recharge.plan_name}</p>
+                      <p className="text-xs text-gray-400">{formatDateTime(new Date(recharge.created_at))}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-extrabold text-white">{formatCurrency(recharge.amount)}</p>
+                      <div className="flex items-center justify-end gap-2 mt-1">
+                        {(recharge.status === 'paid' || recharge.status === 'activated') && (
+                          <a href={`/api/receipt/${recharge.id}`} target="_blank" rel="noopener noreferrer"
+                            className="text-[11px] font-semibold hover:underline" style={{ color: '#93c5fd' }}>
+                            Receipt
+                          </a>
+                        )}
+                        <StatusPill status={expired ? 'expired' : recharge.status} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
-        </div>
+        </GlassCard>
       </div>
     </div>
   );

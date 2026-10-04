@@ -8,7 +8,7 @@ import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
 import AccessoryPaymentModal from '@/components/AccessoryPaymentModal';
 import AccessoryCard from '@/components/AccessoryCard';
-import StatusBadge from '@/components/StatusBadge';
+import { portalBg, glass, GlassCard, StatusPill, accentGradient, goldGradient } from '@/components/PortalUI';
 import { formatCurrency, formatDateTime, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
 import { useTranslation } from '@/lib/useTranslation';
 import { useOperatorBranding } from '@/lib/useOperatorBranding';
@@ -75,6 +75,14 @@ function getTimeRemaining(expiryDate: Date) {
     return { expired: false, text: `${hours} hours left`, color: 'text-red-600' };
   }
 }
+
+// getTimeRemaining's light-theme classes → readable colors on the dark portal.
+const DARK_TIME_COLOR: Record<string, string> = {
+  'text-green-600': '#4ade80',
+  'text-yellow-600': '#facc15',
+  'text-orange-600': '#fb923c',
+  'text-red-600': '#f87171',
+};
 
 // Helper function to format date in a friendly way
 function formatFriendlyDate(date: Date) {
@@ -276,14 +284,14 @@ export default function BuyHistoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={portalBg}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-red"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={portalBg}>
       {/* Header */}
       <nav className="sticky top-0 z-30 shadow-lg" style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 70%, #1a1a4e 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #e94560, #f5a623, #e94560, transparent)' }} />
@@ -352,89 +360,82 @@ export default function BuyHistoryPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-brand-navy mb-2">
+          <p className="text-xs uppercase tracking-[0.2em] font-semibold mb-1.5" style={{ color: '#f5d27a' }}>My Account</p>
+          <h1 className="font-display text-2xl sm:text-4xl font-bold text-white mb-2">
             Buy Plans & History
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
+          <p className="text-gray-400 text-sm sm:text-base">
             Purchase new plans or view your complete recharge history
           </p>
         </div>
 
         {/* Outstanding Due Notice — no longer blocks recharge; due gets added to the next plan payment automatically */}
         {customer && customer.outstanding_balance > 0 && (
-          <div className="card bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 mb-6">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-red-900 mb-1">Outstanding Due: ₹{customer.outstanding_balance}</h3>
-                <p className="text-sm text-red-800">
-                  Yeh amount aapke next plan ke payment mein automatically add ho jayega — ek hi transaction mein due + recharge dono clear ho jayenge.
-                </p>
-              </div>
+          <div className="mb-5 rounded-2xl p-4 sm:p-5 flex items-center gap-4"
+            style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.22), rgba(127,29,29,0.25))', border: '1px solid rgba(248,113,113,0.35)' }}>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-xl" style={{ background: 'rgba(248,113,113,0.2)' }}>💰</div>
+            <div className="flex-1">
+              <p className="text-xs uppercase tracking-wider font-semibold text-red-300">Outstanding Due</p>
+              <p className="text-2xl font-extrabold text-white leading-tight">₹{customer.outstanding_balance}</p>
+              <p className="text-xs text-red-200/80 mt-0.5">
+                Yeh amount aapke next plan ke payment mein automatically add ho jayega — ek hi transaction mein due + recharge dono clear ho jayenge.
+              </p>
             </div>
           </div>
         )}
 
         {/* Next Expiry Alert */}
-        {nextExpiringPlan && (
-          <div className="card bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-500 mb-6">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-orange-900 mb-1">Next Plan Expiring Soon</h3>
-                <p className="text-sm text-orange-800">
-                  <span className="font-semibold">{nextExpiringPlan.plan_name}</span> expires{' '}
-                  <span className="font-semibold">
-                    {formatFriendlyDate(new Date(nextExpiringPlan.expires_at!))}
-                  </span>
-                  {' '}•{' '}
-                  <span className={`font-bold ${getTimeRemaining(new Date(nextExpiringPlan.expires_at!)).color}`}>
-                    {getTimeRemaining(new Date(nextExpiringPlan.expires_at!)).text}
-                  </span>
-                </p>
+        {nextExpiringPlan && (() => {
+          const remaining = getTimeRemaining(new Date(nextExpiringPlan.expires_at!));
+          return (
+            <div className="mb-5 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+              style={{ background: 'linear-gradient(135deg, rgba(247,127,0,0.16), rgba(230,57,70,0.12))', border: '1px solid rgba(247,127,0,0.3)' }}>
+              <div className="flex items-start gap-3 flex-1">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-xl" style={{ background: 'rgba(247,127,0,0.2)' }}>⏳</div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-orange-300 mb-0.5">Next Plan Expiry</p>
+                  <p className="text-sm text-gray-200">
+                    <span className="font-bold text-white">{nextExpiringPlan.plan_name}</span> expires{' '}
+                    <span className="font-semibold text-white">{formatFriendlyDate(new Date(nextExpiringPlan.expires_at!))}</span>
+                    {' · '}
+                    <span className="font-bold" style={{ color: DARK_TIME_COLOR[remaining.color] || '#e5e7eb' }}>{remaining.text}</span>
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setActiveTab('buy')}
-                className="btn-primary text-sm whitespace-nowrap"
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-white whitespace-nowrap"
+                style={{ background: accentGradient, boxShadow: '0 6px 20px rgba(230,57,70,0.35)' }}
               >
                 Renew Now
               </button>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {[
-            { label: 'Total Spent', value: formatCurrency(totalSpent), gradient: 'from-blue-500 to-blue-700', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-            { label: 'Active Plans', value: activeRecharges, gradient: 'from-green-500 to-emerald-600', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-            { label: 'Pending', value: pendingRecharges, gradient: 'from-amber-400 to-orange-500', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-            { label: 'Total Orders', value: totalRecharges, gradient: 'from-purple-500 to-purple-700', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+            { label: 'Total Spent', value: formatCurrency(totalSpent), color: '#60a5fa', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+            { label: 'Active Plans', value: activeRecharges, color: '#4ade80', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+            { label: 'Activating', value: pendingRecharges, color: '#fbbf24', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+            { label: 'Total Orders', value: totalRecharges, color: '#c084fc', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
           ].map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100 flex items-center gap-3 sm:gap-4 overflow-hidden relative">
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <GlassCard key={s.label} className="p-4 sm:p-5 relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${s.color}33, transparent 70%)` }} />
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3" style={{ background: `${s.color}1f`, border: `1px solid ${s.color}40` }}>
+                <svg className="w-4 h-4" fill="none" stroke={s.color} strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d={s.icon} />
                 </svg>
               </div>
-              <div>
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">{s.label}</p>
-                <p className="text-xl sm:text-2xl font-extrabold text-gray-900">{s.value}</p>
-              </div>
-            </div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-white leading-none mb-1">{s.value}</p>
+              <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">{s.label}</p>
+            </GlassCard>
           ))}
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-1.5 mb-6 sm:mb-8 flex gap-1">
+        <div className="rounded-2xl p-1.5 mb-6 sm:mb-8 flex gap-1" style={glass}>
           {[
             { key: 'buy', label: 'Buy Plans', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' },
             { key: 'accessories', label: t('buyAccessories'), icon: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' },
@@ -444,15 +445,14 @@ export default function BuyHistoryPage() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key as 'buy' | 'accessories' | 'history')}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                activeTab === tab.key
-                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md shadow-red-200'
-                  : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
+                activeTab === tab.key ? 'text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
+              style={activeTab === tab.key ? { background: accentGradient, boxShadow: '0 6px 18px rgba(230,57,70,0.35)' } : undefined}
             >
               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
               </svg>
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="text-xs sm:text-sm">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -461,34 +461,34 @@ export default function BuyHistoryPage() {
         {activeTab === 'buy' && (
           <div>
             <div className="mb-6">
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy mb-4">
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-white mb-2">
                 Available Plans
               </h2>
-              <p className="text-gray-600 text-sm sm:text-base">
+              <p className="text-gray-400 text-sm sm:text-base">
                 Choose a plan and make instant payment
               </p>
             </div>
 
             {plans.length === 0 ? (
-              <div className="card text-center py-12">
-                <p className="text-gray-600">No plans available at the moment.</p>
+              <div className="rounded-2xl text-center py-12" style={glass}>
+                <p className="text-gray-400">No plans available at the moment.</p>
               </div>
             ) : (
               <>
                 {/* Test Plan */}
                 {plans.filter(p => p.price === 100).length > 0 && (
                   <div className="max-w-md mx-auto mb-8">
-                    <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-500 rounded-xl p-4 sm:p-6">
+                    <div className="rounded-2xl p-4 sm:p-6" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.35)' }}>
                       <div className="flex items-center justify-center gap-2 mb-3">
-                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span className="text-green-700 font-bold text-sm sm:text-base">Test Payment Gateway</span>
+                        <span className="text-green-300 font-bold text-sm sm:text-base">Test Payment Gateway</span>
                       </div>
                       {plans.filter(p => p.price === 100).map((plan) => (
                         <PlanCard key={plan.id} plan={plan} onSelect={handleSelectPlan} />
                       ))}
-                      <p className="text-center text-xs sm:text-sm text-gray-600 mt-3">
+                      <p className="text-center text-xs sm:text-sm text-gray-400 mt-3">
                         Try our payment system with just ₹1 • Perfect for testing
                       </p>
                     </div>
@@ -516,17 +516,17 @@ export default function BuyHistoryPage() {
         {activeTab === 'accessories' && (
           <div>
             <div className="mb-6">
-              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-black text-brand-navy mb-4 tracking-tight">
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-white mb-2">
                 CCN Accessories & Hardware
               </h2>
-              <p className="text-gray-600 text-sm sm:text-base">
+              <p className="text-gray-400 text-sm sm:text-base">
                 Order accessories and have them delivered to your address
               </p>
             </div>
 
             {accessoriesList.length === 0 ? (
-              <div className="card text-center py-12">
-                <p className="text-gray-600">No accessories available at the moment.</p>
+              <div className="rounded-2xl text-center py-12" style={glass}>
+                <p className="text-gray-400">No accessories available at the moment.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -541,202 +541,165 @@ export default function BuyHistoryPage() {
         {/* History Tab Content */}
         {activeTab === 'history' && (
           <div>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5">
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-white">
                 Purchase History
               </h2>
-              
+
               {/* History Sub-selector */}
-              <div className="flex bg-gray-100 p-1 rounded-xl">
-                <button
-                  onClick={() => setHistoryType('recharges')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    historyType === 'recharges'
-                      ? 'bg-white text-brand-navy shadow-sm'
-                      : 'text-gray-500 hover:text-brand-navy'
-                  }`}
-                >
-                  Recharges
-                </button>
-                <button
-                  onClick={() => setHistoryType('accessories')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    historyType === 'accessories'
-                      ? 'bg-white text-brand-navy shadow-sm'
-                      : 'text-gray-500 hover:text-brand-navy'
-                  }`}
-                >
-                  {t('accessories')}
-                </button>
+              <div className="flex p-1 rounded-xl self-start" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                {([['recharges', 'Recharges'], ['accessories', t('accessories')]] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setHistoryType(key)}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      historyType === key ? 'text-gray-900' : 'text-gray-400 hover:text-white'
+                    }`}
+                    style={historyType === key ? { background: goldGradient } : undefined}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
 
             {historyType === 'recharges' ? (
               <div>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                  <span className="text-sm text-gray-500">View plan purchase and activation history</span>
-                  
-                  {/* Filter */}
-                  <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-                <button
-                  onClick={() => setFilterStatus('all')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                    filterStatus === 'all'
-                      ? 'bg-accent-red text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setFilterStatus('activated')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                    filterStatus === 'activated'
-                      ? 'bg-success text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Activated
-                </button>
-                <button
-                  onClick={() => setFilterStatus('paid')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                    filterStatus === 'paid'
-                      ? 'bg-yellow-500 text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Pending
-                </button>
-                <button
-                  onClick={() => setFilterStatus('pending')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                    filterStatus === 'pending'
-                      ? 'bg-gray-500 text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Unpaid
-                </button>
-              </div>
-            </div>
-
-            {filteredRecharges.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm text-center py-14 px-6">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                {/* Filter */}
+                <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+                  {[
+                    { key: 'all', label: 'All' },
+                    { key: 'activated', label: 'Activated' },
+                    { key: 'paid', label: 'Activating' },
+                    { key: 'pending', label: 'Unpaid' },
+                  ].map((f) => (
+                    <button
+                      key={f.key}
+                      onClick={() => setFilterStatus(f.key)}
+                      className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+                        filterStatus === f.key ? 'text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                      style={filterStatus === f.key
+                        ? { background: 'rgba(230,57,70,0.2)', border: '1px solid rgba(230,57,70,0.55)' }
+                        : { border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
                 </div>
-                <p className="text-gray-500 mb-4 font-medium">
-                  {filterStatus === 'all' ? 'No recharge history yet' : `No ${filterStatus} recharges found`}
-                </p>
-                {filterStatus === 'all' && (
-                  <button onClick={() => setActiveTab('buy')} className="btn-primary inline-block">
-                    Buy Your First Plan
-                  </button>
+
+                {filteredRecharges.length === 0 ? (
+                  <div className="rounded-2xl text-center py-14 px-6" style={glass}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl" style={{ background: 'rgba(255,255,255,0.06)' }}>🧾</div>
+                    <p className="text-gray-400 mb-5 font-medium">
+                      {filterStatus === 'all' ? 'No recharge history yet' : 'Is filter mein koi recharge nahi mila'}
+                    </p>
+                    {filterStatus === 'all' && (
+                      <button onClick={() => setActiveTab('buy')}
+                        className="px-6 py-3 rounded-xl font-bold text-white"
+                        style={{ background: accentGradient }}>
+                        Buy Your First Plan
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredRecharges.map((recharge) => {
+                      const isExpired = !!recharge.expires_at && new Date(recharge.expires_at) < currentTime;
+                      const timeRemaining = recharge.expires_at ? getTimeRemaining(new Date(recharge.expires_at)) : null;
+                      const remainingColor = timeRemaining ? DARK_TIME_COLOR[timeRemaining.color] : undefined;
+                      const accent = isExpired ? '#71717a' : recharge.status === 'activated' ? '#4ade80' : recharge.status === 'paid' ? '#fbbf24' : recharge.status === 'failed' ? '#f87171' : '#94a3b8';
+
+                      return (
+                        <div
+                          key={recharge.id}
+                          className={`rounded-2xl overflow-hidden transition-transform hover:-translate-y-0.5 ${isExpired ? 'opacity-60' : ''}`}
+                          style={{ ...glass, borderLeft: `3px solid ${accent}` }}
+                        >
+                          <div className="p-4 sm:p-5">
+                            {/* Row 1: Icon + Name + Amount + Status */}
+                            <div className="flex items-start gap-3 sm:gap-4">
+                              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{ background: `${accent}1f`, border: `1px solid ${accent}40` }}>
+                                <svg className="w-5 h-5" fill="none" stroke={accent} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-white text-sm sm:text-base mb-0.5 truncate">{recharge.plan_name}</h3>
+                                <p className="text-[11px] text-gray-500 font-mono truncate">#{recharge.id.slice(0, 18)}…</p>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-lg sm:text-xl font-extrabold text-white mb-1">{formatCurrency(recharge.amount)}</p>
+                                <StatusPill status={isExpired ? 'expired' : recharge.status} />
+                              </div>
+                            </div>
+
+                            {/* Row 2: Date info + receipt actions */}
+                            <div className="mt-4 pt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                              {recharge.status === 'activated' ? (
+                                <>
+                                  <div>
+                                    <p className="text-gray-500 uppercase tracking-wider font-semibold text-[10px] mb-0.5">Start</p>
+                                    <p className="font-semibold text-gray-200">{formatDateDMY(recharge.activated_at)}</p>
+                                  </div>
+                                  {recharge.expires_at && (
+                                    <div>
+                                      <p className="text-gray-500 uppercase tracking-wider font-semibold text-[10px] mb-0.5">{isExpired ? 'Expired' : 'End Date'}</p>
+                                      <p className="font-bold" style={{ color: isExpired ? '#a1a1aa' : remainingColor || '#e5e7eb' }}>{formatDisplayEndDate(recharge.expires_at)}</p>
+                                      {timeRemaining && !isExpired && <p className="text-[11px] font-semibold mt-0.5" style={{ color: remainingColor }}>{timeRemaining.text}</p>}
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <div>
+                                    <p className="text-gray-500 uppercase tracking-wider font-semibold text-[10px] mb-0.5">Created</p>
+                                    <p className="font-semibold text-gray-200">{formatDateTime(new Date(recharge.created_at))}</p>
+                                  </div>
+                                  {recharge.paid_at && (
+                                    <div>
+                                      <p className="text-gray-500 uppercase tracking-wider font-semibold text-[10px] mb-0.5">Paid</p>
+                                      <p className="font-semibold text-gray-200">{formatDateTime(new Date(recharge.paid_at))}</p>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {(recharge.status === 'activated' || recharge.status === 'paid') && (
+                                <div className="flex items-end gap-2 col-span-2 sm:col-span-1 justify-end">
+                                  <button onClick={() => handleShareReceipt(recharge)}
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-green-300 hover:bg-green-400/10 transition-colors"
+                                    style={{ border: '1px solid rgba(74,222,128,0.3)' }}>
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                                    Share
+                                  </button>
+                                  <button onClick={() => handleDownloadReceipt(recharge.id)}
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-200 hover:bg-white/10 transition-colors"
+                                    style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    Receipt
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             ) : (
-              <div className="space-y-3">
-                {filteredRecharges.map((recharge) => {
-                  const isExpired = recharge.expires_at && new Date(recharge.expires_at) < currentTime;
-                  const timeRemaining = recharge.expires_at ? getTimeRemaining(new Date(recharge.expires_at)) : null;
-                  const statusColor = isExpired ? 'bg-gray-400' : recharge.status === 'activated' ? 'bg-green-500' : recharge.status === 'paid' ? 'bg-yellow-400' : 'bg-gray-300';
-
-                  return (
-                    <div
-                      key={recharge.id}
-                      className={`bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden ${isExpired ? 'opacity-70' : ''}`}
-                    >
-                      {/* Colored top strip */}
-                      <div className={`h-1 w-full ${statusColor}`} />
-                      <div className="p-4 sm:p-5">
-                        {/* Row 1: Icon + Name + Amount + Status */}
-                        <div className="flex items-start gap-3 sm:gap-4">
-                          <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isExpired ? 'bg-gray-100' : 'bg-blue-50'}`}>
-                            <svg className={`w-5 h-5 ${isExpired ? 'text-gray-400' : 'text-accent-blue'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                              <h3 className="font-bold text-gray-900 text-sm sm:text-base">{recharge.plan_name}</h3>
-                              {isExpired && <span className="px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded-full uppercase">Expired</span>}
-                            </div>
-                            <p className="text-[11px] text-gray-400 font-mono truncate">#{recharge.id.slice(0, 18)}…</p>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-lg sm:text-xl font-extrabold text-gray-900">{formatCurrency(recharge.amount)}</p>
-                            <StatusBadge status={recharge.status} />
-                          </div>
-                        </div>
-
-                        {/* Row 2: Date info */}
-                        <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                          {recharge.status === 'activated' ? (
-                            <>
-                              <div>
-                                <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Start</p>
-                                <p className="font-semibold text-gray-700">{formatDateDMY(recharge.activated_at)}</p>
-                              </div>
-                              {recharge.expires_at && (
-                                <div>
-                                  <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">{isExpired ? 'Expired' : 'End Date'}</p>
-                                  <p className={`font-bold ${timeRemaining?.color || 'text-gray-700'}`}>{formatDisplayEndDate(recharge.expires_at)}</p>
-                                  {timeRemaining && !isExpired && <p className={`text-[11px] font-semibold mt-0.5 ${timeRemaining.color}`}>{timeRemaining.text}</p>}
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              <div>
-                                <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Created</p>
-                                <p className="font-semibold text-gray-700">{formatDateTime(new Date(recharge.created_at))}</p>
-                              </div>
-                              {recharge.paid_at && (
-                                <div>
-                                  <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Paid</p>
-                                  <p className="font-semibold text-gray-700">{formatDateTime(new Date(recharge.paid_at))}</p>
-                                </div>
-                              )}
-                            </>
-                          )}
-                          {/* Receipt buttons inline */}
-                          {(recharge.status === 'activated' || recharge.status === 'paid') && (
-                            <div className="flex items-end gap-2 col-span-2 sm:col-span-1 justify-end sm:justify-end">
-                              <button onClick={() => handleShareReceipt(recharge)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-green-700 border border-green-200 hover:bg-green-50 transition-colors">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-                                Share
-                              </button>
-                              <button onClick={() => handleDownloadReceipt(recharge.id)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                Receipt
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div>
-            {/* Accessories History Content */}
-            {accessoryOrdersList.length === 0 ? (
-                  <div className="card text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-600 mb-4">No accessory order history yet</p>
+              <div>
+                {/* Accessories History Content */}
+                {accessoryOrdersList.length === 0 ? (
+                  <div className="rounded-2xl text-center py-14 px-6" style={glass}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl" style={{ background: 'rgba(255,255,255,0.06)' }}>📦</div>
+                    <p className="text-gray-400 mb-5 font-medium">No accessory order history yet</p>
                     <button
                       onClick={() => setActiveTab('accessories')}
-                      className="btn-primary inline-block"
+                      className="px-6 py-3 rounded-xl font-bold text-white"
+                      style={{ background: accentGradient }}
                     >
                       Browse Accessories
                     </button>
@@ -744,50 +707,48 @@ export default function BuyHistoryPage() {
                 ) : (
                   <div className="space-y-3">
                     {accessoryOrdersList.map((order) => {
-                      const accStatusColor = order.status === 'delivered' ? 'bg-green-500' : order.status === 'paid' ? 'bg-yellow-400' : order.status === 'failed' ? 'bg-red-500' : 'bg-gray-300';
-                      const accBadge = order.status === 'delivered'
-                        ? 'bg-green-100 text-green-700 border-green-200'
-                        : order.status === 'paid' ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                        : order.status === 'failed' ? 'bg-red-100 text-red-700 border-red-200'
-                        : 'bg-gray-100 text-gray-700 border-gray-200';
+                      const pillStatus = order.status === 'delivered' ? 'delivered' : order.status === 'paid' ? 'paid' : order.status === 'failed' ? 'failed' : 'pending';
+                      const accent = order.status === 'delivered' ? '#4ade80' : order.status === 'paid' ? '#fbbf24' : order.status === 'failed' ? '#f87171' : '#94a3b8';
                       return (
-                        <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                          <div className={`h-1 w-full ${accStatusColor}`} />
+                        <div key={order.id} className="rounded-2xl overflow-hidden transition-transform hover:-translate-y-0.5"
+                          style={{ ...glass, borderLeft: `3px solid ${accent}` }}>
                           <div className="p-4 sm:p-5">
                             <div className="flex items-start gap-3 sm:gap-4">
-                              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
-                                <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'rgba(192,132,252,0.12)', border: '1px solid rgba(192,132,252,0.3)' }}>
+                                <svg className="w-5 h-5" fill="none" stroke="#c084fc" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-gray-900 text-sm sm:text-base mb-0.5">{order.accessory_name}</h3>
-                                <p className="text-[11px] text-gray-400 font-mono truncate">#{order.id}</p>
+                                <h3 className="font-bold text-white text-sm sm:text-base mb-0.5 truncate">{order.accessory_name}</h3>
+                                <p className="text-[11px] text-gray-500 font-mono truncate">#{order.id}</p>
                               </div>
                               <div className="text-right flex-shrink-0">
-                                <p className="text-lg sm:text-xl font-extrabold text-gray-900 mb-1">{formatCurrency(order.amount)}</p>
-                                <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${accBadge}`}>
-                                  {order.status === 'delivered' ? t('delivered') : order.status === 'paid' ? t('pendingDelivery') : order.status}
-                                </span>
+                                <p className="text-lg sm:text-xl font-extrabold text-white mb-1">{formatCurrency(order.amount)}</p>
+                                <StatusPill
+                                  status={pillStatus}
+                                  label={order.status === 'delivered' ? t('delivered') : order.status === 'paid' ? t('pendingDelivery') : order.status}
+                                />
                               </div>
                             </div>
 
-                            <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                            <div className="mt-4 pt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
                               <div>
-                                <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Ordered</p>
-                                <p className="font-semibold text-gray-700">{formatDateTime(new Date(order.created_at))}</p>
+                                <p className="text-gray-500 uppercase tracking-wider font-semibold text-[10px] mb-0.5">Ordered</p>
+                                <p className="font-semibold text-gray-200">{formatDateTime(new Date(order.created_at))}</p>
                               </div>
                               {order.paid_at && (
                                 <div>
-                                  <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Paid</p>
-                                  <p className="font-semibold text-gray-700">{formatDateTime(new Date(order.paid_at))}</p>
+                                  <p className="text-gray-500 uppercase tracking-wider font-semibold text-[10px] mb-0.5">Paid</p>
+                                  <p className="font-semibold text-gray-200">{formatDateTime(new Date(order.paid_at))}</p>
                                 </div>
                               )}
                               {order.status === 'delivered' && order.delivered_at && (
                                 <div>
-                                  <p className="text-gray-400 uppercase tracking-wide font-medium mb-0.5">Delivered</p>
-                                  <p className="font-bold text-green-600">{formatDateTime(new Date(order.delivered_at))}</p>
-                                  {order.delivered_by && <p className="text-[10px] text-gray-400 mt-0.5">by {order.delivered_by}</p>}
+                                  <p className="text-gray-500 uppercase tracking-wider font-semibold text-[10px] mb-0.5">Delivered</p>
+                                  <p className="font-bold text-green-400">{formatDateTime(new Date(order.delivered_at))}</p>
+                                  {order.delivered_by && <p className="text-[10px] text-gray-500 mt-0.5">by {order.delivered_by}</p>}
                                 </div>
                               )}
                             </div>
