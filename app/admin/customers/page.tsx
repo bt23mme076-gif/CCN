@@ -3,8 +3,16 @@
 import { useEffect, useState } from 'react';
 import { formatDateTime } from '@/lib/utils';
 
+type PaymentMode = 'default' | 'payu' | 'upi';
+
+const PAYMENT_MODE_OPTIONS: { mode: PaymentMode; label: string; hint: string }[] = [
+  { mode: 'default', label: 'Default', hint: 'Superadmin ki global setting follow karega' },
+  { mode: 'payu', label: 'PayU', hint: 'Gateway se auto-verified payment' },
+  { mode: 'upi', label: 'UPI', hint: 'Manual UPI QR + UTR submit' },
+];
+
 interface CustomerItem {
-  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; outstanding_balance: number; notes: string | null; fast_recharge_enabled: boolean; fast_recharge_amount: number; };
+  customer: { id: string; name: string; mobile: string; stb_number: string; area: string; outstanding_balance: number; notes: string | null; fast_recharge_enabled: boolean; fast_recharge_amount: number; payment_mode?: PaymentMode; };
   rechargeCount: number;
   lastRecharge: string | null;
 }
@@ -97,6 +105,8 @@ export default function CustomersPage() {
   const [togglingFastRecharge, setTogglingFastRecharge] = useState<string | null>(null);
   const [fastRechargeModal, setFastRechargeModal] = useState<{ id: string; name: string; currentAmount: number } | null>(null);
   const [fastRechargeAmountInput, setFastRechargeAmountInput] = useState('');
+  const [paymentModeModal, setPaymentModeModal] = useState<{ id: string; name: string; mode: PaymentMode } | null>(null);
+  const [savingPaymentMode, setSavingPaymentMode] = useState(false);
   // States for per-plan multi-month discounts
   const [planDiscountModal, setPlanDiscountModal] = useState<{ id: string; name: string } | null>(null);
   const [planDiscountGrid, setPlanDiscountGrid] = useState<Record<string, { 3?: string; 6?: string; 12?: string }>>({});
@@ -139,6 +149,25 @@ export default function CustomersPage() {
       alert('Failed to enable Fast Recharge');
     } finally {
       setTogglingFastRecharge(null);
+    }
+  };
+
+  const handleSavePaymentMode = async (mode: PaymentMode) => {
+    if (!paymentModeModal) return;
+    setSavingPaymentMode(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${paymentModeModal.id}/payment-mode`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode }),
+      });
+      if (!res.ok) throw new Error();
+      setPaymentModeModal(null);
+      fetchCustomers();
+    } catch {
+      alert('Payment mode update nahi hua');
+    } finally {
+      setSavingPaymentMode(false);
     }
   };
 
@@ -811,6 +840,7 @@ export default function CustomersPage() {
                 { label: '💲 Set Prices', action: () => handleManagePrices(c), color: '#a78bfa' },
                 { label: '🔑 Reset PIN', action: () => setSelectedCustForReset(c), color: '#ec4899' },
                 { label: togglingFastRecharge === c.id ? 'Updating…' : c.fast_recharge_enabled ? `⚡ Fast Recharge: ON (₹${c.fast_recharge_amount / 100})` : '⚡ Fast Recharge: OFF', action: () => handleToggleFastRecharge(c), color: c.fast_recharge_enabled ? '#facc15' : '#6b7280' },
+                { label: `💳 Payment: ${PAYMENT_MODE_OPTIONS.find((o) => o.mode === (c.payment_mode || 'default'))?.label}`, action: () => setPaymentModeModal({ id: c.id, name: c.name, mode: c.payment_mode || 'default' }), color: c.payment_mode === 'payu' ? '#4ade80' : c.payment_mode === 'upi' ? '#22d3ee' : '#94a3b8' },
                 { label: '🏷 Plan Discounts', action: () => handleOpenPlanDiscounts(c), color: '#4ade80' },
                 { label: deleting === c.id ? 'Deleting…' : '🗑 Delete', action: () => handleDelete(c.id, c.name), color: '#f87171' },
               ].map(({ label, action, color }) => (
@@ -1347,6 +1377,33 @@ export default function CustomersPage() {
                 {togglingFastRecharge === fastRechargeModal.id ? 'Saving…' : 'Enable'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {paymentModeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl text-white" style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <h3 className="font-bold text-lg mb-1">💳 Payment Method</h3>
+            <p className="text-sm text-gray-400 mb-5">{paymentModeModal.name} kis tarah payment karega?</p>
+            <div className="space-y-2 mb-5">
+              {PAYMENT_MODE_OPTIONS.map((o) => (
+                <button key={o.mode} onClick={() => handleSavePaymentMode(o.mode)} disabled={savingPaymentMode}
+                  className="w-full text-left px-4 py-3 rounded-xl transition-colors disabled:opacity-50 hover:bg-white/5"
+                  style={{
+                    border: paymentModeModal.mode === o.mode ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.12)',
+                    background: paymentModeModal.mode === o.mode ? 'rgba(34,197,94,0.1)' : 'transparent',
+                  }}>
+                  <div className="font-semibold">{o.label}{paymentModeModal.mode === o.mode ? ' ✓' : ''}</div>
+                  <div className="text-xs text-gray-400">{o.hint}</div>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mb-4">Superadmin ne PayU global OFF kiya ho to sab customers UPI pe hi rahenge.</p>
+            <button onClick={() => setPaymentModeModal(null)}
+              className="w-full py-2.5 rounded-xl font-semibold text-gray-400 border border-white/10 hover:bg-white/5 transition-colors">
+              {savingPaymentMode ? 'Saving…' : 'Cancel'}
+            </button>
           </div>
         </div>
       )}

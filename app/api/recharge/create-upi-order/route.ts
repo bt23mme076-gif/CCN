@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const upiLink = buildUpiLink(c.fast_recharge_amount, `${c.name} - Fast Recharge`);
 
     const origin = request.nextUrl.origin;
-    const payu = await isPayuEnabled()
+    const payu = await isPayuEnabled(user.customerId)
       ? buildPayuTxnParams({
           txnid: rechargeId,
           amountPaise: c.fast_recharge_amount,

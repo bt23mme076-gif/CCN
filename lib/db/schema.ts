@@ -37,6 +37,7 @@ export const customers = pgTable('customers', {
   notes: text('notes'),
   fast_recharge_enabled: boolean('fast_recharge_enabled').default(false).notNull(),
   fast_recharge_amount: integer('fast_recharge_amount').default(0).notNull(), // in paise
+  payment_mode: text('payment_mode').default('default').notNull(), // 'default' (follow global PayU switch) | 'payu' | 'upi'
   created_at: timestamp('created_at').defaultNow().notNull(),
   deleted_at: timestamp('deleted_at'), // soft-delete: set by admin "delete", cleared/purged only by super admin
 });

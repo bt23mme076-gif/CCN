@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     const upiLink = buildUpiLink(finalPrice, `${match.name} - ${displayPlanName}`);
 
     const origin = request.nextUrl.origin;
-    const payu = await isPayuEnabled()
+    const payu = await isPayuEnabled(match.customerId)
       ? buildPayuTxnParams({
           txnid: rechargeId,
           amountPaise: finalPrice,

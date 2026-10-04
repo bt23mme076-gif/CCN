@@ -67,6 +67,9 @@ export async function POST() {
     `;
     log.push('app_settings table: ok');
 
+    await migrationClient`ALTER TABLE customers ADD COLUMN IF NOT EXISTS payment_mode TEXT NOT NULL DEFAULT 'default';`;
+    log.push('customers.payment_mode column: ok');
+
     return NextResponse.json({ success: true, log });
   } catch (error) {
     console.error('Run migrations error:', error);

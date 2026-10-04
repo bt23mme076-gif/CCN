@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { db } from '@/lib/db';
-import { appSettings } from '@/lib/db/schema';
+import { appSettings, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 const PAYU_KEY = process.env.PAYU_MERCHANT_KEY || process.env.PAYU_KEY || '';
@@ -15,15 +15,31 @@ export function isPayuConfigured(): boolean {
 // account) without touching env vars or redeploying — every flow falls
 // straight back to the manual UPI+UTR path. Missing row/column (not yet
 // migrated) defaults to enabled so this can't accidentally break checkout.
-export async function isPayuEnabled(): Promise<boolean> {
+//
+// With a customerId, the customer's own payment_mode ('payu' | 'upi', set by
+// an admin) overrides the global setting — except that the global kill-switch
+// being off always wins, so PayU can still be shut off for everyone at once.
+export async function isPayuEnabled(customerId?: string): Promise<boolean> {
   if (!isPayuConfigured()) return false;
+
+  let globalEnabled = true;
   try {
     const row = await db.select({ payu_enabled: appSettings.payu_enabled }).from(appSettings).where(eq(appSettings.id, 'global')).limit(1);
-    if (row.length === 0) return true;
-    return row[0].payu_enabled;
+    if (row.length > 0) globalEnabled = row[0].payu_enabled;
   } catch {
-    return true;
+    globalEnabled = true;
   }
+  if (!globalEnabled || !customerId) return globalEnabled;
+
+  try {
+    const row = await db.select({ payment_mode: customers.payment_mode }).from(customers).where(eq(customers.id, customerId)).limit(1);
+    const mode = row[0]?.payment_mode;
+    if (mode === 'upi') return false;
+    if (mode === 'payu') return true;
+  } catch {
+    // column not migrated yet — fall through to the global setting
+  }
+  return globalEnabled;
 }
 
 function sha512(input: string): string {

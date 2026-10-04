@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     const upiLink = buildUpiLink(roundedAmountPaise, `${customer[0].name} - A La Carte`);
 
     const origin = request.nextUrl.origin;
-    const payu = await isPayuEnabled()
+    const payu = await isPayuEnabled(user.customerId)
       ? buildPayuTxnParams({
           txnid: rechargeId,
           amountPaise: roundedAmountPaise,

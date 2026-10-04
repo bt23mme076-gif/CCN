@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const upiLink = buildUpiLink(amountInPaise, `${c.name} - Due Payment`);
 
     const origin = request.nextUrl.origin;
-    const payu = await isPayuEnabled()
+    const payu = await isPayuEnabled(user.customerId)
       ? buildPayuTxnParams({
           txnid: orderId,
           amountPaise: amountInPaise,
