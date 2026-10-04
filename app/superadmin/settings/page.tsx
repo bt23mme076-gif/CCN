@@ -69,6 +69,8 @@ export default function SuperAdminSettingsPage() {
               <strong className="text-gray-300">Gateway</strong> select karoge to customers PayU se directly pay karenge (auto-verified).
               <strong className="text-gray-300"> UPI</strong> select karoge to sabhi payment flows manual UPI QR + UTR submit
               wale tarike par chalenge — koi redeploy ya env var change ki zaroorat nahi.
+              Ye setting sirf un customers par lagti hai jinka payment method admin ne &quot;Default&quot; rakha hai —
+              jinhe admin ne PayU ya UPI par set kiya hai, unpe wahi chalega.
             </p>
             {!payuConfigured && (
               <p className="text-xs text-yellow-400 mb-4">

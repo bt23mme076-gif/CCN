@@ -1399,7 +1399,7 @@ export default function CustomersPage() {
                 </button>
               ))}
             </div>
-            <p className="text-xs text-gray-500 mb-4">Superadmin ne PayU global OFF kiya ho to sab customers UPI pe hi rahenge.</p>
+            <p className="text-xs text-gray-500 mb-4">PayU ya UPI chuna to superadmin ki global setting is customer pe lagu nahi hogi.</p>
             <button onClick={() => setPaymentModeModal(null)}
               className="w-full py-2.5 rounded-xl font-semibold text-gray-400 border border-white/10 hover:bg-white/5 transition-colors">
               {savingPaymentMode ? 'Saving…' : 'Cancel'}

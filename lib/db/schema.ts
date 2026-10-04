@@ -37,7 +37,7 @@ export const customers = pgTable('customers', {
   notes: text('notes'),
   fast_recharge_enabled: boolean('fast_recharge_enabled').default(false).notNull(),
   fast_recharge_amount: integer('fast_recharge_amount').default(0).notNull(), // in paise
-  payment_mode: text('payment_mode').default('default').notNull(), // 'default' (follow global PayU switch) | 'payu' | 'upi'
+  payment_mode: text('payment_mode').default('default').notNull(), // 'default' (follow global PayU switch) | 'payu' | 'upi' — 'payu'/'upi' override the global switch
   created_at: timestamp('created_at').defaultNow().notNull(),
   deleted_at: timestamp('deleted_at'), // soft-delete: set by admin "delete", cleared/purged only by super admin
 });
@@ -302,7 +302,7 @@ export const employees = pgTable('employees', {
 // always 'global' — there's only ever one.
 export const appSettings = pgTable('app_settings', {
   id: text('id').primaryKey().default('global'),
-  payu_enabled: boolean('payu_enabled').notNull().default(true), // kill-switch: false forces every flow back to manual UPI+UTR
+  payu_enabled: boolean('payu_enabled').notNull().default(true), // false = UPI for customers on payment_mode 'default'; per-customer 'payu'/'upi' override it
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 });
 
