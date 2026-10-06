@@ -187,13 +187,13 @@ export default function SettingsPage() {
               </label>
               <div className="flex items-center gap-4 mb-2">
                 <span className="text-xs font-semibold text-orange-400 w-10">Fast</span>
-                <input type="range" min={5} max={80} step={5} value={bulletinSpeed}
+                <input type="range" min={5} max={300} step={5} value={bulletinSpeed}
                   onChange={(e) => setBulletinSpeed(Number(e.target.value))}
                   className="flex-1 h-2 rounded-lg appearance-none cursor-pointer accent-orange-500" />
                 <span className="text-xs font-semibold text-gray-500 w-10 text-right">Slow</span>
               </div>
-              <div className="flex gap-2">
-                {[{ label: '⚡ Fast', val: 10 }, { label: '▶ Normal', val: 30 }, { label: '🐢 Slow', val: 60 }].map((p) => (
+              <div className="flex flex-wrap gap-2">
+                {[{ label: '⚡ Fast', val: 10 }, { label: '▶ Normal', val: 30 }, { label: '🐢 Slow', val: 60 }, { label: '🐌 Very Slow', val: 120 }, { label: '💤 Ultra Slow', val: 200 }].map((p) => (
                   <button key={p.val} type="button" onClick={() => setBulletinSpeed(p.val)}
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={bulletinSpeed === p.val

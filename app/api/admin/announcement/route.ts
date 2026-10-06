@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const announcementId = `announcement_${admin.operatorId}`;
-    const scrollSpeed = typeof speed === 'number' && speed >= 5 && speed <= 120 ? speed : 30;
+    const scrollSpeed = typeof speed === 'number' && speed >= 5 && speed <= 300 ? speed : 30;
 
     // Upsert — insert on first save, update on subsequent saves
     await db
