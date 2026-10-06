@@ -23,13 +23,13 @@ export async function GET() {
           .where(and(eq(recharges.operator_id, opId), eq(recharges.status, 'paid'), isNull(recharges.deleted_at))),
 
         db.select({ total: sql<number>`coalesce(sum(${recharges.amount}), 0)::int` }).from(recharges)
-          .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${todayISO}`)),
+          .where(and(eq(recharges.operator_id, opId), isNull(recharges.deleted_at), sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${todayISO}`)),
 
         db.select({ total: sql<number>`coalesce(sum(${recharges.amount}), 0)::int` }).from(recharges)
-          .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${monthStartISO}`)),
+          .where(and(eq(recharges.operator_id, opId), isNull(recharges.deleted_at), sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${monthStartISO}`)),
 
         db.select({ total: sql<number>`coalesce(sum(${recharges.amount}), 0)::int` }).from(recharges)
-          .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid', 'activated')`)),
+          .where(and(eq(recharges.operator_id, opId), isNull(recharges.deleted_at), sql`${recharges.status} IN ('paid', 'activated')`)),
 
         db.select({ count: sql<number>`count(*)::int` }).from(customers)
           .where(eq(customers.operator_id, opId)),

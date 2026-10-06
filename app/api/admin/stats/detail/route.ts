@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
-import { eq, desc, sql, and } from 'drizzle-orm';
+import { eq, desc, sql, and, isNull } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         .select({ recharge: recharges, customer: customers })
         .from(recharges)
         .leftJoin(customers, eq(recharges.customer_id, customers.id))
-        .where(and(eq(recharges.operator_id, admin.operatorId), sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${start.toISOString()}`))
+        .where(and(eq(recharges.operator_id, admin.operatorId), isNull(recharges.deleted_at), sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${start.toISOString()}`))
         .orderBy(desc(recharges.paid_at))
         .limit(50);
 
