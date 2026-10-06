@@ -1,5 +1,6 @@
 'use client';
 
+import { ensurePushSubscription } from '@/lib/vapid';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -56,18 +57,9 @@ export default function DashboardPage() {
   }, []);
 
   const registerPush = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const existing = await reg.pushManager.getSubscription();
-      if (existing) { await sendSubscription(existing); return; }
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') return;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-      });
-      await sendSubscription(sub);
+      const sub = await ensurePushSubscription();
+      if (sub) await sendSubscription(sub);
     } catch { /* ignore */ }
   };
 

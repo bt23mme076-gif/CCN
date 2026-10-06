@@ -1,5 +1,6 @@
 'use client';
 
+import { ensurePushSubscription } from '@/lib/vapid';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -55,18 +56,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!isAuthenticated) return;
     const registerAdminPush = async () => {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
       try {
-        const reg = await navigator.serviceWorker.ready;
-        let sub = await reg.pushManager.getSubscription();
-        if (!sub) {
-          const permission = await Notification.requestPermission();
-          if (permission !== 'granted') return;
-          sub = await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-          });
-        }
+        const sub = await ensurePushSubscription();
+        if (!sub) return;
         const json = sub.toJSON();
         await fetch('/api/admin/push/subscribe', {
           method: 'POST',

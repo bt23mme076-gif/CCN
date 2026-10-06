@@ -3,10 +3,11 @@ import { db } from '@/lib/db';
 import { pushSubscriptions, adminPushSubscriptions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendTelegramAlert } from '@/lib/telegram';
+import { VAPID_PUBLIC_KEY } from '@/lib/vapid';
 
 export async function sendPushToCustomer(customerId: string, payload: { title: string; body: string; url?: string; tag?: string }) {
   try {
-    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    const publicKey = VAPID_PUBLIC_KEY;
     const privateKey = process.env.VAPID_PRIVATE_KEY;
     if (!publicKey || !privateKey) return;
 
@@ -33,7 +34,7 @@ export async function notifyAdmin(payload: { title: string; body: string; url?: 
 
 export async function sendPushToAdmin(payload: { title: string; body: string; url?: string; tag?: string }) {
   try {
-    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    const publicKey = VAPID_PUBLIC_KEY;
     const privateKey = process.env.VAPID_PRIVATE_KEY;
     if (!publicKey || !privateKey) return;
 
