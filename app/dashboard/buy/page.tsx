@@ -360,7 +360,7 @@ export default function BuyHistoryPage() {
               <p className="text-xs uppercase tracking-wider font-semibold text-red-300">Outstanding Due</p>
               <p className="text-2xl font-extrabold text-white leading-tight">₹{customer.outstanding_balance}</p>
               <p className="text-xs text-red-200/80 mt-0.5">
-                Yeh amount aapke next plan ke payment mein automatically add ho jayega — ek hi transaction mein due + recharge dono clear ho jayenge.
+                This amount will be added automatically to your next plan payment — your due and recharge are cleared in a single transaction.
               </p>
             </div>
           </div>
@@ -574,7 +574,7 @@ export default function BuyHistoryPage() {
                   <div className="rounded-2xl text-center py-14 px-6" style={glass}>
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl" style={{ background: 'rgba(255,255,255,0.06)' }}>🧾</div>
                     <p className="text-gray-400 mb-5 font-medium">
-                      {filterStatus === 'all' ? 'No recharge history yet' : 'Is filter mein koi recharge nahi mila'}
+                      {filterStatus === 'all' ? 'No recharge history yet' : 'No recharges match this filter'}
                     </p>
                     {filterStatus === 'all' && (
                       <button onClick={() => setActiveTab('buy')}

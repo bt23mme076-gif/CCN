@@ -159,7 +159,7 @@ export default function PaymentModal({
             <span className="text-accent-red">{formatCurrency(displayPrice + dueAmount * 100)}</span>
           </div>
           {dueAmount > 0 && (
-            <p className="text-xs text-gray-500 -mt-2">Due amount is included in this payment — dono ek hi transaction mein clear ho jayenge.</p>
+            <p className="text-xs text-gray-500 -mt-2">Your due amount is included in this payment — both are cleared in a single transaction.</p>
           )}
         </div>
 

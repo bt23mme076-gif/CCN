@@ -85,7 +85,7 @@ export async function POST(
       const expiryStr = expiresAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
       await sendPushToCustomer(rechargeData.customer_id, {
         title: '✅ Fast Recharge Activated!',
-        body: `Aapka Fast Recharge activate ho gaya. Valid till ${expiryStr}. Enjoy your channels!`,
+        body: `Your Fast Recharge is now active. Valid till ${expiryStr}. Enjoy your channels!`,
         url: '/dashboard',
       });
 

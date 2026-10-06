@@ -149,9 +149,9 @@ export default function ActivationWaiting({ rechargeId, planName, amount, hasAct
           {isGtpl && (
             <div className="max-w-xs mx-auto mt-4 mb-2 rounded-xl p-4 text-left"
               style={{ background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(96,165,250,0.4)' }}>
-              <p className="text-blue-200 text-sm font-semibold mb-1">📡 Channel change nahi hua?</p>
+              <p className="text-blue-200 text-sm font-semibold mb-1">📡 Channels not updated?</p>
               <p className="text-blue-300/90 text-xs leading-relaxed">
-                Kabhi-kabhi GTPL channels khud-ba-khud update nahi hote — apne TV/STB remote se manually channel change ya rescan kar lein.
+                Sometimes GTPL channels do not refresh on their own — change the channel or run a rescan using your TV/STB remote.
               </p>
             </div>
           )}
@@ -190,15 +190,15 @@ export default function ActivationWaiting({ rechargeId, planName, amount, hasAct
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Recharge Confirmed!</h1>
             <p className="text-blue-200 text-base leading-relaxed">
-              Aapka <span className="text-white font-bold">{planName}</span> recharge ho gaya hai.
+              Your <span className="text-white font-bold">{planName}</span> recharge is confirmed.
             </p>
             <p className="text-blue-300 text-sm mt-2 leading-relaxed">
-              Ye plan aapke existing plan ke{' '}
+              This plan will start automatically{' '}
               {expiryLabel
-                ? <span className="text-yellow-300 font-semibold">khatam hone ke baad ({expiryLabel})</span>
-                : <span className="text-yellow-300 font-semibold">khatam hone ke baad</span>
+                ? <span className="text-yellow-300 font-semibold">after your current plan ends ({expiryLabel})</span>
+                : <span className="text-yellow-300 font-semibold">after your current plan ends</span>
               }{' '}
-              automatically chalu ho jayega. 🎉
+              🎉
             </p>
           </div>
 
@@ -253,10 +253,10 @@ export default function ActivationWaiting({ rechargeId, planName, amount, hasAct
           <div>
             <h2 className="text-2xl font-bold text-white mb-3">Payment Pending</h2>
             <p className="text-yellow-200 text-sm leading-relaxed">
-              Aapki payment bank ke end se confirm nahi ho pa rhi hai. Kripya wait karein payment confirm hone ka.
+              We have not received confirmation of your payment from the bank yet. Please wait while it is confirmed.
             </p>
             <p className="text-gray-400 text-sm mt-3">
-              <span className="text-white font-semibold">15 minute baad</span> apna dashboard check karein. Agar payment deduct hua hai to automatically process ho jayega.
+              Check your dashboard again <span className="text-white font-semibold">in 15 minutes</span>. If the amount was deducted, your recharge will be processed automatically.
             </p>
           </div>
           <div className="w-full rounded-2xl p-4 text-left space-y-3"

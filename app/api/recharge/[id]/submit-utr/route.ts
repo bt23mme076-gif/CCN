@@ -45,7 +45,7 @@ export async function POST(
       const c = customer[0];
       await notifyAdmin({
         title: '💳 UPI Payment Claimed — Verify & Activate',
-        body: `${c.name} ne ₹${(recharge[0].amount / 100).toFixed(0)} ka ${recharge[0].plan_name} UPI se pay kiya (UTR: ${utr}). PhonePe Business mein confirm karke activate karein.`,
+        body: `${c.name} paid ₹${(recharge[0].amount / 100).toFixed(0)} for ${recharge[0].plan_name} via UPI (UTR: ${utr}). Confirm it in PhonePe Business, then activate.`,
         url: '/admin/pending',
         tag: `recharge-${id}`,
       });

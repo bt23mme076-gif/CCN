@@ -109,7 +109,7 @@ export default function ExpensesPage() {
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       setForm({ title: '', amount: '', category: 'salary', note: '', date: new Date().toISOString().split('T')[0], employee_id: '' });
       setShowForm(false);
-      setMessage({ type: 'success', text: 'Expense add ho gaya' });
+      setMessage({ type: 'success', text: 'Expense added' });
       fetchExpenses();
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to add expense' });
@@ -117,7 +117,7 @@ export default function ExpensesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Is expense ko delete karo?')) return;
+    if (!confirm('Delete this expense?')) return;
     setDeleting(id);
     try {
       await fetch(`/api/admin/expenses/${id}`, { method: 'DELETE' });

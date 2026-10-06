@@ -18,7 +18,7 @@ export async function sendTelegramAlert(payload: { title: string; body: string; 
   const link = payload.url ? `${base}${payload.url.startsWith('/') ? '' : '/'}${payload.url}` : null;
   const text =
     `<b>${escapeHtml(payload.title)}</b>\n\n${escapeHtml(payload.body)}` +
-    (link ? `\n\n👉 <a href="${escapeHtml(link)}">Admin panel kholo</a>` : '');
+    (link ? `\n\n👉 <a href="${escapeHtml(link)}">Open admin panel</a>` : '');
 
   await Promise.allSettled(
     chatIds.map(async (chatId) => {

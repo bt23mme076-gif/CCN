@@ -35,7 +35,7 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
       if (customer.length > 0) {
         await notifyAdmin({
           title: '📦 Payment Received — Verify & Deliver',
-          body: `${customer[0].name} ne ₹${(order.amount / 100).toFixed(0)} ka ${order.accessory_name} PayU se pay kiya. Deliver karein.`,
+          body: `${customer[0].name} paid ₹${(order.amount / 100).toFixed(0)} for ${order.accessory_name} via PayU. Please deliver.`,
           url: '/admin/deliveries',
           tag: `accessory-${order.id}`,
         });
@@ -69,7 +69,7 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
     if (customer.length > 0) {
       await notifyAdmin({
         title: '💳 Payment Received — Verify & Activate',
-        body: `${customer[0].name} ne ₹${(recharge.amount / 100).toFixed(0)} ka ${recharge.plan_name} PayU se pay kiya. Activate karein.`,
+        body: `${customer[0].name} paid ₹${(recharge.amount / 100).toFixed(0)} for ${recharge.plan_name} via PayU. Please activate.`,
         url: '/admin/pending',
         tag: `recharge-${recharge.id}`,
       });

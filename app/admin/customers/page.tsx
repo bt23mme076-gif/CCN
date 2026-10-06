@@ -6,9 +6,9 @@ import { formatDateTime } from '@/lib/utils';
 type PaymentMode = 'default' | 'payu' | 'upi';
 
 const PAYMENT_MODE_OPTIONS: { mode: PaymentMode; label: string; hint: string }[] = [
-  { mode: 'default', label: 'Default', hint: 'Superadmin ki global setting follow karega' },
-  { mode: 'payu', label: 'PayU', hint: 'Gateway se auto-verified payment' },
-  { mode: 'upi', label: 'UPI', hint: 'Manual UPI QR + UTR submit' },
+  { mode: 'default', label: 'Default', hint: 'Follows the super admin global setting' },
+  { mode: 'payu', label: 'PayU', hint: 'Auto-verified payment via the gateway' },
+  { mode: 'upi', label: 'UPI', hint: 'Manual UPI QR + UTR submission' },
 ];
 
 interface CustomerItem {
@@ -135,7 +135,7 @@ export default function CustomersPage() {
   const handleSaveFastRecharge = async () => {
     if (!fastRechargeModal) return;
     const amt = parseFloat(fastRechargeAmountInput);
-    if (!amt || amt <= 0) { alert('Valid amount daalo'); return; }
+    if (!amt || amt <= 0) { alert('Please enter a valid amount'); return; }
     setTogglingFastRecharge(fastRechargeModal.id);
     try {
       await fetch(`/api/admin/customers/${fastRechargeModal.id}/fast-recharge`, {
@@ -165,7 +165,7 @@ export default function CustomersPage() {
       setPaymentModeModal(null);
       fetchCustomers();
     } catch {
-      alert('Payment mode update nahi hua');
+      alert('Could not update the payment mode');
     } finally {
       setSavingPaymentMode(false);
     }
@@ -494,11 +494,11 @@ export default function CustomersPage() {
         )
       );
       setMessage({ type: 'success', text: amount === 0
-        ? `${selectedCustForDues.name} ka due clear ho gaya`
-        : `${selectedCustForDues.name} ka due ₹${amount} set ho gaya` });
+        ? `Due cleared for ${selectedCustForDues.name}`
+        : `Due of ₹${amount} set for ${selectedCustForDues.name}` });
       setSelectedCustForDues(null);
     } catch {
-      setMessage({ type: 'error', text: 'Due update nahi hua, dobara try karo' });
+      setMessage({ type: 'error', text: 'Could not update the due. Please try again.' });
     } finally {
       setSavingDues(false);
     }
@@ -521,10 +521,10 @@ export default function CustomersPage() {
             : c
         )
       );
-      setMessage({ type: 'success', text: `${editForm.name} ka details update ho gaya` });
+      setMessage({ type: 'success', text: `Details updated for ${editForm.name}` });
       setSelectedCustForEdit(null);
     } catch (e: any) {
-      setMessage({ type: 'error', text: e.message || 'Update nahi hua, dobara try karo' });
+      setMessage({ type: 'error', text: e.message || 'Could not update. Please try again.' });
     } finally {
       setSavingEdit(false);
     }
@@ -543,7 +543,7 @@ export default function CustomersPage() {
       const d = await res.json();
       setEditConnections((prev) => [...prev, { id: d.id, stb_number: newConnStb.trim(), area: newConnArea.trim(), label: newConnLabel.trim() || null }]);
       setNewConnStb(''); setNewConnArea(''); setNewConnLabel('');
-    } catch { setMessage({ type: 'error', text: 'Connection add nahi hua' }); }
+    } catch { setMessage({ type: 'error', text: 'Could not add the connection' }); }
     finally { setAddingConn(false); }
   };
 
@@ -574,10 +574,10 @@ export default function CustomersPage() {
             : c
         )
       );
-      setMessage({ type: 'success', text: `${selectedCustForNotes.name} ka note save ho gaya` });
+      setMessage({ type: 'success', text: `Note saved for ${selectedCustForNotes.name}` });
       setSelectedCustForNotes(null);
     } catch {
-      setMessage({ type: 'error', text: 'Note save nahi hua, dobara try karo' });
+      setMessage({ type: 'error', text: 'Could not save the note. Please try again.' });
     } finally {
       setSavingNotes(false);
     }
@@ -1183,7 +1183,7 @@ export default function CustomersPage() {
                   onFocus={(e) => e.target.style.borderColor = 'rgba(230,57,70,0.6)'}
                   onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
                 />
-                <p className="text-xs text-gray-500 mt-1">0 enter karo to due clear karo</p>
+                <p className="text-xs text-gray-500 mt-1">Enter 0 to clear the due</p>
               </div>
 
               {selectedCustForDues.outstanding_balance > 0 && (
@@ -1270,7 +1270,7 @@ export default function CustomersPage() {
                   </div>
                 )}
                 <div className="space-y-1.5 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <p className="text-xs text-gray-500 mb-2">New STB add karo:</p>
+                  <p className="text-xs text-gray-500 mb-2">Add a new STB:</p>
                   <input type="text" value={newConnStb} onChange={(e) => setNewConnStb(e.target.value)}
                     placeholder="STB Number *" className="w-full px-3 py-2 rounded-lg text-xs outline-none placeholder-gray-500"
                     style={inputStyle} />
@@ -1327,7 +1327,7 @@ export default function CustomersPage() {
                   onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
                   onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
                 />
-                <p className="text-xs text-gray-500 mt-1">Sirf admin ko dikhega. Blank karo to note delete hoga.</p>
+                <p className="text-xs text-gray-500 mt-1">Only visible to admins. Leave blank to delete the note.</p>
               </div>
 
               <div className="flex gap-3 pt-1">
@@ -1353,7 +1353,7 @@ export default function CustomersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl text-white" style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
             <h3 className="font-bold text-lg mb-1">⚡ Fast Recharge Enable</h3>
-            <p className="text-sm text-gray-400 mb-5">{fastRechargeModal.name} ke liye amount set karo</p>
+            <p className="text-sm text-gray-400 mb-5">Set the amount for {fastRechargeModal.name}</p>
             <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">Amount (₹)</label>
             <input
               type="number"
@@ -1385,7 +1385,7 @@ export default function CustomersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl text-white" style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
             <h3 className="font-bold text-lg mb-1">💳 Payment Method</h3>
-            <p className="text-sm text-gray-400 mb-5">{paymentModeModal.name} kis tarah payment karega?</p>
+            <p className="text-sm text-gray-400 mb-5">How should {paymentModeModal.name} pay?</p>
             <div className="space-y-2 mb-5">
               {PAYMENT_MODE_OPTIONS.map((o) => (
                 <button key={o.mode} onClick={() => handleSavePaymentMode(o.mode)} disabled={savingPaymentMode}
@@ -1399,7 +1399,7 @@ export default function CustomersPage() {
                 </button>
               ))}
             </div>
-            <p className="text-xs text-gray-500 mb-4">PayU ya UPI chuna to superadmin ki global setting is customer pe lagu nahi hogi.</p>
+            <p className="text-xs text-gray-500 mb-4">Choosing PayU or UPI overrides the super admin global setting for this customer.</p>
             <button onClick={() => setPaymentModeModal(null)}
               className="w-full py-2.5 rounded-xl font-semibold text-gray-400 border border-white/10 hover:bg-white/5 transition-colors">
               {savingPaymentMode ? 'Saving…' : 'Cancel'}
@@ -1413,7 +1413,7 @@ export default function CustomersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-2xl p-6 shadow-2xl text-white" style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)' }}>
             <h3 className="font-bold text-lg mb-1">🏷 Plan Discounts</h3>
-            <p className="text-sm text-gray-400 mb-5">{planDiscountModal.name} ke liye har plan aur duration par discount % set karo. Khaali chodo agar discount nahi dena.</p>
+            <p className="text-sm text-gray-400 mb-5">Set a discount % for each plan and duration for {planDiscountModal.name}. Leave blank for no discount.</p>
 
             {loadingPlanDiscounts ? (
               <div className="py-8 text-center text-gray-400 text-sm">Loading…</div>

@@ -114,7 +114,7 @@ export default function DashboardPage() {
         setPaymentActivePlanExpiry(existingActive?.expires_at ?? null);
         setShowActivationScreen(true);
       } else if (match?.status === 'failed') {
-        setPaymentError('Payment failed ya cancel ho gaya. Please try again.');
+        setPaymentError('Payment failed or was cancelled. Please try again.');
       }
     } catch { /* ignore, dashboard will still load normally */ }
     finally {
@@ -304,7 +304,7 @@ export default function DashboardPage() {
         <div className="mb-5 sm:mb-6">
           <p className="text-xs uppercase tracking-[0.2em] font-semibold mb-1.5" style={{ color: '#f5d27a' }}>My Account</p>
           <h1 className="font-display text-2xl sm:text-4xl font-bold text-white mb-4">
-            Namaste, {customer?.name?.split(' ')[0]} 👋
+            Welcome back, {customer?.name?.split(' ')[0]} 👋
           </h1>
           <div className="flex flex-wrap gap-2">
             {[
@@ -331,7 +331,7 @@ export default function DashboardPage() {
             <div className="flex-1 min-w-0">
               <p className="text-xs uppercase tracking-wider font-semibold text-red-300">Outstanding Due</p>
               <p className="text-2xl font-extrabold text-white leading-tight">₹{customer.outstanding_balance}</p>
-              <p className="text-xs text-red-200/80 mt-0.5">Ye amount aapke next recharge ke payment mein automatically add ho jayega.</p>
+              <p className="text-xs text-red-200/80 mt-0.5">This amount will be added automatically to your next recharge payment.</p>
             </div>
           </div>
         )}

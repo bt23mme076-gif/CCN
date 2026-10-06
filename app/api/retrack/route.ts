@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     await notifyAdmin({
       title: '📺 Retrack Request',
-      body: `${c.name} (STB: ${body.stb_number || c.stb_number}) ne retrack request bheja`,
+      body: `${c.name} (STB: ${body.stb_number || c.stb_number}) has requested a retrack`,
       url: '/admin/retrack',
     });
 

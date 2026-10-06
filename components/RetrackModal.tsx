@@ -24,7 +24,7 @@ export default function RetrackModal({ defaultStb, onClose }: { defaultStb: stri
       if (!res.ok) throw new Error();
       setDone(true);
     } catch {
-      setError('Request nahi gayi. Thodi der baad dobara try karo.');
+      setError('Could not send the request. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
@@ -64,8 +64,8 @@ export default function RetrackModal({ defaultStb, onClose }: { defaultStb: stri
               </div>
               <h3 className="font-display text-2xl font-bold text-white mb-2">Request Submitted!</h3>
               <p className="text-sm text-gray-300 mb-6">
-                Agle <span className="font-bold text-white">5 minute</span> tak apna STB aur TV{' '}
-                <span className="font-bold text-green-400">ON</span> rakhein.
+                Keep your STB and TV{' '}
+                <span className="font-bold text-green-400">ON</span> for the next <span className="font-bold text-white">5 minutes</span>.
               </p>
               <button onClick={onClose}
                 className="w-full py-3.5 rounded-xl font-bold text-gray-900"
@@ -80,7 +80,7 @@ export default function RetrackModal({ defaultStb, onClose }: { defaultStb: stri
                 📺
               </div>
               <h3 className="font-display text-2xl font-bold text-white mb-1">Request Retrack</h3>
-              <p className="text-sm text-gray-400 mb-6">Channels nahi aa rahe? Signal dobara bhejne ki request karo.</p>
+              <p className="text-sm text-gray-400 mb-6">Channels not working? Request a signal refresh for your set-top box.</p>
 
               <div className="text-left mb-5">
                 <label className="block text-[11px] font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">STB Number</label>

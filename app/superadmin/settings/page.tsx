@@ -66,15 +66,15 @@ export default function SuperAdminSettingsPage() {
           <div className="rounded-xl p-5" style={card}>
             <h2 className="text-white font-semibold mb-1">Payment Method</h2>
             <p className="text-sm text-gray-400 mb-4">
-              <strong className="text-gray-300">Gateway</strong> select karoge to customers PayU se directly pay karenge (auto-verified).
-              <strong className="text-gray-300"> UPI</strong> select karoge to sabhi payment flows manual UPI QR + UTR submit
-              wale tarike par chalenge — koi redeploy ya env var change ki zaroorat nahi.
-              Ye setting sirf un customers par lagti hai jinka payment method admin ne &quot;Default&quot; rakha hai —
-              jinhe admin ne PayU ya UPI par set kiya hai, unpe wahi chalega.
+              <strong className="text-gray-300">Gateway</strong>: customers pay directly through PayU (auto-verified).
+              <strong className="text-gray-300"> UPI</strong>: every payment flow uses a manual UPI QR + UTR submission
+              — no redeploy or env var change needed.
+              This only applies to customers whose payment method the admin left on &quot;Default&quot; —
+              customers set to PayU or UPI by the admin always use that method.
             </p>
             {!payuConfigured && (
               <p className="text-xs text-yellow-400 mb-4">
-                ⚠ PAYU_MERCHANT_KEY / PAYU_SALT env vars set nahi hain — tab tak ye selection chahe jo bhi ho, system automatically UPI hi use karega.
+                ⚠ PAYU_MERCHANT_KEY / PAYU_SALT env vars are not set — until they are, the system uses UPI regardless of this selection.
               </p>
             )}
 
@@ -104,7 +104,7 @@ export default function SuperAdminSettingsPage() {
             </div>
 
             <p className="text-sm font-medium mt-4" style={{ color: payuEnabled ? '#4ade80' : '#22d3ee' }}>
-              {payuEnabled ? '● Gateway active — PayU se auto-verified payments' : '● UPI active — manual UPI QR + UTR submit'}
+              {payuEnabled ? '● Gateway active — auto-verified payments via PayU' : '● UPI active — manual UPI QR + UTR submission'}
             </p>
           </div>
         )}

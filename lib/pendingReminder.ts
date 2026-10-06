@@ -23,7 +23,7 @@ export function startPendingActivationReminder() {
 
       await sendPushToAdmin({
         title: `🔴 ${pending.length} Recharge${pending.length > 1 ? 's' : ''} Waiting!`,
-        body: `${oldest.plan_name} — ${waitingMinutes}min se activation ka wait ho raha hai. Turant activate karein!`,
+        body: `${oldest.plan_name} has been waiting ${waitingMinutes} min for activation. Please activate now!`,
         url: '/admin/pending',
         tag: 'pending-reminder', // same tag each tick — renotify in sw.js makes it re-vibrate instead of stacking duplicates
       });
