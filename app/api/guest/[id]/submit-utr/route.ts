@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { sendPushToAdmin } from '@/lib/push';
+import { notifyAdmin } from '@/lib/push';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +33,7 @@ export async function POST(
     const customer = await db.select().from(customers).where(eq(customers.id, recharge[0].customer_id)).limit(1);
     if (customer.length > 0) {
       const c = customer[0];
-      await sendPushToAdmin({
+      await notifyAdmin({
         title: '💳 UPI Payment Claimed — Verify & Activate',
         body: `${c.name} ne ₹${(recharge[0].amount / 100).toFixed(0)} ka ${recharge[0].plan_name} UPI se pay kiya (UTR: ${utr}, Quick Recharge). PhonePe Business mein confirm karke activate karein.`,
         url: '/admin/pending',

@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { recharges, accessoryOrders, customers } from '@/lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { verifyPayuResponseHash } from '@/lib/payments/payu';
-import { sendPushToAdmin } from '@/lib/push';
+import { notifyAdmin } from '@/lib/push';
 import { clearDue } from '@/lib/payments/clearDue';
 import { sendPaymentAlertEmail } from '@/lib/email';
 
@@ -33,7 +33,7 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
       const order = updated[0];
       const customer = await db.select().from(customers).where(eq(customers.id, order.customer_id)).limit(1);
       if (customer.length > 0) {
-        await sendPushToAdmin({
+        await notifyAdmin({
           title: '📦 Payment Received — Verify & Deliver',
           body: `${customer[0].name} ne ₹${(order.amount / 100).toFixed(0)} ka ${order.accessory_name} PayU se pay kiya. Deliver karein.`,
           url: '/admin/deliveries',
@@ -67,7 +67,7 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
 
     const customer = await db.select().from(customers).where(eq(customers.id, recharge.customer_id)).limit(1);
     if (customer.length > 0) {
-      await sendPushToAdmin({
+      await notifyAdmin({
         title: '💳 Payment Received — Verify & Activate',
         body: `${customer[0].name} ne ₹${(recharge.amount / 100).toFixed(0)} ka ${recharge.plan_name} PayU se pay kiya. Activate karein.`,
         url: '/admin/pending',

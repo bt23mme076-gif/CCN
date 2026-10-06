@@ -2,6 +2,7 @@ import webpush from 'web-push';
 import { db } from '@/lib/db';
 import { pushSubscriptions, adminPushSubscriptions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { sendTelegramAlert } from '@/lib/telegram';
 
 export async function sendPushToCustomer(customerId: string, payload: { title: string; body: string; url?: string; tag?: string }) {
   try {
@@ -22,6 +23,12 @@ export async function sendPushToCustomer(customerId: string, payload: { title: s
   } catch (error) {
     console.error('Push send error:', error);
   }
+}
+
+// Every admin alert channel at once — browser push + Telegram. Awaited by
+// callers so Vercel doesn't freeze the function before they're delivered.
+export async function notifyAdmin(payload: { title: string; body: string; url?: string; tag?: string }) {
+  await Promise.allSettled([sendPushToAdmin(payload), sendTelegramAlert(payload)]);
 }
 
 export async function sendPushToAdmin(payload: { title: string; body: string; url?: string; tag?: string }) {
