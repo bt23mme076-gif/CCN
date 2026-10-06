@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
-import { eq, sql, and } from 'drizzle-orm';
+import { eq, sql, and, isNull } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +20,7 @@ export async function GET() {
     const [pendingResult, todayRevenueResult, monthRevenueResult, totalRevenueResult, totalCustomersResult] =
       await Promise.all([
         db.select({ count: sql<number>`count(*)::int` }).from(recharges)
-          .where(and(eq(recharges.operator_id, opId), eq(recharges.status, 'paid'))),
+          .where(and(eq(recharges.operator_id, opId), eq(recharges.status, 'paid'), isNull(recharges.deleted_at))),
 
         db.select({ total: sql<number>`coalesce(sum(${recharges.amount}), 0)::int` }).from(recharges)
           .where(and(eq(recharges.operator_id, opId), sql`${recharges.status} IN ('paid', 'activated') AND ${recharges.paid_at} >= ${todayISO}`)),

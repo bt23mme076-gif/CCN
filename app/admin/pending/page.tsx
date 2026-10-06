@@ -281,8 +281,12 @@ export default function PendingActivationsPage() {
     </div>
   );
 
+  // Counted from the live list (re-polled every 7s) so the badge and card
+  // always match what's shown below, instead of the stats snapshot from page load.
+  const paidCount = recharges.filter((r) => r.recharge.status === 'paid').length;
+
   const statCards: { key: 'pending' | DetailKey; label: string; value: string | number; color: string; bg: string; border: string; icon: string }[] = [
-    { key: 'pending', label: 'Pending', value: stats?.pendingCount ?? 0, color: '#e63946', bg: 'rgba(230,57,70,0.12)', border: 'rgba(230,57,70,0.3)', icon: '⏳' },
+    { key: 'pending', label: 'Pending', value: paidCount, color: '#e63946', bg: 'rgba(230,57,70,0.12)', border: 'rgba(230,57,70,0.3)', icon: '⏳' },
     { key: 'today', label: "Today's Revenue", value: formatCurrency(stats?.todayRevenue ?? 0), color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', border: 'rgba(96,165,250,0.25)', icon: '📈' },
     { key: 'month', label: "This Month's Revenue", value: formatCurrency(stats?.monthRevenue ?? 0), color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', icon: '💰' },
     { key: 'customers', label: 'Customers', value: stats?.totalCustomers ?? 0, color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', icon: '👥' },
@@ -300,10 +304,10 @@ export default function PendingActivationsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6 sm:mb-8">
         <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">Pending Activations</h1>
-        {stats && stats.pendingCount > 0 && (
+        {paidCount > 0 && (
           <span className="px-3 py-1 rounded-full text-sm font-bold w-fit animate-pulse"
             style={{ background: 'rgba(230,57,70,0.2)', color: '#e63946', border: '1px solid rgba(230,57,70,0.4)' }}>
-            {stats.pendingCount} pending
+            {paidCount} pending
           </span>
         )}
         <button onClick={toggleVoiceAlerts}
