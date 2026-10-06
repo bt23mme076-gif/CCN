@@ -83,7 +83,7 @@ export async function POST(
       }).where(eq(recharges.id, rechargeId));
 
       const expiryStr = expiresAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-      sendPushToCustomer(rechargeData.customer_id, {
+      await sendPushToCustomer(rechargeData.customer_id, {
         title: '✅ Fast Recharge Activated!',
         body: `Aapka Fast Recharge activate ho gaya. Valid till ${expiryStr}. Enjoy your channels!`,
         url: '/dashboard',
@@ -201,7 +201,7 @@ export async function POST(
 
     // Send push notification to customer (fire-and-forget)
     const expiryStr = expiresAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    sendPushToCustomer(rechargeData.customer_id, {
+    await sendPushToCustomer(rechargeData.customer_id, {
       title: '✅ Plan Activated!',
       body: `${rechargeData.plan_name} activated. Valid till ${expiryStr}. Enjoy your channels!`,
       url: '/dashboard',

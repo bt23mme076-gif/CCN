@@ -40,7 +40,7 @@ export async function POST(
     const customer = await db.select().from(customers).where(eq(customers.id, user.customerId)).limit(1);
     if (customer.length > 0) {
       const c = customer[0];
-      sendPushToAdmin({
+      await sendPushToAdmin({
         title: '📦 UPI Payment Claimed — Verify & Deliver',
         body: `${c.name} ne ₹${(order[0].amount / 100).toFixed(0)} ka ${order[0].accessory_name} UPI se pay kiya (UTR: ${utr}). PhonePe Business mein confirm karke deliver karein.`,
         url: '/admin/deliveries',

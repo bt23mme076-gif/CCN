@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
-    sendPushToAdmin({
+    await sendPushToAdmin({
       title: '📺 Retrack Request',
       body: `${c.name} (STB: ${body.stb_number || c.stb_number}) ne retrack request bheja`,
       url: '/admin/retrack',

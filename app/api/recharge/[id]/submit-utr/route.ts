@@ -43,7 +43,7 @@ export async function POST(
     const customer = await db.select().from(customers).where(eq(customers.id, user.customerId)).limit(1);
     if (customer.length > 0) {
       const c = customer[0];
-      sendPushToAdmin({
+      await sendPushToAdmin({
         title: '💳 UPI Payment Claimed — Verify & Activate',
         body: `${c.name} ne ₹${(recharge[0].amount / 100).toFixed(0)} ka ${recharge[0].plan_name} UPI se pay kiya (UTR: ${utr}). PhonePe Business mein confirm karke activate karein.`,
         url: '/admin/pending',
