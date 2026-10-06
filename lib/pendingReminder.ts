@@ -1,17 +1,19 @@
-const CHECK_INTERVAL_MS = 15 * 1000;
+// Every 2 min (was 15s, which — times every warm Vercel instance — flooded
+// the admin phone). Each tick only fires while a non-deleted paid recharge waits.
+const CHECK_INTERVAL_MS = 2 * 60 * 1000;
 
 export function startPendingActivationReminder() {
   const check = async () => {
     try {
       const { db } = await import('@/lib/db');
       const { recharges } = await import('@/lib/db/schema');
-      const { eq } = await import('drizzle-orm');
+      const { eq, and, isNull } = await import('drizzle-orm');
       const { sendPushToAdmin } = await import('@/lib/push');
 
       const pending = await db
         .select()
         .from(recharges)
-        .where(eq(recharges.status, 'paid'));
+        .where(and(eq(recharges.status, 'paid'), isNull(recharges.deleted_at)));
 
       if (pending.length === 0) return;
 
