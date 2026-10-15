@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { formatCurrency, formatDateTime, getInitials } from '@/lib/utils';
+import { formatCurrency, formatDateTime, getInitials, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
 import StatusBadge from '@/components/StatusBadge';
 
 interface Stats { pendingCount: number; todayRevenue: number; monthRevenue: number; totalRevenue: number; totalCustomers: number; }
 interface PendingRecharge {
   recharge: { id: string; plan_name: string; amount: number; status: string; paid_at: string | null; created_at: string; upi_reference: string | null; due_amount_paise: number | null; };
   customer: { name: string; mobile: string; stb_number: string; area: string; };
+  // Customer's running base plan, if any — activating this order chains it after that plan ends.
+  currentPlan?: { name: string; expires_at: string } | null;
 }
 
 type DetailKey = 'today' | 'month' | 'customers';
@@ -442,7 +444,10 @@ export default function PendingActivationsPage() {
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-            {recharges.map(({ recharge, customer }) => (
+            {recharges.map(({ recharge, customer, currentPlan }) => {
+              // A renewal paid while a base plan is still running: Activate chains it after that plan.
+              const queued = !!currentPlan && !recharge.plan_name.toUpperCase().startsWith('ALA CARTE');
+              return (
               <div key={recharge.id}
                 className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 transition-colors"
                 style={{ background: selected.has(recharge.id) ? 'rgba(99,102,241,0.08)' : undefined }}>
@@ -479,6 +484,12 @@ export default function PendingActivationsPage() {
                         Includes due: {formatCurrency(recharge.due_amount_paise)}
                       </p>
                     )}
+                    {queued && currentPlan && (
+                      <p className="text-xs mt-1.5 px-2 py-1 rounded-lg inline-block"
+                        style={{ color: '#93c5fd', background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.3)' }}>
+                        ⏭ Active plan ({currentPlan.name}) till {formatDisplayEndDate(currentPlan.expires_at)} — this one starts {formatDateDMY(currentPlan.expires_at)}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => handleDelete(recharge.id)} disabled={deleting === recharge.id || bulkActivating || bulkDeleting}
@@ -487,14 +498,18 @@ export default function PendingActivationsPage() {
                       {deleting === recharge.id ? '...' : '✕'}
                     </button>
                     <button onClick={() => handleActivate(recharge.id)} disabled={activating === recharge.id || bulkActivating || bulkDeleting}
+                      title={queued ? 'Marks it paid & scheduled: the new plan starts automatically when the current plan ends' : undefined}
                       className="px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 whitespace-nowrap"
-                      style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)', boxShadow: '0 4px 15px rgba(52,183,136,0.3)' }}>
-                      {activating === recharge.id ? '...' : '✓ Activate'}
+                      style={queued
+                        ? { background: 'linear-gradient(135deg, #1d4ed8, #6366f1)', boxShadow: '0 4px 15px rgba(99,102,241,0.3)' }
+                        : { background: 'linear-gradient(135deg, #2d6a4f, #52b788)', boxShadow: '0 4px 15px rgba(52,183,136,0.3)' }}>
+                      {activating === recharge.id ? '...' : queued ? '⏭ Queue after current plan' : '✓ Activate'}
                     </button>
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

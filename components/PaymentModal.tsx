@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { formatCurrency } from '@/lib/utils';
+import { useEffect, useState } from 'react';
+import { formatCurrency, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
 import { calcDurationPricing } from '@/lib/planDuration';
 import UpiPaymentModal from '@/components/UpiPaymentModal';
 import { launchPayu, PayuLaunchParams } from '@/lib/payments/payuClient';
@@ -36,6 +36,27 @@ export default function PaymentModal({
 }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
   const [upiOrder, setUpiOrder] = useState<{ orderId: string; upiLink: string; amount: number } | null>(null);
+  // The customer's still-running base plan on this connection, if any — a new
+  // plan bought now is queued after it, so we say so before they pay.
+  const [currentPlan, setCurrentPlan] = useState<{ name: string; expires_at: string } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    const cid = connectionId || (typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null) || 'primary';
+    fetch(`/api/recharge/history${cid !== 'primary' ? `?cid=${encodeURIComponent(cid)}` : ''}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : { recharges: [] }))
+      .then((d: { recharges?: { plan_name: string; status: string; expires_at: string | null }[] }) => {
+        if (cancelled) return;
+        const now = Date.now();
+        const running = (d.recharges || [])
+          .filter((r) => r.status === 'activated' && r.expires_at && new Date(r.expires_at).getTime() > now && !r.plan_name.toUpperCase().startsWith('ALA CARTE'))
+          .sort((a, b) => new Date(b.expires_at!).getTime() - new Date(a.expires_at!).getTime())[0];
+        setCurrentPlan(running ? { name: running.plan_name, expires_at: running.expires_at! } : null);
+      })
+      .catch(() => { if (!cancelled) setCurrentPlan(null); });
+    return () => { cancelled = true; };
+  }, [isOpen, connectionId]);
 
   if (!isOpen || !plan) return null;
 
@@ -129,6 +150,18 @@ export default function PaymentModal({
           </button>
         </div>
 
+        {currentPlan && (
+          <div className="mb-4 sm:mb-5 rounded-xl p-3.5 text-sm bg-amber-50 border border-amber-300 text-amber-900">
+            <p className="font-bold mb-1">⚠ You already have an active plan</p>
+            <p className="text-xs sm:text-sm leading-relaxed">
+              <span className="font-semibold">{currentPlan.name}</span> is valid till{' '}
+              <span className="font-semibold">{formatDisplayEndDate(currentPlan.expires_at)}</span>.
+              This new plan will start automatically on{' '}
+              <span className="font-semibold">{formatDateDMY(currentPlan.expires_at)}</span>, after your current plan ends — you will not lose any days.
+            </p>
+          </div>
+        )}
+
         <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
           <div className="flex justify-between text-sm sm:text-base">
             <span className="text-gray-600">Plan:</span>
@@ -168,7 +201,7 @@ export default function PaymentModal({
           disabled={loading}
           className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
         >
-          {loading ? 'Processing...' : 'Pay Now'}
+          {loading ? 'Processing...' : currentPlan ? 'Pay & Queue After Current Plan' : 'Pay Now'}
         </button>
       </div>
     </div>

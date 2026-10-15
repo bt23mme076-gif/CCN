@@ -97,6 +97,8 @@ export async function POST(
                        (plan && plan.name.toUpperCase().startsWith('ALA CARTE'));
 
     let expiresAt: Date;
+    // Set when this plan is chained after a still-running plan — it starts then, not now.
+    let startsAt: Date | null = null;
 
     if (isAlacarte) {
       // Find customer's active base plan (not expired, not ala carte)
@@ -170,6 +172,7 @@ export async function POST(
           return bTime - aTime;
         });
         baseDate = new Date(futureActivePlans[0].expires_at!);
+        startsAt = baseDate;
       }
 
       // Shift base date into IST, add duration, set to midnight IST, convert back to UTC.
@@ -199,13 +202,20 @@ export async function POST(
       .where(eq(recharges.id, rechargeId))
       .limit(1);
 
-    // Send push notification to customer (fire-and-forget)
-    const expiryStr = expiresAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    await sendPushToCustomer(rechargeData.customer_id, {
-      title: '✅ Plan Activated!',
-      body: `${rechargeData.plan_name} activated. Valid till ${expiryStr}. Enjoy your channels!`,
-      url: '/dashboard',
-    });
+    // Tell the customer — a queued renewal gets its start date instead of "activated".
+    const dateOpts = { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' } as const;
+    const expiryStr = new Date(expiresAt.getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', dateOpts);
+    await sendPushToCustomer(rechargeData.customer_id, startsAt
+      ? {
+          title: '✅ Recharge Confirmed!',
+          body: `${rechargeData.plan_name} will start on ${startsAt.toLocaleDateString('en-IN', dateOpts)}, right after your current plan ends. Valid till ${expiryStr}.`,
+          url: '/dashboard',
+        }
+      : {
+          title: '✅ Plan Activated!',
+          body: `${rechargeData.plan_name} activated. Valid till ${expiryStr}. Enjoy your channels!`,
+          url: '/dashboard',
+        });
 
     return NextResponse.json({ recharge: updatedRecharge[0] });
   } catch (error) {
