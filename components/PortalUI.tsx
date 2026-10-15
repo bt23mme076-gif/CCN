@@ -1,7 +1,7 @@
 // Shared building blocks for the dark "premium" customer portal pages
 // (dashboard + buy/history), so both pages look like one product.
 
-import type { CSSProperties, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 
 export const portalBg: CSSProperties = {
   background:
@@ -90,5 +90,65 @@ export function DaysRing({ days, fraction, size = 128 }: { days: number; fractio
         <span className="text-[11px] uppercase tracking-widest text-gray-400 mt-1">days left</span>
       </div>
     </div>
+  );
+}
+
+// Dark "premium" modal frame shared by the payment popups.
+export function PremiumModal({
+  title,
+  subtitle,
+  onClose,
+  closeDisabled = false,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  onClose: () => void;
+  closeDisabled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(5,5,20,0.75)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
+    >
+      <div
+        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl text-white"
+        style={{
+          background: 'linear-gradient(160deg, #1d1a4a 0%, #15133a 60%, #100e2c 100%)',
+          border: '1px solid rgba(245,210,122,0.22)',
+          boxShadow: '0 25px 70px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
+        }}
+      >
+        <div className="absolute inset-x-0 top-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, #f5d27a, #e63946, transparent)' }} />
+        <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(230,57,70,0.2), transparent 70%)' }} />
+        <div className="relative p-5 sm:p-7">
+          <div className="flex justify-between items-start gap-3 mb-5">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-white leading-tight">{title}</h2>
+              {subtitle && <p className="text-sm text-gray-400 mt-1">{subtitle}</p>}
+            </div>
+            <button onClick={onClose} disabled={closeDisabled} aria-label="Close"
+              className="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-40">
+              ✕
+            </button>
+          </div>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Primary call-to-action button used inside PremiumModal.
+export function PremiumButton({ children, className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className={`w-full py-3.5 rounded-xl font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-transform hover:-translate-y-0.5 ${className}`}
+      style={{ background: accentGradient, boxShadow: '0 8px 24px rgba(230,57,70,0.35)' }}
+    >
+      {children}
+    </button>
   );
 }

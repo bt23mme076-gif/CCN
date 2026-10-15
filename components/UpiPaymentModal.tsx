@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { formatCurrency } from '@/lib/utils';
+import { PremiumModal, PremiumButton } from '@/components/PortalUI';
 
 interface UpiPaymentModalProps {
   upiLink: string;
@@ -64,71 +65,62 @@ export default function UpiPaymentModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="font-display text-lg sm:text-xl font-bold text-brand-navy">{title}</h2>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 p-1" disabled={submitting}>
-            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <PremiumModal title={title} subtitle="Scan with any UPI app" onClose={onCancel} closeDisabled={submitting}>
+      <div className="text-center mb-4">
+        <p className="text-[11px] uppercase tracking-wider font-semibold text-gray-400">Amount to pay</p>
+        <p className="text-4xl font-extrabold text-white">{formatCurrency(amount)}</p>
+      </div>
 
-        <p className="text-center font-bold text-base sm:text-lg text-brand-navy mb-2">
-          Amount: {formatCurrency(amount)}
-        </p>
-
-        <div className="flex justify-center mb-2">
-          {qrDataUrl ? (
-            <div className="p-2 bg-white rounded-xl shadow-md border">
-              <img src={qrDataUrl} alt="UPI QR Code" className="w-36 h-36 sm:w-40 sm:h-40" />
-            </div>
-          ) : (
-            <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-lg border flex items-center justify-center text-gray-400 text-sm">
-              Loading QR…
-            </div>
-          )}
-        </div>
-
-        {upiId && (
-          <div className="flex items-center justify-between gap-2 mb-2 px-2.5 py-1.5 rounded-lg border bg-gray-50">
-            <p className="text-xs font-medium text-brand-navy truncate">{upiId}</p>
-            <button
-              type="button"
-              onClick={handleCopyUpiId}
-              className="flex-shrink-0 text-xs font-medium text-brand-navy border border-brand-navy rounded-md px-2.5 py-1 hover:bg-brand-navy hover:text-white transition-colors"
-            >
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
+      <div className="flex justify-center mb-4">
+        {qrDataUrl ? (
+          <div className="p-3 bg-white rounded-2xl" style={{ boxShadow: '0 0 0 4px rgba(245,210,122,0.25), 0 12px 40px rgba(0,0,0,0.4)' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qrDataUrl} alt="UPI QR Code" className="w-44 h-44 sm:w-48 sm:h-48" />
+          </div>
+        ) : (
+          <div className="w-44 h-44 sm:w-48 sm:h-48 rounded-2xl flex items-center justify-center text-gray-400 text-sm"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            Loading QR…
           </div>
         )}
-
-        {qrDataUrl && (
-          <a
-            href={qrDataUrl}
-            download="upi-qr-code.png"
-            className="btn-outline w-full text-center block mb-2 text-xs sm:text-sm py-2"
-          >
-            Download QR Code
-          </a>
-        )}
-
-        <p className="text-xs text-gray-600 mb-3">
-          Scan the QR (or use the UPI ID above) to pay {formatCurrency(amount)}, then tap Confirm Payment below.
-          <span className="font-bold text-brand-navy"> Confirm only after</span> your UPI payment succeeds.
-        </p>
-
-        {error && <p className="text-sm text-accent-red text-center mb-3">{error}</p>}
-
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          className="btn-primary w-full disabled:opacity-50 text-sm sm:text-base"
-        >
-          {submitting ? 'Submitting...' : 'Confirm Payment'}
-        </button>
       </div>
-    </div>
+
+      {upiId && (
+        <div className="flex items-center justify-between gap-2 mb-3 px-3.5 py-2.5 rounded-xl"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500">UPI ID</p>
+            <p className="text-sm font-semibold text-white truncate font-mono">{upiId}</p>
+          </div>
+          <button type="button" onClick={handleCopyUpiId}
+            className="flex-shrink-0 text-xs font-bold rounded-lg px-3 py-1.5 transition-colors"
+            style={copied
+              ? { color: '#4ade80', border: '1px solid rgba(74,222,128,0.5)' }
+              : { color: '#f5d27a', border: '1px solid rgba(245,210,122,0.5)' }}>
+            {copied ? '✓ Copied' : 'Copy'}
+          </button>
+        </div>
+      )}
+
+      {qrDataUrl && (
+        <a href={qrDataUrl} download="upi-qr-code.png"
+          className="block w-full text-center mb-4 text-sm font-semibold py-2.5 rounded-xl text-gray-200 hover:bg-white/5 transition-colors"
+          style={{ border: '1px solid rgba(255,255,255,0.14)' }}>
+          ⬇ Download QR Code
+        </a>
+      )}
+
+      <div className="rounded-xl px-3.5 py-3 mb-4 text-xs leading-relaxed text-gray-300"
+        style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)' }}>
+        <p className="mb-1"><span className="font-bold text-white">1.</span> Scan the QR or use the UPI ID to pay {formatCurrency(amount)}.</p>
+        <p><span className="font-bold text-white">2.</span> Tap <span className="font-bold text-white">Confirm Payment</span> — <span className="font-bold text-amber-300">only after</span> your UPI payment succeeds.</p>
+      </div>
+
+      {error && <p className="text-sm text-red-300 text-center mb-3">{error}</p>}
+
+      <PremiumButton onClick={handleSubmit} disabled={submitting}>
+        {submitting ? 'Submitting…' : 'Confirm Payment'}
+      </PremiumButton>
+    </PremiumModal>
   );
 }

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { formatCurrency, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
 import { calcDurationPricing } from '@/lib/planDuration';
 import UpiPaymentModal from '@/components/UpiPaymentModal';
 import { launchPayu, PayuLaunchParams } from '@/lib/payments/payuClient';
+import { PremiumModal, PremiumButton } from '@/components/PortalUI';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -122,88 +123,49 @@ export default function PaymentModal({
     );
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <h2 className="font-display text-xl sm:text-2xl font-bold text-brand-navy">
-            Confirm Payment
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1"
-            disabled={loading}
-          >
-            <svg
-              className="w-5 h-5 sm:w-6 sm:h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {currentPlan && (
-          <div className="mb-4 sm:mb-5 rounded-xl p-3.5 text-sm bg-amber-50 border border-amber-300 text-amber-900">
-            <p className="font-bold mb-1">⚠ You already have an active plan</p>
-            <p className="text-xs sm:text-sm leading-relaxed">
-              <span className="font-semibold">{currentPlan.name}</span> is valid till{' '}
-              <span className="font-semibold">{formatDisplayEndDate(currentPlan.expires_at)}</span>.
-              This new plan will start automatically on{' '}
-              <span className="font-semibold">{formatDateDMY(currentPlan.expires_at)}</span>, after your current plan ends — you will not lose any days.
-            </p>
-          </div>
-        )}
-
-        <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
-          <div className="flex justify-between text-sm sm:text-base">
-            <span className="text-gray-600">Plan:</span>
-            <span className="font-medium">{plan.name}{months > 1 ? ` (${months} Months)` : ''}</span>
-          </div>
-          <div className="flex justify-between text-sm sm:text-base">
-            <span className="text-gray-600">Duration:</span>
-            <span className="font-medium">{displayDurationDays} days</span>
-          </div>
-          <div className="flex justify-between text-sm sm:text-base">
-            <span className="text-gray-600">STB Number:</span>
-            <span className="font-medium break-all">{stbNumber}</span>
-          </div>
-          {dueAmount > 0 && (
-            <>
-              <div className="flex justify-between text-sm sm:text-base pt-3 sm:pt-4 border-t">
-                <span className="text-gray-600">Plan Amount:</span>
-                <span className="font-medium">{formatCurrency(displayPrice)}</span>
-              </div>
-              <div className="flex justify-between text-sm sm:text-base">
-                <span className="text-gray-600">Outstanding Due:</span>
-                <span className="font-medium text-accent-red">{formatCurrency(dueAmount * 100)}</span>
-              </div>
-            </>
-          )}
-          <div className={`flex justify-between text-base sm:text-lg font-bold pt-3 sm:pt-4 ${dueAmount > 0 ? '' : 'border-t'}`}>
-            <span>Total Amount:</span>
-            <span className="text-accent-red">{formatCurrency(displayPrice + dueAmount * 100)}</span>
-          </div>
-          {dueAmount > 0 && (
-            <p className="text-xs text-gray-500 -mt-2">Your due amount is included in this payment — both are cleared in a single transaction.</p>
-          )}
-        </div>
-
-        <button
-          onClick={handlePayment}
-          disabled={loading}
-          className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-        >
-          {loading ? 'Processing...' : currentPlan ? 'Pay & Queue After Current Plan' : 'Pay Now'}
-        </button>
-      </div>
+  const row = (label: string, value: ReactNode, valueClass = 'text-white') => (
+    <div className="flex justify-between items-center gap-4 py-2.5">
+      <span className="text-sm text-gray-400">{label}</span>
+      <span className={`text-sm sm:text-base font-semibold text-right break-all ${valueClass}`}>{value}</span>
     </div>
+  );
+
+  return (
+    <PremiumModal title="Confirm Payment" subtitle="Review your recharge before paying" onClose={onClose} closeDisabled={loading}>
+      {currentPlan && (
+        <div className="mb-5 rounded-2xl p-4 text-sm"
+          style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.35)' }}>
+          <p className="font-bold text-amber-300 mb-1">⚠ You already have an active plan</p>
+          <p className="text-xs sm:text-sm leading-relaxed text-amber-100/90">
+            <span className="font-semibold text-white">{currentPlan.name}</span> is valid till{' '}
+            <span className="font-semibold text-white">{formatDisplayEndDate(currentPlan.expires_at)}</span>.
+            This new plan will start automatically on{' '}
+            <span className="font-semibold text-white">{formatDateDMY(currentPlan.expires_at)}</span>, after your current plan ends — you will not lose any days.
+          </p>
+        </div>
+      )}
+
+      <div className="rounded-2xl px-4 mb-5 divide-y divide-white/[0.07]"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        {row('Plan', `${plan.name}${months > 1 ? ` (${months} Months)` : ''}`)}
+        {row('Duration', `${displayDurationDays} days`)}
+        {row('STB Number', <span className="font-mono">{stbNumber}</span>)}
+        {dueAmount > 0 && row('Plan Amount', formatCurrency(displayPrice))}
+        {dueAmount > 0 && row('Outstanding Due', formatCurrency(dueAmount * 100), 'text-red-300')}
+      </div>
+
+      <div className="flex justify-between items-end mb-1">
+        <span className="text-sm uppercase tracking-wider font-semibold text-gray-400">Total Amount</span>
+        <span className="text-3xl font-extrabold text-white">{formatCurrency(displayPrice + dueAmount * 100)}</span>
+      </div>
+      {dueAmount > 0 && (
+        <p className="text-xs text-gray-400 mb-1">Your due amount is included in this payment — both are cleared in a single transaction.</p>
+      )}
+
+      <PremiumButton onClick={handlePayment} disabled={loading} className="mt-5">
+        {loading ? 'Processing…' : currentPlan ? 'Pay & Queue After Current Plan' : 'Pay Now'}
+      </PremiumButton>
+      <p className="text-center text-[11px] text-gray-500 mt-3">🔒 Secure payment</p>
+    </PremiumModal>
   );
 }
