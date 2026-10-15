@@ -152,3 +152,44 @@ export function PremiumButton({ children, className = '', ...props }: ButtonHTML
     </button>
   );
 }
+
+// Label/value rows in a soft box — order summaries inside PremiumModal.
+export function ModalDetails({ rows }: { rows: { label: ReactNode; value: ReactNode; valueClass?: string }[] }) {
+  return (
+    <div className="rounded-2xl px-4 mb-5 divide-y divide-white/[0.07]"
+      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      {rows.map((r, i) => (
+        <div key={i} className="flex justify-between items-center gap-4 py-2.5">
+          <span className="text-sm text-gray-400">{r.label}</span>
+          <span className={`text-sm sm:text-base font-semibold text-right break-all ${r.valueClass ?? 'text-white'}`}>{r.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Big total line under ModalDetails.
+export function ModalTotal({ label = 'Total Amount', amount }: { label?: ReactNode; amount: ReactNode }) {
+  return (
+    <div className="flex justify-between items-end mb-5">
+      <span className="text-sm uppercase tracking-wider font-semibold text-gray-400">{label}</span>
+      <span className="text-3xl font-extrabold text-white">{amount}</span>
+    </div>
+  );
+}
+
+// Green check + heading + message, for "payment submitted" screens.
+export function ModalSuccessHeader({ title, message }: { title: string; message: ReactNode }) {
+  return (
+    <div className="text-center mb-5">
+      <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+        style={{ background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)', boxShadow: '0 0 30px rgba(74,222,128,0.25)' }}>
+        <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h3 className="font-display text-2xl font-bold text-white mb-2">{title}</h3>
+      <p className="text-sm text-gray-300">{message}</p>
+    </div>
+  );
+}
