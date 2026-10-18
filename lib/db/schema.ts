@@ -317,3 +317,42 @@ export const expenses = pgTable('expenses', {
   date: timestamp('date').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
 });
+
+// Paid banner ads shown on the CCN live stream (OBS "L shape add" / "Full Screen add" scenes).
+// Packages are the price list the admin maintains; bookings are what advertisers submit from /advertise.
+export const streamAdPackages = pgTable('stream_ad_packages', {
+  id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
+  ad_type: text('ad_type').notNull(), // 'l_shape' | 'full_screen'
+  name: text('name').notNull(), // e.g. '1 Day L-Shape'
+  description: text('description'), // banner size / timing guidance shown to advertisers
+  price: integer('price').notNull(), // in paise
+  duration_days: integer('duration_days').notNull().default(1),
+  is_active: boolean('is_active').default(true).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const streamAdBookings = pgTable('stream_ad_bookings', {
+  id: text('id').primaryKey(), // doubles as the PayU txnid
+  operator_id: text('operator_id').references(() => operators.id),
+  package_id: text('package_id').references(() => streamAdPackages.id, { onDelete: 'set null' }),
+  ad_type: text('ad_type').notNull(), // 'l_shape' | 'full_screen'
+  package_name: text('package_name').notNull(),
+  duration_days: integer('duration_days').notNull(),
+  amount: integer('amount').notNull(), // in paise
+  advertiser_name: text('advertiser_name').notNull(),
+  business_name: text('business_name'),
+  phone: text('phone').notNull(),
+  banner_data: text('banner_data').notNull(), // base64 data URL
+  scroll_text: text('scroll_text'), // optional ticker line under the banner
+  start_date: timestamp('start_date'),
+  end_date: timestamp('end_date'),
+  notes: text('notes'), // advertiser's message
+  admin_note: text('admin_note'),
+  status: text('status').notNull(), // 'pending' (unpaid) | 'paid' | 'approved' | 'live' | 'completed' | 'rejected' | 'failed'
+  upi_reference: text('upi_reference'),
+  paid_at: timestamp('paid_at'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  statusIdx: index('stream_ad_bookings_status_idx').on(table.status),
+}));

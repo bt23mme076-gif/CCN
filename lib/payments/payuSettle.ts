@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { recharges, accessoryOrders, customers } from '@/lib/db/schema';
+import { recharges, accessoryOrders, customers, streamAdBookings } from '@/lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { verifyPayuResponseHash } from '@/lib/payments/payu';
 import { notifyAdmin } from '@/lib/push';
@@ -54,6 +54,35 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
     return true;
   }
 
+  if (udf1 === 'stream_ad') {
+    const updated = await db
+      .update(streamAdBookings)
+      .set(update)
+      .where(and(eq(streamAdBookings.id, txnid), eq(streamAdBookings.status, 'pending')))
+      .returning();
+
+    if (success && updated.length > 0) {
+      const booking = updated[0];
+      await notifyAdmin({
+        title: '📢 Live Ad Booking — Payment Received',
+        body: `${booking.advertiser_name} paid ₹${(booking.amount / 100).toFixed(0)} for the ${booking.package_name} ad via PayU. Please review the banner and approve.`,
+        url: '/admin/stream-ads',
+        tag: `stream-ad-${booking.id}`,
+      });
+      await sendPaymentAlertEmail({
+        item: `Live Ad - ${booking.package_name}`,
+        amountPaise: booking.amount,
+        orderId: booking.id,
+        payuId: reference,
+        customerId: '-',
+        customerName: booking.business_name ? `${booking.advertiser_name} (${booking.business_name})` : booking.advertiser_name,
+        mobile: booking.phone,
+        stbNumber: '-',
+      });
+    }
+    return true;
+  }
+
   // Everything else (recharge, due, alacarte, fast-recharge, guest) lives in `recharges`.
   const updated = await db
     .update(recharges)
@@ -97,6 +126,9 @@ export async function payuReturnPath(fields: Record<string, string>, valid: bool
   const id = encodeURIComponent(txnid);
   const failed = !valid || status !== 'success';
 
+  if (udf1 === 'stream_ad') {
+    return failed ? `/advertise/status?order_id=${id}&payment=failed` : `/advertise/status?order_id=${id}`;
+  }
   if (udf2 === 'guest') {
     return failed ? `/recharge-status?order_id=${id}&payment=failed` : `/recharge-status?order_id=${id}`;
   }

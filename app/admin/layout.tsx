@@ -101,6 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/plans', label: 'Plans', icon: '📋', desc: 'Manage plans' },
     { href: '/admin/accessories', label: 'Accessories', icon: '📦', desc: 'Manage products' },
     { href: '/admin/advertisements', label: 'Ads', icon: '📢', desc: 'Business posters' },
+    { href: '/admin/stream-ads', label: 'Live Ads', icon: '📺', desc: 'Stream banner bookings' },
     { href: '/admin/expenses', label: 'Expenses', icon: '💰', desc: 'Payroll & costs' },
     { href: '/admin/retrack', label: 'Retrack', icon: '📺', desc: 'STB retrack requests' },
     { href: '/admin/settings', label: 'Settings', icon: '⚙️', desc: 'Config' },
