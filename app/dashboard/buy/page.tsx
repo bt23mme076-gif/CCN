@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import RechargePauseBanner from '@/components/RechargePauseBanner';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
 import AccessoryPaymentModal from '@/components/AccessoryPaymentModal';
@@ -350,6 +351,8 @@ export default function BuyHistoryPage() {
             Purchase new plans or view your complete recharge history
           </p>
         </div>
+
+        <RechargePauseBanner stbNumber={customer?.stb_number} className="mb-5" />
 
         {/* Outstanding Due Notice — no longer blocks recharge; due gets added to the next plan payment automatically */}
         {customer && customer.outstanding_balance > 0 && (

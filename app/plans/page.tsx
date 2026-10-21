@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
 import Navbar from '@/components/Navbar';
+import RechargePauseBanner from '@/components/RechargePauseBanner';
 import { useOperatorBranding } from '@/lib/useOperatorBranding';
 
 interface Plan {
@@ -159,6 +160,8 @@ export default function PlansPage() {
               Select the plan that fits your entertainment needs
             </p>
           </div>
+
+          <RechargePauseBanner stbNumber={customer?.stb_number} className="max-w-2xl mx-auto mb-10" />
 
           {plans && plans.length > 0 ? (
             <>

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import RechargePauseBanner from '@/components/RechargePauseBanner';
 import RetrackModal from '@/components/RetrackModal';
 import { portalBg, GlassCard, SectionTitle, StatusPill, DaysRing, accentGradient } from '@/components/PortalUI';
 import ActivationWaiting from '@/components/ActivationWaiting';
@@ -320,6 +321,8 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+
+        <RechargePauseBanner stbNumber={customer?.stb_number} className="mb-5" />
 
         {/* Outstanding Due Banner */}
         {customer && customer.outstanding_balance > 0 && (

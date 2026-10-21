@@ -356,3 +356,14 @@ export const streamAdBookings = pgTable('stream_ad_bookings', {
 }, (table) => ({
   statusIdx: index('stream_ad_bookings_status_idx').on(table.status),
 }));
+
+// Per-MSO "recharges paused" switch — flipped by the admin when that MSO's
+// own portal is down and plans can't be activated. id = `${operatorId}:${mso}`.
+export const rechargePauses = pgTable('recharge_pauses', {
+  id: text('id').primaryKey(),
+  operator_id: text('operator_id').notNull(),
+  mso: text('mso').notNull(), // see lib/mso.ts — 'gtpl' | 'nxt'
+  paused: boolean('paused').notNull().default(false),
+  message: text('message'),
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+});

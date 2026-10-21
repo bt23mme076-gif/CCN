@@ -7,6 +7,7 @@ import { generateOrderId } from '@/lib/utils';
 import { resolveConnection } from '@/lib/connections';
 import { buildUpiLink } from '@/lib/payments/upi';
 import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
+import { rechargesPausedResponse } from '@/lib/rechargePause';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,9 @@ export async function POST(request: NextRequest) {
     }
 
     const c = customer[0];
+
+    const paused = await rechargesPausedResponse(c.operator_id, connInfo.stb_number);
+    if (paused) return paused;
 
     if (!c.fast_recharge_enabled || !c.fast_recharge_amount) {
       return NextResponse.json({ error: 'Fast Recharge not enabled for this account' }, { status: 403 });

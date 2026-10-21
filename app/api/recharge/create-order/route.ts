@@ -9,6 +9,7 @@ import { resolveConnection } from '@/lib/connections';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
 import { buildUpiLink } from '@/lib/payments/upi';
 import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
+import { rechargesPausedResponse } from '@/lib/rechargePause';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +73,9 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const paused = await rechargesPausedResponse(customer[0].operator_id, connInfo.stb_number);
+    if (paused) return paused;
 
     const discountPercent = discountRow.length > 0 ? discountRow[0].discount_percent : 0;
 

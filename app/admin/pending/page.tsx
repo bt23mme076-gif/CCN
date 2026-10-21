@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { formatCurrency, formatDateTime, getInitials, formatDateDMY, formatDisplayEndDate } from '@/lib/utils';
 import StatusBadge from '@/components/StatusBadge';
+import RechargePauseControl from '@/components/RechargePauseControl';
 
 interface Stats { pendingCount: number; todayRevenue: number; monthRevenue: number; totalRevenue: number; totalCustomers: number; }
 interface PendingRecharge {
@@ -322,6 +323,8 @@ export default function PendingActivationsPage() {
           {voiceAlertsOn ? '🔊 Voice Alerts ON' : '🔇 Voice Alerts OFF'}
         </button>
       </div>
+
+      <RechargePauseControl />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">

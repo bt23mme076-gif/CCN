@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import RechargePauseBanner from '@/components/RechargePauseBanner';
 import Footer from '@/components/Footer';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
@@ -288,6 +289,7 @@ export default function HomePage() {
       </div>
 
       <Navbar />
+      <RechargePauseBanner stbNumber={customer?.stb_number} className="max-w-5xl mx-4 sm:mx-auto mt-4" />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-hero text-white py-16 sm:py-20 md:py-28 overflow-hidden">

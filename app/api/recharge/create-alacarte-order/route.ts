@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import { buildUpiLink } from '@/lib/payments/upi';
 import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
+import { rechargesPausedResponse } from '@/lib/rechargePause';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +46,9 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const paused = await rechargesPausedResponse(customer[0].operator_id, customer[0].stb_number);
+    if (paused) return paused;
 
     if (customer[0].outstanding_balance > 0) {
       return NextResponse.json(

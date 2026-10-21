@@ -8,6 +8,7 @@ import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
 import { findCustomerByStbOrMobile } from '@/lib/guestLookup';
 import { buildUpiLink } from '@/lib/payments/upi';
 import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
+import { rechargesPausedResponse } from '@/lib/rechargePause';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,9 @@ export async function POST(request: NextRequest) {
     if (!match) {
       return NextResponse.json({ error: 'Invalid STB or mobile number. Please check and try again.' }, { status: 404 });
     }
+
+    const paused = await rechargesPausedResponse(match.operator_id, match.stb_number);
+    if (paused) return paused;
 
     if (match.outstanding_balance > 0) {
       return NextResponse.json(

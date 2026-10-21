@@ -110,6 +110,18 @@ export async function POST() {
     await migrationClient`CREATE INDEX IF NOT EXISTS stream_ad_bookings_status_idx ON stream_ad_bookings (status);`;
     log.push('stream ad tables: ok');
 
+    await migrationClient`
+      CREATE TABLE IF NOT EXISTS recharge_pauses (
+        id TEXT PRIMARY KEY,
+        operator_id TEXT NOT NULL,
+        mso TEXT NOT NULL,
+        paused BOOLEAN NOT NULL DEFAULT false,
+        message TEXT,
+        updated_at TIMESTAMP NOT NULL DEFAULT now()
+      );
+    `;
+    log.push('recharge_pauses table: ok');
+
     return NextResponse.json({ success: true, log });
   } catch (error) {
     console.error('Run migrations error:', error);

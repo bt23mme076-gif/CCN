@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 export interface GuestCustomerMatch {
   customerId: string;
   connectionId: string | null; // null = primary
+  stb_number: string; // the matched connection's STB (decides its MSO)
   name: string;
   area: string;
   mobile: string;
@@ -22,6 +23,7 @@ export async function findCustomerByStb(stbNumber: string): Promise<GuestCustome
     return {
       customerId: c.id,
       connectionId: null,
+      stb_number: c.stb_number,
       name: c.name,
       area: c.area,
       mobile: c.mobile,
@@ -37,6 +39,7 @@ export async function findCustomerByStb(stbNumber: string): Promise<GuestCustome
     return {
       customerId: cust[0].id,
       connectionId: conn[0].id,
+      stb_number: conn[0].stb_number,
       name: cust[0].name,
       area: conn[0].area,
       mobile: cust[0].mobile,
@@ -59,6 +62,7 @@ export async function findCustomerByMobile(mobile: string): Promise<GuestCustome
   return {
     customerId: c.id,
     connectionId: null, // mobile lookup always resolves to the primary connection
+    stb_number: c.stb_number,
     name: c.name,
     area: c.area,
     mobile: c.mobile,

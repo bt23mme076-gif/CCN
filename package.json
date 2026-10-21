@@ -31,6 +31,7 @@
     "add-operator-branding-columns": "tsx add-operator-branding-columns.ts",
     "add-app-settings-table": "tsx add-app-settings-table.ts",
     "add-customer-payment-mode-column": "tsx add-customer-payment-mode-column.ts",
+    "add-recharge-pauses-table": "tsx add-recharge-pauses-table.ts",
     "delete-super-admin": "tsx delete-super-admin.ts",
     "add-stream-ads-tables": "tsx add-stream-ads-tables.ts"
   },
