@@ -289,7 +289,7 @@ export default function HomePage() {
       </div>
 
       <Navbar />
-      <RechargePauseBanner stbNumber={customer?.stb_number} className="max-w-5xl mx-4 sm:mx-auto mt-4" />
+      <RechargePauseBanner stbNumber={customer?.stb_number} wrapperClassName="bg-gradient-hero px-4 pt-4" className="max-w-5xl mx-auto" />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-hero text-white py-16 sm:py-20 md:py-28 overflow-hidden">
