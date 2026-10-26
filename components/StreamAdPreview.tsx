@@ -8,8 +8,9 @@ export const AD_TYPE_LABELS: Record<StreamAdType, string> = {
 };
 
 // How the banner sits on the live stream. Full Screen replaces the video
-// entirely; L-Shape shrinks the live video into the top-left corner, so that
-// area of the banner is covered and only the right strip + bottom strip show.
+// entirely; L-Shape shrinks the live video into the top-right corner, so that
+// area of the banner is covered and only the left strip + bottom strip show.
+// The CCN LIVE channel logo always sits in the top-right corner.
 export default function StreamAdPreview({
   adType,
   banner,
@@ -36,14 +37,18 @@ export default function StreamAdPreview({
       )}
 
       {adType === 'l_shape' && (
-        <div className="absolute top-0 left-0 flex items-center justify-center"
-          style={{ width: '76%', height: '80%', background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderRight: '2px solid #f77f00', borderBottom: '2px solid #f77f00' }}>
+        <div className="absolute top-0 right-0 flex items-center justify-center"
+          style={{ width: '76%', height: '80%', background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderLeft: '2px solid #f77f00', borderBottom: '2px solid #f77f00' }}>
           <div className="text-center">
             <span className="inline-block text-[10px] sm:text-xs font-black px-2 py-0.5 rounded bg-red-600 text-white mb-1">● LIVE</span>
             <p className="text-[10px] sm:text-xs text-gray-400">Live program plays here</p>
           </div>
         </div>
       )}
+
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/ccn-live-logo.webp" alt="CCN Live" className="absolute top-[3%] right-[2%] w-[13%] pointer-events-none"
+        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} />
 
       {scrollText && (
         <div className="absolute bottom-0 left-0 right-0 overflow-hidden whitespace-nowrap py-0.5 sm:py-1"

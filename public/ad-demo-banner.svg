@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
   <!-- Sample advertiser banner for the /advertise page TV preview.
-       Content sits in the right strip and bottom strip so it reads the same
-       in Full Screen and L-Shape (where the top-left 76%x80% is covered). -->
+       Key content sits in the LEFT strip and BOTTOM strip so it reads the same
+       in Full Screen and L-Shape (where the top-right 76%x80% shows the live
+       program). The top-right corner is kept clear for the CCN LIVE logo. -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#7c2d12"/>
@@ -14,20 +15,21 @@
     </linearGradient>
   </defs>
   <rect width="1920" height="1080" fill="url(#bg)"/>
-  <circle cx="1700" cy="200" r="260" fill="#fff" opacity="0.08"/>
-  <circle cx="300" cy="1000" r="300" fill="#000" opacity="0.12"/>
+  <circle cx="1300" cy="300" r="320" fill="#fff" opacity="0.07"/>
 
-  <!-- Left / centre (visible in Full Screen) -->
-  <text x="110" y="300" font-family="Georgia, serif" font-size="150" font-weight="700" fill="#fff">Sharma</text>
-  <text x="110" y="460" font-family="Georgia, serif" font-size="150" font-weight="700" fill="url(#gold)">Electronics</text>
-  <text x="115" y="560" font-family="Arial, sans-serif" font-size="56" fill="#fff" opacity="0.9">TV • Fridge • AC • Mobiles</text>
+  <!-- Centre / right (visible only in Full Screen) -->
+  <text x="1180" y="420" text-anchor="middle" font-family="Georgia, serif" font-size="150" font-weight="700" fill="#fff">Sharma</text>
+  <text x="1180" y="580" text-anchor="middle" font-family="Georgia, serif" font-size="150" font-weight="700" fill="url(#gold)">Electronics</text>
+  <text x="1180" y="680" text-anchor="middle" font-family="Arial, sans-serif" font-size="56" fill="#fff" opacity="0.9">TV • Fridge • AC • Mobiles</text>
 
-  <!-- Right strip (visible in both) -->
-  <rect x="1480" y="0" width="440" height="864" fill="#000" opacity="0.25"/>
-  <text x="1700" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#fde68a">FESTIVE</text>
-  <text x="1700" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#fde68a">SALE</text>
-  <text x="1700" y="520" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="150" font-weight="900" fill="#fff">30%</text>
-  <text x="1700" y="610" text-anchor="middle" font-family="Arial, sans-serif" font-size="70" font-weight="700" fill="#fff">OFF</text>
+  <!-- Left strip (visible in both) -->
+  <rect x="0" y="0" width="460" height="864" fill="#000" opacity="0.25"/>
+  <text x="230" y="230" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#fde68a">FESTIVE</text>
+  <text x="230" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#fde68a">SALE</text>
+  <text x="230" y="500" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="150" font-weight="900" fill="#fff">30%</text>
+  <text x="230" y="590" text-anchor="middle" font-family="Arial, sans-serif" font-size="70" font-weight="700" fill="#fff">OFF</text>
+  <text x="230" y="720" text-anchor="middle" font-family="Georgia, serif" font-size="52" font-weight="700" fill="#fff">Sharma</text>
+  <text x="230" y="780" text-anchor="middle" font-family="Georgia, serif" font-size="52" font-weight="700" fill="#fde68a">Electronics</text>
 
   <!-- Bottom strip (visible in both) -->
   <rect x="0" y="864" width="1920" height="216" fill="#111827" opacity="0.85"/>

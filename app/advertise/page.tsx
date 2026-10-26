@@ -31,7 +31,7 @@ const TYPE_INFO: Record<StreamAdType, { tagline: string; size: string; best: str
   },
   l_shape: {
     tagline: 'Live program keeps playing, your ad wraps around it',
-    size: '1920 × 1080 px — keep text on the right side & bottom strip; the top-left area is covered by the live video',
+    size: '1920 × 1080 px — keep text on the left side & bottom strip; the top-right area is covered by the live video and the CCN LIVE logo',
     best: 'Best for running all day without interrupting viewers — great for regular brand visibility.',
   },
 };
@@ -520,7 +520,7 @@ function AdvertiseInner() {
           {[
             { q: 'When will my ad go on air?', a: 'From the start date you choose while booking. We review every banner first, usually the same day.' },
             { q: 'What if my banner is not approved?', a: 'We will call you to fix it. If we still cannot run it, you get a refund.' },
-            { q: 'What size should my banner be?', a: '1920 × 1080 pixels (16:9), JPG or PNG. For L-Shape, keep your text on the right side and the bottom strip — the top-left area shows the live program.' },
+            { q: 'What size should my banner be?', a: '1920 × 1080 pixels (16:9), JPG or PNG. For L-Shape, keep your text on the left side and the bottom strip — the top-right area shows the live program. Keep the top-right corner clear in every ad: the CCN LIVE logo sits there.' },
             { q: 'I don’t have a banner. Can you help?', a: 'Yes — message us on WhatsApp with your shop details and offer, and we will help you get one ready.' },
             { q: 'How do I pay?', a: 'Online by UPI (or card where available). You get an order ID right away to track your booking.' },
           ].map((item) => (
