@@ -51,9 +51,9 @@ export default function StreamAdPreview({
         style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} />
 
       {scrollText && (
-        <div className="absolute bottom-0 left-0 right-0 overflow-hidden whitespace-nowrap py-0.5 sm:py-1"
+        <div className="absolute bottom-0 left-0 right-0 overflow-hidden whitespace-nowrap py-px leading-none"
           style={{ background: '#b91c1c' }}>
-          <span className="inline-block text-[10px] sm:text-sm font-bold text-white"
+          <span className="inline-block text-[9px] sm:text-[11px] font-bold text-white leading-tight"
             style={{ animation: 'stream-ad-ticker 14s linear infinite' }}>
             {scrollText}
           </span>

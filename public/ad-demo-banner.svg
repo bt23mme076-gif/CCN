@@ -31,9 +31,10 @@
   <text x="230" y="720" text-anchor="middle" font-family="Georgia, serif" font-size="52" font-weight="700" fill="#fff">Sharma</text>
   <text x="230" y="780" text-anchor="middle" font-family="Georgia, serif" font-size="52" font-weight="700" fill="#fde68a">Electronics</text>
 
-  <!-- Bottom strip (visible in both) -->
+  <!-- Bottom strip (visible in both) — content kept above the lowest ~8%,
+       where the optional scrolling-text ticker runs. -->
   <rect x="0" y="864" width="1920" height="216" fill="#111827" opacity="0.85"/>
-  <text x="80" y="990" font-family="Arial, sans-serif" font-size="68" font-weight="700" fill="#fff">Main Market  |  Call 98XXX XXXXX</text>
-  <rect x="1440" y="905" width="400" height="130" rx="65" fill="url(#gold)"/>
-  <text x="1640" y="990" text-anchor="middle" font-family="Arial, sans-serif" font-size="56" font-weight="800" fill="#7c2d12">VISIT TODAY</text>
+  <text x="80" y="955" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#fff">Main Market  |  Call 98XXX XXXXX</text>
+  <rect x="1440" y="884" width="400" height="104" rx="52" fill="url(#gold)"/>
+  <text x="1640" y="953" text-anchor="middle" font-family="Arial, sans-serif" font-size="50" font-weight="800" fill="#7c2d12">VISIT TODAY</text>
 </svg>
