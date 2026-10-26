@@ -173,7 +173,9 @@ export default function StreamAdsPage() {
               {filtered.map((b) => {
                 const st = STATUS_STYLES[b.status] ?? { label: b.status, cls: 'bg-gray-700 text-gray-300' };
                 return (
-                  <button key={b.id} onClick={() => setEditingId(b.id)} className="w-full text-left flex items-center gap-4 px-4 sm:px-6 py-4 hover:bg-white/5">
+                  <div key={b.id} role="button" tabIndex={0} onClick={() => setEditingId(b.id)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditingId(b.id); } }}
+                    className="w-full text-left flex items-center gap-4 px-4 sm:px-6 py-4 hover:bg-white/5 cursor-pointer">
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-[10px] font-black text-white text-center leading-tight"
                       style={{ background: b.ad_type === 'l_shape' ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : 'linear-gradient(135deg, #e63946, #f77f00)' }}>
                       {b.ad_type === 'l_shape' ? 'L' : 'FULL'}
@@ -192,10 +194,17 @@ export default function StreamAdsPage() {
                             {formatDateDMY(b.start_date)}{b.end_date && toDateInput(b.end_date) !== toDateInput(b.start_date) ? ` – ${formatDateDMY(b.end_date)}` : ''}
                           </span>
                         )}
+                        {['paid', 'approved', 'live', 'completed'].includes(b.status) && (
+                          <a href={`/api/admin/stream-ads/${encodeURIComponent(b.id)}/receipt`} target="_blank" rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs font-semibold text-orange-300 hover:underline">
+                            📄 Receipt
+                          </a>
+                        )}
                       </div>
                     </div>
                     <span className="text-gray-500 text-sm flex-shrink-0">Edit →</span>
-                  </button>
+                  </div>
                 );
               })}
             </div>

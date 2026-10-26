@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm';
 import { verifyPayuResponseHash } from '@/lib/payments/payu';
 import { notifyAdmin } from '@/lib/push';
 import { clearDue } from '@/lib/payments/clearDue';
+import { adReceiptToken } from '@/lib/adReceipt';
 import { sendPaymentAlertEmail } from '@/lib/email';
 
 // Applies a hash-verified PayU result to its order. Shared by the browser
@@ -127,7 +128,9 @@ export async function payuReturnPath(fields: Record<string, string>, valid: bool
   const failed = !valid || status !== 'success';
 
   if (udf1 === 'stream_ad') {
-    return failed ? `/advertise/status?order_id=${id}&payment=failed` : `/advertise/status?order_id=${id}`;
+    return failed
+      ? `/advertise/status?order_id=${id}&payment=failed`
+      : `/advertise/status?order_id=${id}&t=${adReceiptToken(txnid)}`;
   }
   if (udf2 === 'guest') {
     return failed ? `/recharge-status?order_id=${id}&payment=failed` : `/recharge-status?order_id=${id}`;

@@ -16,6 +16,9 @@ interface Booking {
   admin_note: string | null;
 }
 
+// Statuses where the advertiser has paid — a receipt can be shown.
+const PAID_STATUSES = ['paid', 'approved', 'live', 'completed'];
+
 const MESSAGES: Record<string, { icon: string; title: string; body: string; color: string }> = {
   pending: { icon: '⏳', title: 'Waiting for payment', body: 'We have not received your payment yet. If you already paid, this page updates automatically.', color: '#facc15' },
   paid: { icon: '🎉', title: 'Payment received!', body: 'Our team is reviewing your banner. You will get a call on your mobile if any change is needed.', color: '#22c55e' },
@@ -30,6 +33,13 @@ function StatusInner() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order_id');
   const paymentFailed = searchParams.get('payment') === 'failed';
+  // Receipt access token, only present in the link the advertiser lands on after paying.
+  const receiptToken = searchParams.get('t');
+  const [origin, setOrigin] = useState('');
+  useEffect(() => setOrigin(window.location.origin), []);
+  const receiptUrl = orderId && receiptToken && origin
+    ? `${origin}/api/stream-ads/${encodeURIComponent(orderId)}/receipt?t=${encodeURIComponent(receiptToken)}`
+    : null;
   const [booking, setBooking] = useState<Booking | null>(null);
   const [notFound, setNotFound] = useState(!orderId);
 
@@ -81,10 +91,23 @@ function StatusInner() {
                 {booking.admin_note && <p className="text-yellow-200 text-xs pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>{booking.admin_note}</p>}
               </div>
             )}
+            {receiptUrl && status && PAID_STATUSES.includes(status) && (
+              <div className="w-full grid grid-cols-2 gap-3">
+                <a href={receiptUrl} target="_blank" rel="noopener noreferrer"
+                  className="py-3 rounded-xl font-bold text-white text-sm"
+                  style={{ background: 'linear-gradient(135deg, #e63946, #f77f00)', boxShadow: '0 8px 24px rgba(230,57,70,0.35)' }}>
+                  📄 Download Receipt
+                </a>
+                <a href={`https://wa.me/?text=${encodeURIComponent(`My CCN LIVE ad receipt: ${receiptUrl}`)}`} target="_blank" rel="noopener noreferrer"
+                  className="py-3 rounded-xl font-bold text-white text-sm" style={{ background: '#16a34a' }}>
+                  💬 Share on WhatsApp
+                </a>
+              </div>
+            )}
             {status === 'failed' && (
               <Link href="/advertise" className="btn-gradient px-6 py-3 rounded-xl font-semibold text-sm">Try again</Link>
             )}
-            <p className="text-xs text-gray-500">Save this page link to check your ad status later.</p>
+            <p className="text-xs text-gray-500">Save this page link to check your ad status and get your receipt later.</p>
           </>
         )}
       </div>

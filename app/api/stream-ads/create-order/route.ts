@@ -1,3 +1,4 @@
+import { adReceiptToken } from '@/lib/adReceipt';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { streamAdPackages, streamAdBookings } from '@/lib/db/schema';
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
         })
       : null;
 
-    return NextResponse.json({ orderId, upiLink, amount: pkg.price, payu });
+    return NextResponse.json({ orderId, upiLink, amount: pkg.price, payu, receiptToken: adReceiptToken(orderId) });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });

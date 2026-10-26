@@ -18,7 +18,7 @@ export interface ReceiptData {
   };
 }
 
-function fmtDate(date: string | Date | null | undefined): string {
+export function fmtDate(date: string | Date | null | undefined): string {
   if (!date) return '—';
   return new Intl.DateTimeFormat('en-IN', {
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -26,12 +26,12 @@ function fmtDate(date: string | Date | null | undefined): string {
   }).format(new Date(date));
 }
 
-function fmtCurrency(paise: number): string {
+export function fmtCurrency(paise: number): string {
   const rupees = paise / 100;
   return '₹ ' + rupees.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
-function numberToWords(paise: number): string {
+export function numberToWords(paise: number): string {
   const n = Math.round(paise / 100);
   if (n === 0) return 'Zero Rupees Only';
 

@@ -77,7 +77,7 @@ function AdvertiseInner() {
 
   const [error, setError] = useState('');
   const [paying, setPaying] = useState(false);
-  const [payOrder, setPayOrder] = useState<{ orderId: string; upiLink: string; amount: number } | null>(null);
+  const [payOrder, setPayOrder] = useState<{ orderId: string; upiLink: string; amount: number; receiptToken?: string } | null>(null);
   // Hero TV mock flips between the two formats so visitors see both.
   const [heroType, setHeroType] = useState<StreamAdType>('l_shape');
   useEffect(() => {
@@ -156,7 +156,7 @@ function AdvertiseInner() {
         await launchPayu(data.payu as PayuLaunchParams, () => setPaying(false));
         return;
       }
-      setPayOrder({ orderId: data.orderId, upiLink: data.upiLink, amount: data.amount });
+      setPayOrder({ orderId: data.orderId, upiLink: data.upiLink, amount: data.amount, receiptToken: data.receiptToken });
       setPaying(false);
     } catch {
       setError('Failed to start payment. Please check your internet and try again.');
@@ -170,7 +170,7 @@ function AdvertiseInner() {
         upiLink={payOrder.upiLink}
         amount={payOrder.amount}
         submitUtrUrl={`/api/stream-ads/${payOrder.orderId}/submit-utr`}
-        onSubmitted={() => { window.location.href = `/advertise/status?order_id=${payOrder.orderId}`; }}
+        onSubmitted={() => { window.location.href = `/advertise/status?order_id=${payOrder.orderId}${payOrder.receiptToken ? `&t=${payOrder.receiptToken}` : ''}`; }}
         onCancel={() => setPayOrder(null)}
         title="Pay for your Live Ad"
       />
