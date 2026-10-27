@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import NotifyOptIn from '@/components/NotifyOptIn';
 
 interface ActivationWaitingProps {
   rechargeId: string;
@@ -354,6 +355,8 @@ export default function ActivationWaiting({ rechargeId, planName, amount, hasAct
           <StatusStep icon="⟳" label="Your recharge is being activated" active color="text-yellow-400" />
           <StatusStep icon="○" label="TV ready — channels loading" color="text-gray-500" />
         </div>
+
+        <NotifyOptIn className="w-full text-left" />
 
         <button onClick={onActivated}
           className="text-gray-600 hover:text-gray-400 text-xs underline transition-colors mt-2">

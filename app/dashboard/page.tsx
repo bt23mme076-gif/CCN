@@ -1,6 +1,6 @@
 'use client';
 
-import { ensurePushSubscription } from '@/lib/vapid';
+import NotifyOptIn from '@/components/NotifyOptIn';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -50,28 +50,11 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchData();
     checkPaymentStatus();
-    registerPush();
     const onConnectionChanged = () => fetchData();
     window.addEventListener('ccn-connection-changed', onConnectionChanged);
     return () => window.removeEventListener('ccn-connection-changed', onConnectionChanged);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const registerPush = async () => {
-    try {
-      const sub = await ensurePushSubscription();
-      if (sub) await sendSubscription(sub);
-    } catch { /* ignore */ }
-  };
-
-  const sendSubscription = async (sub: PushSubscription) => {
-    const json = sub.toJSON();
-    await fetch('/api/push/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint: sub.endpoint, keys: json.keys }),
-    });
-  };
 
   const checkPaymentStatus = async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -323,6 +306,7 @@ export default function DashboardPage() {
         </div>
 
         <RechargePauseBanner stbNumber={customer?.stb_number} className="mb-5" />
+        <NotifyOptIn className="mb-5" />
 
         {/* Outstanding Due Banner */}
         {customer && customer.outstanding_balance > 0 && (
