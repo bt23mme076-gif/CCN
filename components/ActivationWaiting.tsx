@@ -280,12 +280,8 @@ export default function ActivationWaiting({ rechargeId, planName, amount, hasAct
               <span className="text-green-300 text-sm">Payment received &amp; confirmed</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-green-400">✓</span>
-              <span className="text-green-300 text-sm">Recharge request sent to {branding.name}</span>
-            </div>
-            <div className="flex items-center gap-3">
               <span className="text-yellow-400 animate-pulse">⏳</span>
-              <span className="text-yellow-200 text-sm">Activation in queue — this page updates by itself</span>
+              <span className="text-yellow-200 text-sm">Recharge in queue</span>
             </div>
             <p className="text-[11px] text-gray-500 pt-2 font-mono break-all" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               Order ID: {rechargeId}
