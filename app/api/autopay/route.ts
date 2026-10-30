@@ -31,20 +31,51 @@ export async function GET(request: NextRequest) {
     const user = await requireCustomerAuth();
     const conn = await resolveConnection(user.customerId, request.nextUrl.searchParams.get('cid') || undefined);
     if (!conn) return NextResponse.json({ error: 'Invalid connection' }, { status: 400 });
-    return NextResponse.json({ autopay: await currentFor(user.customerId, conn.connectionId) });
+    const autopay = await currentFor(user.customerId, conn.connectionId);
+    if (autopay) return NextResponse.json({ autopay });
+
+    // Nothing set up yet — hand the sign-up form its defaults.
+    const [customer] = await db
+      .select({ name: customers.name, mobile: customers.mobile })
+      .from(customers)
+      .where(eq(customers.id, user.customerId))
+      .limit(1);
+    const suggested = await firstDebitDate(user.customerId, conn.connectionId);
+    return NextResponse.json({
+      autopay: null,
+      defaults: {
+        name: customer?.name ?? '',
+        mobile: customer?.mobile ?? '',
+        startDate: suggested.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
+      },
+    });
   } catch (error) {
     console.error('Get autopay error:', error);
     return NextResponse.json({ autopay: null });
   }
 }
 
-const requestSchema = z.object({ planId: z.string(), connectionId: z.string().optional() });
+const AUTOPAY_MONTHS = [6, 12, 24] as const;
 
-// Customer asks for AutoPay on a plan — the admin then makes the QR in Collect.
+const requestSchema = z.object({
+  planId: z.string(),
+  connectionId: z.string().optional(),
+  name: z.string().trim().min(2, 'Please enter your name').max(80),
+  mobile: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Please choose a start date'),
+  months: z.number().refine((m) => (AUTOPAY_MONTHS as readonly number[]).includes(m), 'Please choose how long AutoPay should run'),
+});
+
+// Customer signs up with the details the mandate needs; the admin enters them
+// into Collect and uploads the QR it generates.
 export async function POST(request: NextRequest) {
   try {
     const user = await requireCustomerAuth();
-    const { planId, connectionId } = requestSchema.parse(await request.json());
+    const { planId, connectionId, name, mobile, startDate, months } = requestSchema.parse(await request.json());
+
+    if (startDate < new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })) {
+      return NextResponse.json({ error: 'Start date cannot be in the past' }, { status: 400 });
+    }
 
     const conn = await resolveConnection(user.customerId, connectionId);
     if (!conn) return NextResponse.json({ error: 'Invalid connection' }, { status: 400 });
@@ -63,7 +94,7 @@ export async function POST(request: NextRequest) {
     if (!customer) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
 
     const amount = override ? override.custom_price : plan.price;
-    const debitDate = await firstDebitDate(user.customerId, conn.connectionId);
+    const debitDate = new Date(`${startDate}T00:00:00+05:30`);
 
     const [row] = await db.insert(autopaySubscriptions).values({
       id: `ap_${randomBytes(8).toString('hex')}`,
@@ -74,13 +105,16 @@ export async function POST(request: NextRequest) {
       plan_name: plan.name,
       amount,
       duration_days: plan.duration_days,
+      mandate_name: name,
+      mandate_mobile: mobile,
+      mandate_months: months,
       status: 'requested',
       next_debit_date: debitDate,
     }).returning();
 
     await notifyAdmin({
       title: '🔁 New AutoPay request',
-      body: `${customer.name} (STB ${conn.stb_number}) wants AutoPay. Make a QR in Collect: ₹${(amount / 100).toFixed(0)}, monthly, start ${autopayDateLabel(debitDate)}. Then upload it in the admin panel.`,
+      body: `Make a QR in Collect:\nName: ${name}\nMobile: ${mobile}\nAmount: ₹${(amount / 100).toFixed(0)}\nFrequency: Monthly\nStart: ${autopayDateLabel(debitDate)}\nDuration: ${months} months\n(STB ${conn.stb_number}, ${plan.name})\nThen upload the QR in the admin panel.`,
       url: '/admin/autopay',
       tag: `autopay-${row.id}`,
     });

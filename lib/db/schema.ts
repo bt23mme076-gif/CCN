@@ -382,6 +382,9 @@ export const autopaySubscriptions = pgTable('autopay_subscriptions', {
   amount: integer('amount').notNull(), // in paise
   duration_days: integer('duration_days').notNull(),
   status: text('status').notNull(), // 'requested' | 'qr_ready' | 'registered' | 'active' | 'cancelled'
+  mandate_name: text('mandate_name').notNull(), // details the customer filled in, entered into Collect as-is
+  mandate_mobile: text('mandate_mobile').notNull(),
+  mandate_months: integer('mandate_months').notNull(), // how many months the mandate runs
   qr_data: text('qr_data'), // base64 data URL of the QR made in Collect
   next_debit_date: timestamp('next_debit_date').notNull(), // midnight IST of the next expected debit
   last_debit_at: timestamp('last_debit_at'),

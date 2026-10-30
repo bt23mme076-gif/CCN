@@ -11,6 +11,9 @@ interface Sub {
   status: string;
   next_debit_date: string;
   last_debit_at: string | null;
+  mandate_name: string;
+  mandate_mobile: string;
+  mandate_months: number;
   has_qr: boolean;
   customer_name: string;
   customer_mobile: string;
@@ -159,7 +162,16 @@ export default function AutoPayPage() {
                     </p>
                     {SETUP_LABEL[s.status] && <p className="text-xs font-semibold text-amber-300 mt-1">{SETUP_LABEL[s.status]}</p>}
                     {s.status === 'requested' && (
-                      <p className="text-[11px] text-gray-500 mt-0.5">In Collect enter: amount {formatCurrency(s.amount)}, frequency monthly, start date {formatDateDMY(s.next_debit_date)}.</p>
+                      <div className="mt-2 px-3 py-2 rounded-lg text-xs text-gray-200 grid grid-cols-2 gap-x-4 gap-y-0.5 max-w-md"
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <span className="text-gray-400 col-span-2 font-semibold">Enter in Collect:</span>
+                        <span>Name: <b>{s.mandate_name}</b></span>
+                        <span>Mobile: <b>{s.mandate_mobile}</b></span>
+                        <span>Amount: <b>{formatCurrency(s.amount)}</b></span>
+                        <span>Frequency: <b>Monthly</b></span>
+                        <span>Start: <b>{formatDateDMY(s.next_debit_date)}</b></span>
+                        <span>Duration: <b>{s.mandate_months} months</b></span>
+                      </div>
                     )}
                     {s.last_debit_at && <p className="text-[11px] text-gray-500 mt-0.5">Last received: {formatDateDMY(s.last_debit_at)}</p>}
                   </div>

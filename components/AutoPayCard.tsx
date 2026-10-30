@@ -15,10 +15,14 @@ interface AutoPay {
 
 interface PlanOption { id: string; name: string; price: number; duration_days: number }
 
+const labelClass = 'block text-[11px] font-semibold text-gray-400 mb-1.5 uppercase tracking-wider';
+const fieldClass = 'w-full px-4 py-3 rounded-xl text-white outline-none placeholder:text-gray-500';
+const fieldStyle = { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)' };
+
 const activeCid = () => (typeof window !== 'undefined' ? localStorage.getItem('ccn_active_cid') : null) || 'primary';
 
-// Customer side of AutoPay. The mandate itself lives in the Collect app: the
-// customer asks here, the admin uploads a personal QR, the customer scans it
+// Customer side of AutoPay. The mandate itself is created outside this app: the
+// customer fills in its details here, the admin uploads a personal QR, the customer scans it
 // with their UPI app, and the admin confirms.
 export default function AutoPayCard({ className = '' }: { className?: string }) {
   const [autopay, setAutopay] = useState<AutoPay | null>(null);
@@ -26,6 +30,10 @@ export default function AutoPayCard({ className = '' }: { className?: string }) 
   const [choosing, setChoosing] = useState(false);
   const [plans, setPlans] = useState<PlanOption[]>([]);
   const [planId, setPlanId] = useState('');
+  const [name, setName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [months, setMonths] = useState(12);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -34,6 +42,12 @@ export default function AutoPayCard({ className = '' }: { className?: string }) 
       const res = await fetch(`/api/autopay?cid=${encodeURIComponent(activeCid())}`, { cache: 'no-store' });
       const data = await res.json();
       setAutopay(data.autopay ?? null);
+      if (data.defaults) {
+        // Prefill once, without overwriting what the customer is typing on a re-poll.
+        setName((v) => v || data.defaults.name);
+        setMobile((v) => v || data.defaults.mobile);
+        setStartDate((v) => v || data.defaults.startDate);
+      }
     } catch { /* keep last state */ }
     setLoaded(true);
   };
@@ -66,7 +80,7 @@ export default function AutoPayCard({ className = '' }: { className?: string }) 
       const res = await fetch('/api/autopay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, connectionId: activeCid() }),
+        body: JSON.stringify({ planId, connectionId: activeCid(), name: name.trim(), mobile, startDate, months }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -118,28 +132,54 @@ export default function AutoPayCard({ className = '' }: { className?: string }) 
           </div>
           {!choosing && (
             <button onClick={startChoosing} className="px-5 py-3 rounded-xl font-bold text-white whitespace-nowrap" style={{ background: accentGradient, boxShadow: '0 8px 24px rgba(230,57,70,0.3)' }}>
-              Turn on AutoPay
+              Register for AutoPay
             </button>
           )}
         </div>
 
         {choosing && (
           <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            <label className="block text-[11px] font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Choose your plan</label>
-            <select value={planId} onChange={(e) => setPlanId(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl text-white outline-none mb-3"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)' }}>
-              {plans.map((p) => (
-                <option key={p.id} value={p.id} style={{ color: '#111' }}>{p.name} — {formatCurrency(p.price)} / month</option>
-              ))}
-            </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className={labelClass}>Full name</label>
+                <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name"
+                  placeholder="Your name" className={fieldClass} style={fieldStyle} />
+              </div>
+              <div>
+                <label className={labelClass}>Mobile number</label>
+                <input value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  inputMode="numeric" autoComplete="tel-national" placeholder="10-digit mobile" className={fieldClass} style={fieldStyle} />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Plan</label>
+                <select value={planId} onChange={(e) => setPlanId(e.target.value)} className={fieldClass} style={fieldStyle}>
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id} style={{ color: '#111' }}>{p.name} — {formatCurrency(p.price)} / month</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>First payment date</label>
+                <input type="date" value={startDate} min={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}
+                  onChange={(e) => setStartDate(e.target.value)} className={fieldClass} style={{ ...fieldStyle, colorScheme: 'dark' }} />
+              </div>
+              <div>
+                <label className={labelClass}>Run AutoPay for</label>
+                <select value={months} onChange={(e) => setMonths(Number(e.target.value))} className={fieldClass} style={fieldStyle}>
+                  {[6, 12, 24].map((m) => (
+                    <option key={m} value={m} style={{ color: '#111' }}>{m} months</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mb-3">Frequency: Monthly. You can cancel any time.</p>
             <div className="flex gap-3">
               <button onClick={() => setChoosing(false)} disabled={busy} className="flex-1 py-3 rounded-xl font-semibold text-gray-300 hover:bg-white/5" style={{ border: '1px solid rgba(255,255,255,0.14)' }}>Cancel</button>
               <button onClick={request} disabled={busy || !planId} className="flex-1 py-3 rounded-xl font-bold text-white disabled:opacity-50" style={{ background: accentGradient }}>
-                {busy ? 'Sending…' : 'Continue'}
+                {busy ? 'Sending…' : 'Register'}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-3">We will prepare your personal AutoPay QR and notify you when it is ready.</p>
+            <p className="text-xs text-gray-500 mt-3">We will prepare your personal AutoPay QR and show it here. You will get a notification when it is ready.</p>
           </div>
         )}
         {errorLine}
