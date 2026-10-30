@@ -1,6 +1,7 @@
 'use client';
 
 import NotifyOptIn from '@/components/NotifyOptIn';
+import AutoPayCard from '@/components/AutoPayCard';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -419,6 +420,8 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        <AutoPayCard className="mb-5 sm:mb-6" />
 
         {/* Recent recharges */}
         <GlassCard className="p-5 sm:p-6">

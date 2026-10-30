@@ -96,6 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/recharges', label: 'Recharges', icon: '💳', desc: 'All orders' },
     { href: '/admin/revenue', label: 'Revenue', icon: '📊', desc: 'Earnings & charts' },
     { href: '/admin/expiring', label: 'Expiring', icon: '🔔', desc: 'Plans expiring soon' },
+    { href: '/admin/autopay', label: 'AutoPay', icon: '🔁', desc: 'Monthly mandates' },
     { href: '/admin/deliveries', label: 'Deliveries', icon: '🚚', desc: 'Deliveries' },
     { href: '/admin/customers', label: 'Customers', icon: '👥', desc: 'Manage users' },
     { href: '/admin/plans', label: 'Plans', icon: '📋', desc: 'Manage plans' },

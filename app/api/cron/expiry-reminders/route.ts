@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { recharges, customers, customerConnections } from '@/lib/db/schema';
+import { recharges, customers, customerConnections, autopaySubscriptions } from '@/lib/db/schema';
 import { and, eq, gt, isNull, inArray } from 'drizzle-orm';
 import { sendPushToCustomer } from '@/lib/push';
 import { sendTelegramAlert } from '@/lib/telegram';
@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic';
 // Daily (see vercel.json "crons"): pushes each customer whose plan's last
 // valid day is 3, 2, 1 or 0 days away, and sends the admin one Telegram
 // summary so they can follow up. A connection with a renewal already queued
-// (a later-expiring plan) or a paid order awaiting activation is skipped.
+// (a later-expiring plan), a paid order awaiting activation, or active AutoPay
+// is skipped. Also alerts the admin on Telegram when AutoPay debits are due.
 //
 // Vercel calls this with "Authorization: Bearer $CRON_SECRET"; without the
 // env var set the route refuses to run, so nobody else can trigger pushes.
@@ -49,6 +50,27 @@ export async function GET(request: NextRequest) {
 
     const keyOf = (r: { customer_id: string; connection_id: string | null }) => `${r.customer_id}|${r.connection_id ?? ''}`;
     const awaitingKeys = new Set(awaiting.map(keyOf));
+
+    // Active AutoPay connections renew by themselves, so reminding them would
+    // only risk a double payment. Also tell the admin which debits are due.
+    const autopayRows = await db
+      .select({
+        customer_id: autopaySubscriptions.customer_id,
+        connection_id: autopaySubscriptions.connection_id,
+        next_debit_date: autopaySubscriptions.next_debit_date,
+      })
+      .from(autopaySubscriptions)
+      .where(eq(autopaySubscriptions.status, 'active'))
+      .catch(() => []); // table not migrated yet
+    for (const a of autopayRows) awaitingKeys.add(keyOf(a));
+    const autopayDue = autopayRows.filter((a) => istDay(a.next_debit_date) <= today).length;
+    if (autopayDue > 0) {
+      await sendTelegramAlert({
+        title: `🔁 ${autopayDue} AutoPay debit${autopayDue > 1 ? 's' : ''} due`,
+        body: 'Check Collect, then mark each one Received or Failed in the admin panel.',
+        url: '/admin/autopay',
+      });
+    }
 
     // Latest-ending base plan per connection — if a renewal is queued, that's the one that counts.
     const latest = new Map<string, { customer_id: string; connection_id: string | null; plan_name: string; expires_at: Date }>();

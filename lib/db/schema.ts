@@ -367,3 +367,27 @@ export const rechargePauses = pgTable('recharge_pauses', {
   message: text('message'),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// UPI AutoPay set up outside this app: the admin makes a per-customer mandate
+// QR in the Collect app and uploads it here. Nothing here talks to Collect —
+// statuses are moved by the customer and admin, and each month's debit is
+// recorded by the admin ("Received"), which creates a normal paid recharge.
+export const autopaySubscriptions = pgTable('autopay_subscriptions', {
+  id: text('id').primaryKey(),
+  operator_id: text('operator_id').references(() => operators.id),
+  customer_id: text('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
+  connection_id: text('connection_id').references(() => customerConnections.id, { onDelete: 'cascade' }), // null = primary STB
+  plan_id: text('plan_id').references(() => plans.id, { onDelete: 'set null' }),
+  plan_name: text('plan_name').notNull(),
+  amount: integer('amount').notNull(), // in paise
+  duration_days: integer('duration_days').notNull(),
+  status: text('status').notNull(), // 'requested' | 'qr_ready' | 'registered' | 'active' | 'cancelled'
+  qr_data: text('qr_data'), // base64 data URL of the QR made in Collect
+  next_debit_date: timestamp('next_debit_date').notNull(), // midnight IST of the next expected debit
+  last_debit_at: timestamp('last_debit_at'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  customerIdx: index('autopay_customer_id_idx').on(table.customer_id),
+  statusIdx: index('autopay_status_idx').on(table.status),
+}));
