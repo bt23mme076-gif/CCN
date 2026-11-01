@@ -64,6 +64,7 @@ export default function AllRechargesPage() {
   const [editingExpiryId, setEditingExpiryId] = useState<string | null>(null);
   const [expiryDays, setExpiryDays] = useState('');
   const [updatingExpiry, setUpdatingExpiry] = useState(false);
+  const [markingPayment, setMarkingPayment] = useState<string | null>(null);
 
   useEffect(() => { fetchRecharges(); }, [search]); // eslint-disable-line
 
@@ -84,6 +85,24 @@ export default function AllRechargesPage() {
       else alert('Failed to activate recharge');
     } catch { alert('Failed to activate recharge'); }
     finally { setActivating(null); }
+  };
+
+  const handlePaymentStatus = async (rechargeId: string, action: 'not_received' | 'received', customerName: string) => {
+    const question = action === 'not_received'
+      ? `Mark ${customerName}'s payment as NOT received? They will be told to pay, and it stops counting as revenue. Remember to suspend them on the MSO portal if needed.`
+      : `Confirm the money from ${customerName} has arrived? This removes their payment warning.`;
+    if (!confirm(question)) return;
+    setMarkingPayment(rechargeId);
+    try {
+      const response = await fetch(`/api/admin/recharges/${rechargeId}/payment-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      if (response.ok) fetchRecharges();
+      else alert((await response.json()).error || 'Failed to update');
+    } catch { alert('Failed to update'); }
+    finally { setMarkingPayment(null); }
   };
 
   const handleDelete = async (rechargeId: string) => {
@@ -308,6 +327,20 @@ export default function AllRechargesPage() {
                             style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
                             {deleting === recharge.id ? 'Deleting...' : 'Delete'}
                           </button>
+                          {(recharge.status === 'paid' || recharge.status === 'activated') && (
+                            <button onClick={() => handlePaymentStatus(recharge.id, 'not_received', customer.name)} disabled={markingPayment === recharge.id}
+                              className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50 whitespace-nowrap"
+                              style={{ background: 'linear-gradient(135deg, #b45309, #f59e0b)' }}>
+                              ⚠️ Not received
+                            </button>
+                          )}
+                          {recharge.status === 'payment_due' && (
+                            <button onClick={() => handlePaymentStatus(recharge.id, 'received', customer.name)} disabled={markingPayment === recharge.id}
+                              className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-105 disabled:opacity-50 whitespace-nowrap"
+                              style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
+                              ✓ Payment received
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td>
@@ -370,6 +403,20 @@ export default function AllRechargesPage() {
                     style={{ background: 'linear-gradient(135deg, #b70909, #e63946)' }}>
                     {deleting === recharge.id ? 'Deleting...' : 'Delete'}
                   </button>
+                  {(recharge.status === 'paid' || recharge.status === 'activated') && (
+                    <button onClick={() => handlePaymentStatus(recharge.id, 'not_received', customer.name)} disabled={markingPayment === recharge.id}
+                      className="w-full py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
+                      style={{ background: 'linear-gradient(135deg, #b45309, #f59e0b)' }}>
+                      ⚠️ Payment not received
+                    </button>
+                  )}
+                  {recharge.status === 'payment_due' && (
+                    <button onClick={() => handlePaymentStatus(recharge.id, 'received', customer.name)} disabled={markingPayment === recharge.id}
+                      className="w-full py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
+                      style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
+                      ✓ Payment received
+                    </button>
+                  )}
                   {(recharge.status === 'paid' || recharge.status === 'activated') && (
                     <div className="flex gap-2">
                       <button

@@ -44,6 +44,7 @@ const STATUS: Record<string, { label: string; color: string; bg: string; border:
   paid: { label: 'Activating', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.3)' },
   pending: { label: 'Unpaid', color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.25)' },
   failed: { label: 'Failed', color: '#f87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.3)' },
+  payment_due: { label: 'Payment Due', color: '#f87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.3)' },
   expired: { label: 'Expired', color: '#a1a1aa', bg: 'rgba(161,161,170,0.10)', border: 'rgba(161,161,170,0.25)' },
   delivered: { label: 'Delivered', color: '#4ade80', bg: 'rgba(74,222,128,0.12)', border: 'rgba(74,222,128,0.3)' },
 };

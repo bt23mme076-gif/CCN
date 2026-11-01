@@ -29,7 +29,8 @@ export async function POST(
     if (recharge.length === 0) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
-    if (recharge[0].status !== 'pending') {
+    // 'payment_due' = the admin marked an earlier claim as not received, and the customer is paying again.
+    if (recharge[0].status !== 'pending' && recharge[0].status !== 'payment_due') {
       return NextResponse.json({ error: 'Order already processed' }, { status: 400 });
     }
 

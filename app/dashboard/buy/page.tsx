@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import RechargePauseBanner from '@/components/RechargePauseBanner';
+import PaymentDueBanner from '@/components/PaymentDueBanner';
 import PlanCard from '@/components/PlanCard';
 import PaymentModal from '@/components/PaymentModal';
 import AccessoryPaymentModal from '@/components/AccessoryPaymentModal';
@@ -352,6 +353,7 @@ export default function BuyHistoryPage() {
           </p>
         </div>
 
+        <PaymentDueBanner recharges={recharges} className="mb-5" />
         <RechargePauseBanner stbNumber={customer?.stb_number} className="mb-5" />
 
         {/* Outstanding Due Notice — no longer blocks recharge; due gets added to the next plan payment automatically */}
@@ -590,7 +592,7 @@ export default function BuyHistoryPage() {
                 ) : (
                   <div className="space-y-3">
                     {filteredRecharges.map((recharge) => {
-                      const isExpired = !!recharge.expires_at && new Date(recharge.expires_at) < currentTime;
+                      const isExpired = recharge.status !== 'payment_due' && !!recharge.expires_at && new Date(recharge.expires_at) < currentTime;
                       const timeRemaining = recharge.expires_at ? getTimeRemaining(new Date(recharge.expires_at)) : null;
                       const remainingColor = timeRemaining ? DARK_TIME_COLOR[timeRemaining.color] : undefined;
                       const accent = isExpired ? '#71717a' : recharge.status === 'activated' ? '#4ade80' : recharge.status === 'paid' ? '#fbbf24' : recharge.status === 'failed' ? '#f87171' : '#94a3b8';

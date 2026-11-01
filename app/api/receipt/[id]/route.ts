@@ -23,7 +23,7 @@ export async function GET(
       return NextResponse.json({ error: 'Recharge not found' }, { status: 404 });
     }
 
-    if (recharge.status === 'pending' || recharge.status === 'failed') {
+    if (recharge.status === 'pending' || recharge.status === 'failed' || recharge.status === 'payment_due') {
       return NextResponse.json({ error: 'Receipt not available for this recharge' }, { status: 400 });
     }
 

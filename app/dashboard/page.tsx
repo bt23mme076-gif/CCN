@@ -2,6 +2,7 @@
 
 import NotifyOptIn from '@/components/NotifyOptIn';
 import AutoPayCard from '@/components/AutoPayCard';
+import PaymentDueBanner from '@/components/PaymentDueBanner';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -306,6 +307,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        <PaymentDueBanner recharges={recharges} className="mb-5" />
         <RechargePauseBanner stbNumber={customer?.stb_number} className="mb-5" />
         <NotifyOptIn className="mb-5" />
 

@@ -11,6 +11,7 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
         return 'status-badge status-paid';
       case 'activated':
         return 'status-badge status-activated';
+      case 'payment_due':
       case 'failed':
         return 'status-badge status-failed';
       default:
@@ -28,6 +29,8 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
         return 'Activated';
       case 'failed':
         return 'Failed';
+      case 'payment_due':
+        return 'Payment Due';
       default:
         return status;
     }

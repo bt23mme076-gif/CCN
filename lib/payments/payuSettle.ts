@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { recharges, accessoryOrders, customers, streamAdBookings } from '@/lib/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { verifyPayuResponseHash } from '@/lib/payments/payu';
 import { notifyAdmin } from '@/lib/push';
 import { clearDue } from '@/lib/payments/clearDue';
@@ -88,7 +88,8 @@ export async function settlePayuResult(fields: Record<string, string>): Promise<
   const updated = await db
     .update(recharges)
     .set(update)
-    .where(and(eq(recharges.id, txnid), eq(recharges.status, 'pending')))
+    // A failed retry must leave a 'payment_due' row as it is, so the customer keeps their pay-now banner.
+    .where(and(eq(recharges.id, txnid), success ? inArray(recharges.status, ['pending', 'payment_due']) : eq(recharges.status, 'pending')))
     .returning();
 
   if (success && updated.length > 0) {
