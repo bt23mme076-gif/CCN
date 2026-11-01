@@ -171,7 +171,9 @@ export default function AllRechargesPage() {
   };
 
   const openReceipt = (rechargeId: string) => {
-    const receiptUrl = `/api/admin/receipt/${rechargeId}`;
+    // The public share route: a new tab / Chrome (from the APK) has no admin
+    // Authorization header, and the cookie alone is not always present.
+    const receiptUrl = `/api/receipt/share/${rechargeId}`;
     if (isInNativeApp()) {
       // target="_blank" / window.open() need the app's WebChromeClient to
       // implement onCreateWindow, which this app may not have yet. A plain

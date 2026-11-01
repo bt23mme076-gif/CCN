@@ -73,6 +73,28 @@ function isAndroidWebView() {
   return /wv\b/.test(ua) || (/Android/.test(ua) && /Version\/\d/.test(ua) && !/Chrome\//.test(ua));
 }
 
+// Loaded with fetch (which carries the admin token) and written into a new tab,
+// because a plain link wouldn't send that token. The tab is opened first, in
+// the click itself, so popup blockers allow it.
+async function openAdReceipt(id: string) {
+  const tab = window.open('', '_blank');
+  if (!tab) {
+    alert('Please allow pop-ups to view the receipt');
+    return;
+  }
+  try {
+    const res = await fetch(`/api/admin/stream-ads/${encodeURIComponent(id)}/receipt`);
+    if (!res.ok) throw new Error();
+    const html = await res.text();
+    tab.document.open();
+    tab.document.write(html);
+    tab.document.close();
+  } catch {
+    tab.close();
+    alert('Could not load the receipt');
+  }
+}
+
 export default function StreamAdsPage() {
   const [tab, setTab] = useState<'bookings' | 'packages'>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -195,11 +217,11 @@ export default function StreamAdsPage() {
                           </span>
                         )}
                         {['paid', 'approved', 'live', 'completed'].includes(b.status) && (
-                          <a href={`/api/admin/stream-ads/${encodeURIComponent(b.id)}/receipt`} target="_blank" rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
+                          <button type="button"
+                            onClick={(e) => { e.stopPropagation(); openAdReceipt(b.id); }}
                             className="text-xs font-semibold text-orange-300 hover:underline">
                             📄 Receipt
-                          </a>
+                          </button>
                         )}
                       </div>
                     </div>

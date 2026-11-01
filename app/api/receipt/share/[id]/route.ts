@@ -25,6 +25,10 @@ export async function GET(
       return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
     }
 
+    if (['pending', 'failed', 'payment_due'].includes(recharge.status)) {
+      return NextResponse.json({ error: 'Receipt is available once the payment is confirmed' }, { status: 409 });
+    }
+
     const [customer] = await db
       .select()
       .from(customers)
