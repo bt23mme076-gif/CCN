@@ -20,7 +20,7 @@ export interface Operator {
   support_phone: string | null;
 }
 
-// Mirrors middleware.ts's extractSubdomain — kept in sync manually since
+// Mirrors proxy.ts's extractSubdomain — kept in sync manually since
 // this file needs its own copy (see below for why).
 function extractSubdomain(hostname: string): string {
   const host = hostname.split(':')[0]; // strip port
@@ -62,7 +62,7 @@ export const getOperatorBySubdomain = cache(async (subdomain: string): Promise<O
 // Call this inside any server component or API route to get the current operator.
 //
 // Reads the Host header directly rather than the `x-operator-subdomain`
-// header middleware.ts injects — that pattern only reliably reaches Server
+// header proxy.ts injects — that pattern only reliably reaches Server
 // Components via next/headers, not Route Handlers, so API routes (like
 // /api/operator/branding) were silently falling back to the default
 // operator on every subdomain.

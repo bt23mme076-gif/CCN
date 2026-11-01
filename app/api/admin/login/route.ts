@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = loginSchema.parse(body);
 
-    // Resolve operator from subdomain (injected by middleware)
+    // Resolve operator from subdomain (injected by proxy.ts)
     const operator = await getCurrentOperator();
     if (!operator) {
       return NextResponse.json({ error: 'Unknown operator' }, { status: 400 });

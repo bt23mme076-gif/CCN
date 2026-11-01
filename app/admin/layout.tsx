@@ -9,7 +9,7 @@ import { useOperatorBranding } from '@/lib/useOperatorBranding';
 // The CCN APK's WebView has been observed dropping the auth cookie after a
 // short time (regular browsers are unaffected). As a fallback, every
 // /api/admin/* fetch also carries the token from localStorage as an
-// Authorization header — middleware.ts accepts either. Patched once at
+// Authorization header — proxy.ts accepts either. Patched once at
 // module load so every existing `fetch(...)` call across the admin section
 // picks it up without having to be rewritten individually.
 if (typeof window !== 'undefined' && !(window as any).__ccnAdminFetchPatched) {
