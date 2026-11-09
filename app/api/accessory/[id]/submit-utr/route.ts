@@ -5,6 +5,7 @@ import { accessoryOrders, customers } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { notifyAdmin } from '@/lib/push';
+import { CLAIM_PLACEHOLDER } from '@/lib/payments/upiAuto';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export async function POST(
   try {
     const user = await requireCustomerAuth();
     const { id } = await params;
-    const { utr } = schema.parse(await request.json());
+    schema.parse(await request.json());
 
     const order = await db
       .select()
@@ -34,7 +35,7 @@ export async function POST(
 
     await db
       .update(accessoryOrders)
-      .set({ status: 'paid', upi_reference: utr, paid_at: new Date() })
+      .set({ status: 'paid', upi_reference: CLAIM_PLACEHOLDER, paid_at: new Date() })
       .where(eq(accessoryOrders.id, id));
 
     const customer = await db.select().from(customers).where(eq(customers.id, user.customerId)).limit(1);
@@ -42,7 +43,7 @@ export async function POST(
       const c = customer[0];
       await notifyAdmin({
         title: '📦 UPI Payment Claimed — Verify & Deliver',
-        body: `${c.name} paid ₹${(order[0].amount / 100).toFixed(0)} for ${order[0].accessory_name} via UPI (UTR: ${utr}). Confirm it in PhonePe Business, then deliver.`,
+        body: `${c.name} paid ₹${(order[0].amount / 100).toFixed(0)} for ${order[0].accessory_name} via UPI (not bank-verified yet). Confirm it in PhonePe Business, then deliver.`,
         url: '/admin/deliveries',
         tag: `accessory-${id}`,
       });

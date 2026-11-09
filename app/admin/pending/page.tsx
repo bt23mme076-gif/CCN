@@ -250,6 +250,20 @@ export default function PendingActivationsPage() {
     finally { setDeleting(null); }
   };
 
+  // Confirms a customer's unverified "I've paid" claim (clears its bundled due) — mainly for due-only
+  // payments, which have no plan to activate. Activating a plan order confirms the claim automatically.
+  const handleConfirmPayment = async (rechargeId: string) => {
+    if (!confirm('Have you checked PhonePe Business and seen this money arrive?')) return;
+    try {
+      const res = await fetch(`/api/admin/recharges/${rechargeId}/confirm-payment`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) return alert(data.error || 'Failed to confirm payment');
+      setRecharges(prev => prev.map(r => r.recharge.id === rechargeId
+        ? { ...r, recharge: { ...r.recharge, upi_reference: data.upi_reference } }
+        : r));
+    } catch { alert('Failed to confirm payment'); }
+  };
+
   const handleActivate = async (rechargeId: string) => {
     setActivating(rechargeId);
     try {
@@ -503,9 +517,25 @@ export default function PendingActivationsPage() {
                         ? `Paid: ${formatDateTime(new Date(recharge.paid_at))}`
                         : `Ordered: ${formatDateTime(new Date(recharge.created_at))} (unpaid)`}
                     </p>
-                    {recharge.upi_reference && (
+                    {recharge.upi_reference === 'CLAIMED-UNVERIFIED' || recharge.upi_reference === 'N/A' ? (
+                      <div className="text-xs mt-1" style={{ color: '#fbbf24' }}>
+                        ⚠ UPI not verified yet — customer tapped &quot;I&apos;ve paid&quot;. Check PhonePe Business before activating
+                        {recharge.upi_reference === 'CLAIMED-UNVERIFIED' && !!recharge.due_amount_paise && recharge.due_amount_paise > 0
+                          && ' (their due stays until you confirm)'}.
+                        {recharge.upi_reference === 'CLAIMED-UNVERIFIED' && (
+                          <button onClick={() => handleConfirmPayment(recharge.id)}
+                            className="ml-2 underline font-semibold text-amber-200 hover:text-white">
+                            Mark payment received
+                          </button>
+                        )}
+                      </div>
+                    ) : recharge.upi_reference && (
                       <p className="text-xs mt-1" style={{ color: '#34d399' }}>
-                        UPI UTR: {recharge.upi_reference}
+                        ✅ {recharge.upi_reference === 'ADMIN-VERIFIED'
+                          ? 'Payment confirmed by admin'
+                          : /^\d{12}$/.test(recharge.upi_reference) || recharge.upi_reference === 'UPI-AUTO-VERIFIED'
+                            ? `UPI bank-verified · Ref: ${recharge.upi_reference}`
+                            : `Paid · Ref: ${recharge.upi_reference}`}
                       </p>
                     )}
                     {!!recharge.due_amount_paise && recharge.due_amount_paise > 0 && (

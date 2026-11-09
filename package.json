@@ -34,7 +34,8 @@
     "add-recharge-pauses-table": "tsx add-recharge-pauses-table.ts",
     "add-autopay-table": "tsx add-autopay-table.ts",
     "delete-super-admin": "tsx delete-super-admin.ts",
-    "add-stream-ads-tables": "tsx add-stream-ads-tables.ts"
+    "add-stream-ads-tables": "tsx add-stream-ads-tables.ts",
+    "add-upi-auto-verify-tables": "tsx add-upi-auto-verify-tables.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

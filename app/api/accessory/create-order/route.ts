@@ -5,7 +5,7 @@ import { accessories, accessoryOrders, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
-import { buildUpiLink } from '@/lib/payments/upi';
+import { createUpiPayment } from '@/lib/payments/upiAuto';
 import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
-    const upiLink = buildUpiLink(price, `${customer[0].name} - ${accessory[0].name}`);
+    const { upiLink } = await createUpiPayment({ kind: 'accessory', orderId: orderId, amountPaise: price, note: `${customer[0].name} - ${accessory[0].name}` });
 
     const origin = request.nextUrl.origin;
     const payu = await isPayuEnabled(user.customerId)

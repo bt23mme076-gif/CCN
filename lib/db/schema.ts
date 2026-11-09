@@ -394,3 +394,35 @@ export const autopaySubscriptions = pgTable('autopay_subscriptions', {
   customerIdx: index('autopay_customer_id_idx').on(table.customer_id),
   statusIdx: index('autopay_status_idx').on(table.status),
 }));
+
+// Direct-UPI auto-verification. Each UPI checkout gets a unique pay amount
+// (price + 1–99 paise) so a forwarded bank SMS / PhonePe Business
+// notification can be matched to exactly one order — no UTR typing needed.
+// A partial unique index (pay_amount_paise WHERE status='pending') is created
+// in run-migrations; drizzle only uses these definitions for queries.
+export const upiPaymentIntents = pgTable('upi_payment_intents', {
+  id: text('id').primaryKey(),
+  order_kind: text('order_kind').notNull(), // 'recharge' | 'accessory' | 'stream_ad'
+  order_id: text('order_id').notNull(),
+  amount_paise: integer('amount_paise').notNull(), // order price
+  pay_amount_paise: integer('pay_amount_paise').notNull(), // exact amount the customer is asked to pay
+  status: text('status').notNull().default('pending'), // 'pending' | 'matched' | 'expired'
+  utr: text('utr'),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  matched_at: timestamp('matched_at'),
+}, (table) => ({
+  orderIdx: index('upi_intents_order_idx').on(table.order_id),
+}));
+
+// Every credit seen in a forwarded SMS/notification, matched or not.
+export const upiCredits = pgTable('upi_credits', {
+  id: text('id').primaryKey(),
+  amount_paise: integer('amount_paise').notNull(),
+  utr: text('utr'),
+  sender: text('sender').notNull(),
+  raw: text('raw').notNull(),
+  intent_id: text('intent_id'),
+  received_at: timestamp('received_at').defaultNow().notNull(),
+}, (table) => ({
+  utrIdx: uniqueIndex('upi_credits_utr_idx').on(table.utr),
+}));
