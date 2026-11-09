@@ -39,6 +39,9 @@ async function main() {
     );
   `;
   await migrationClient`CREATE INDEX IF NOT EXISTS stream_ad_bookings_status_idx ON stream_ad_bookings (status);`;
+  // Block Supabase's public REST API; the app connects as `postgres`, which bypasses RLS.
+  await migrationClient`ALTER TABLE stream_ad_packages ENABLE ROW LEVEL SECURITY;`;
+  await migrationClient`ALTER TABLE stream_ad_bookings ENABLE ROW LEVEL SECURITY;`;
   console.log('✓ stream_ad_packages + stream_ad_bookings tables ready');
   await migrationClient.end();
 }
