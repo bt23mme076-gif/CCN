@@ -32,7 +32,8 @@
     "add-app-settings-table": "tsx add-app-settings-table.ts",
     "add-customer-payment-mode-column": "tsx add-customer-payment-mode-column.ts",
     "delete-super-admin": "tsx delete-super-admin.ts",
-    "add-stream-ads-tables": "tsx add-stream-ads-tables.ts"
+    "add-stream-ads-tables": "tsx add-stream-ads-tables.ts",
+    "add-upi-auto-verify-tables": "tsx add-upi-auto-verify-tables.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

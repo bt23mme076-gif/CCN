@@ -4,6 +4,7 @@ import { recharges, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { notifyAdmin } from '@/lib/push';
+import { CLAIM_PLACEHOLDER } from '@/lib/payments/upiAuto';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const { utr } = schema.parse(await request.json());
+    schema.parse(await request.json());
 
     const recharge = await db.select().from(recharges).where(eq(recharges.id, id)).limit(1);
     if (recharge.length === 0) {
@@ -27,7 +28,7 @@ export async function POST(
 
     await db
       .update(recharges)
-      .set({ status: 'paid', upi_reference: utr, paid_at: new Date() })
+      .set({ status: 'paid', upi_reference: CLAIM_PLACEHOLDER, paid_at: new Date() })
       .where(eq(recharges.id, id));
 
     const customer = await db.select().from(customers).where(eq(customers.id, recharge[0].customer_id)).limit(1);
@@ -35,7 +36,7 @@ export async function POST(
       const c = customer[0];
       await notifyAdmin({
         title: '💳 UPI Payment Claimed — Verify & Activate',
-        body: `${c.name} paid ₹${(recharge[0].amount / 100).toFixed(0)} for ${recharge[0].plan_name} via UPI (UTR: ${utr}, Quick Recharge). Confirm it in PhonePe Business, then activate.`,
+        body: `${c.name} paid ₹${(recharge[0].amount / 100).toFixed(0)} for ${recharge[0].plan_name} via UPI (Quick Recharge, not bank-verified yet). Confirm it in PhonePe Business, then activate.`,
         url: '/admin/pending',
         tag: `recharge-${id}`,
       });

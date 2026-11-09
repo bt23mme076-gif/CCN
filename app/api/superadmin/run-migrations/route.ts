@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { migrationClient } from '@/lib/db/index';
+import { createUpiAutoVerifyTables } from '@/lib/db/upiAutoVerifyMigration';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 
@@ -109,6 +110,9 @@ export async function POST() {
     `;
     await migrationClient`CREATE INDEX IF NOT EXISTS stream_ad_bookings_status_idx ON stream_ad_bookings (status);`;
     log.push('stream ad tables: ok');
+
+    await createUpiAutoVerifyTables(migrationClient);
+    log.push('UPI auto-verify tables: ok');
 
     return NextResponse.json({ success: true, log });
   } catch (error) {
