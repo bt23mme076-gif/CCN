@@ -7,7 +7,7 @@ import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { resolveConnection } from '@/lib/connections';
 import { calcDurationPricing, isValidMonths } from '@/lib/planDuration';
-import { createUpiPayment } from '@/lib/payments/upiAuto';
+import { buildUpiLink } from '@/lib/payments/upi';
 import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
 import { rechargesPausedResponse } from '@/lib/rechargePause';
 
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
-    const { upiLink } = await createUpiPayment({ kind: 'recharge', orderId: rechargeId, amountPaise: totalAmount, note: `${customer[0].name} - ${displayPlanName}` });
+    const upiLink = buildUpiLink(totalAmount, `${customer[0].name} - ${displayPlanName}`);
 
     const origin = request.nextUrl.origin;
     const payu = await isPayuEnabled(user.customerId)

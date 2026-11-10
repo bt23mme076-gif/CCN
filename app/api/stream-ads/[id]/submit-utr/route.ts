@@ -4,7 +4,6 @@ import { streamAdBookings } from '@/lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { notifyAdmin } from '@/lib/push';
-import { CLAIM_PLACEHOLDER } from '@/lib/payments/upiAuto';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +15,11 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    schema.parse(await request.json());
+    const { utr } = schema.parse(await request.json());
 
     const [booking] = await db
       .update(streamAdBookings)
-      .set({ status: 'paid', upi_reference: CLAIM_PLACEHOLDER, paid_at: new Date() })
+      .set({ status: 'paid', upi_reference: utr, paid_at: new Date() })
       .where(and(eq(streamAdBookings.id, id), eq(streamAdBookings.status, 'pending')))
       .returning();
 
@@ -30,7 +29,7 @@ export async function POST(
 
     await notifyAdmin({
       title: '📢 Live Ad Booking — UPI Claimed',
-      body: `${booking.advertiser_name} paid ₹${(booking.amount / 100).toFixed(0)} for the ${booking.package_name} ad via UPI (not bank-verified yet). Confirm in PhonePe Business, then approve.`,
+      body: `${booking.advertiser_name} paid ₹${(booking.amount / 100).toFixed(0)} for the ${booking.package_name} ad via UPI (UTR: ${utr}). Confirm in PhonePe Business, then approve.`,
       url: '/admin/stream-ads',
       tag: `stream-ad-${id}`,
     });

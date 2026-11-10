@@ -4,7 +4,6 @@ import { db } from '@/lib/db';
 import { recharges, plans, customers } from '@/lib/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { sendPushToCustomer } from '@/lib/push';
-import { ADMIN_VERIFIED_REFERENCE, CLAIM_PLACEHOLDER, confirmRechargeClaim } from '@/lib/payments/upiAuto';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,12 +46,6 @@ export async function POST(
 
     if (!plan && !isFastRecharge) {
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
-    }
-
-    // Activating an unverified "I've paid" claim means the admin has checked
-    // the money arrived — confirm it now so its bundled due gets cleared.
-    if (rechargeData.upi_reference === CLAIM_PLACEHOLDER) {
-      await confirmRechargeClaim(rechargeId, ADMIN_VERIFIED_REFERENCE);
     }
 
     // Calculate expiry date in IST (UTC+5:30)

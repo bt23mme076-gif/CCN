@@ -6,7 +6,6 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { sendPushToCustomer } from '@/lib/push';
 import { clearDue } from '@/lib/payments/clearDue';
-import { ADMIN_VERIFIED_REFERENCE, CLAIM_PLACEHOLDER } from '@/lib/payments/upiAuto';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,9 +33,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         .returning();
       if (!row) return NextResponse.json({ error: 'Only paid or activated recharges can be marked' }, { status: 409 });
 
-      // Any old due bundled into this payment wasn't really paid either. An
-      // unverified claim never cleared it, so only restore a due that was cleared.
-      if (row.due_amount_paise && row.due_amount_paise > 0 && row.upi_reference !== CLAIM_PLACEHOLDER) {
+      // Any old due bundled into this payment wasn't really paid either.
+      if (row.due_amount_paise && row.due_amount_paise > 0) {
         await db.update(customers)
           .set({ outstanding_balance: sql`${customers.outstanding_balance} + ${Math.round(row.due_amount_paise / 100)}` })
           .where(eq(customers.id, row.customer_id));
@@ -54,12 +52,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (!existing) return NextResponse.json({ error: 'Recharge not found' }, { status: 404 });
 
     const restored = existing.activated_at && existing.expires_at ? 'activated' : 'paid';
-    // The admin has now seen the money: an unverified claim becomes admin-verified,
-    // so a later Activate doesn't clear the due a second time.
     const [row] = await db.update(recharges)
-      .set(existing.upi_reference === CLAIM_PLACEHOLDER
-        ? { status: restored, upi_reference: ADMIN_VERIFIED_REFERENCE }
-        : { status: restored })
+      .set({ status: restored })
       .where(and(scope, eq(recharges.status, 'payment_due')))
       .returning();
     if (!row) return NextResponse.json({ error: 'This recharge is not marked as unpaid' }, { status: 409 });

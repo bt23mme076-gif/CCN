@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { recharges, customers } from '@/lib/db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { notifyAdmin } from '@/lib/push';
-import { CLAIM_PLACEHOLDER } from '@/lib/payments/upiAuto';
+import { clearDue } from '@/lib/payments/clearDue';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +18,7 @@ export async function POST(
   try {
     const user = await requireCustomerAuth();
     const { id } = await params;
-    schema.parse(await request.json());
+    const { utr } = schema.parse(await request.json());
 
     const recharge = await db
       .select()
@@ -34,20 +34,19 @@ export async function POST(
       return NextResponse.json({ error: 'Order already processed' }, { status: 400 });
     }
 
-    // An unverified claim: shows up for the admin like before, but any bundled
-    // due is only cleared once the bank SMS or the admin confirms the money
-    // (confirmRechargeClaim). Whatever the customer typed is not trusted.
     await db
       .update(recharges)
-      .set({ status: 'paid', upi_reference: CLAIM_PLACEHOLDER, paid_at: new Date() })
-      .where(and(eq(recharges.id, id), inArray(recharges.status, ['pending', 'payment_due'])));
+      .set({ status: 'paid', upi_reference: utr, paid_at: new Date() })
+      .where(eq(recharges.id, id));
+
+    await clearDue(user.customerId, recharge[0].due_amount_paise);
 
     const customer = await db.select().from(customers).where(eq(customers.id, user.customerId)).limit(1);
     if (customer.length > 0) {
       const c = customer[0];
       await notifyAdmin({
-        title: '⚠ UPI Payment Claimed — Not Verified',
-        body: `${c.name} says they paid ₹${(recharge[0].amount / 100).toFixed(0)} for ${recharge[0].plan_name}, but the bank hasn't confirmed it yet. Check PhonePe Business before activating.`,
+        title: '💳 UPI Payment Claimed — Verify & Activate',
+        body: `${c.name} paid ₹${(recharge[0].amount / 100).toFixed(0)} for ${recharge[0].plan_name} via UPI (UTR: ${utr}). Confirm it in PhonePe Business, then activate.`,
         url: '/admin/pending',
         tag: `recharge-${id}`,
       });

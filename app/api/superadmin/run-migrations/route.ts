@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { migrationClient } from '@/lib/db/index';
-import { createUpiAutoVerifyTables } from '@/lib/db/upiAutoVerifyMigration';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 
@@ -147,9 +146,6 @@ export async function POST() {
     await migrationClient`CREATE INDEX IF NOT EXISTS autopay_customer_id_idx ON autopay_subscriptions (customer_id);`;
     await migrationClient`CREATE INDEX IF NOT EXISTS autopay_status_idx ON autopay_subscriptions (status);`;
     log.push('autopay_subscriptions table: ok');
-
-    await createUpiAutoVerifyTables(migrationClient);
-    log.push('UPI auto-verify tables: ok');
 
     return NextResponse.json({ success: true, log });
   } catch (error) {

@@ -3,7 +3,7 @@ import { requireCustomerAuth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { customers, recharges } from '@/lib/db/schema';
 import { and, eq } from 'drizzle-orm';
-import { createUpiPayment } from '@/lib/payments/upiAuto';
+import { buildUpiLink } from '@/lib/payments/upi';
 import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
 
 export const dynamic = 'force-dynamic';
@@ -40,16 +40,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         })
       : null;
 
-    const { upiLink } = await createUpiPayment({
-      kind: 'recharge',
-      orderId: recharge.id,
-      amountPaise: recharge.amount,
-      note: `${customer.name} - ${recharge.plan_name}`,
-    });
-
     return NextResponse.json({
       orderId: recharge.id,
-      upiLink,
+      upiLink: buildUpiLink(recharge.amount, `${customer.name} - ${recharge.plan_name}`),
       amount: recharge.amount,
       payu,
     });

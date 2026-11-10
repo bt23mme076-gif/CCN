@@ -6,7 +6,7 @@ import { eq, inArray, and } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
-import { createUpiPayment } from '@/lib/payments/upiAuto';
+import { buildUpiLink } from '@/lib/payments/upi';
 import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
 import { rechargesPausedResponse } from '@/lib/rechargePause';
 
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
-    const { upiLink } = await createUpiPayment({ kind: 'recharge', orderId: rechargeId, amountPaise: roundedAmountPaise, note: `${customer[0].name} - A La Carte` });
+    const upiLink = buildUpiLink(roundedAmountPaise, `${customer[0].name} - A La Carte`);
 
     const origin = request.nextUrl.origin;
     const payu = await isPayuEnabled(user.customerId)

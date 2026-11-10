@@ -5,7 +5,7 @@ import { recharges, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateOrderId } from '@/lib/utils';
 import { resolveConnection } from '@/lib/connections';
-import { createUpiPayment } from '@/lib/payments/upiAuto';
+import { buildUpiLink } from '@/lib/payments/upi';
 import { buildPayuTxnParams, isPayuEnabled } from '@/lib/payments/payu';
 import { rechargesPausedResponse } from '@/lib/rechargePause';
 
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       status: 'pending',
     });
 
-    const { upiLink } = await createUpiPayment({ kind: 'recharge', orderId: rechargeId, amountPaise: c.fast_recharge_amount, note: `${c.name} - Fast Recharge` });
+    const upiLink = buildUpiLink(c.fast_recharge_amount, `${c.name} - Fast Recharge`);
 
     const origin = request.nextUrl.origin;
     const payu = await isPayuEnabled(user.customerId)
